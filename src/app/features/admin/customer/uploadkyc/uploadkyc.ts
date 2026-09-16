@@ -3238,7 +3238,9 @@ return true;
       this.uploadingKycFiles
     ).some(uploading => uploading === true);
   }
-
+  isDocUploading(docKey: string): any {
+    return this.uploadedFiles[docKey];
+  }
   isCurrentStepUploading(): boolean {
   return this.isAnyKycFileUploading;
 }

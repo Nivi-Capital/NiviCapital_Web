@@ -79,47 +79,62 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
+                            <div class="text-label" *ngIf="isDocUploading('salary1')">
+                                Salary Slip 1<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('salary1')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
 
- <div *ngIf="isDocUploading('salary1')"
-        class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
-
-        <div class="spinner-border spinner-border-sm text-danger me-2"
-            role="status">
-        </div>
-
-        <span>Uploading...</span>
-    </div>
-
-    <!-- File Upload / Preview -->
-    <ng-container *ngIf="!isDocUploading('salary1')">
-
-
-                            @if( hasDocument('salary1')){
-                            <div class="text-label">Salary Slip 1<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('salary1',false)">{{
-                                    getDocumentName('salary1') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('salary1'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('salary1'), getDocumentName('salary1'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span (click)="deleteImage('salary1')"><img src="/assets/images/icons/close.svg"
-                                            alt="Download"></span>
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
+
+                                <span>Uploading...</span>
                             </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig" [uploadViaApi]="true" [required]="true"
-                                [disabled]="isViewMode" label="Salary Slip 1"
-                                (uploadStarted)="onUploadStarted($event, 'salary1','INCOME','LAST_3_MONTHS','SALARY_SLIP', '', 0)"
-                                [fileuploadresponse]="handleresponse">
-                            </app-uploadbtn>
-                            }
-</ng-container>
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('salary1')">
+
+
+                                @if( hasDocument('salary1')){
+                                <div class="text-label">Salary Slip 1<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('salary1',false)">{{
+                                        getDocumentName('salary1') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('salary1'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('salary1'), getDocumentName('salary1'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span (click)="deleteImage('salary1')"><img src="/assets/images/icons/close.svg"
+                                                alt="Download"></span>
+                                    </div>
+                                </div>
+
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig" [uploadViaApi]="true" [required]="true"
+                                    [disabled]="isViewMode" label="Salary Slip 1"
+                                    (uploadStarted)="onUploadStarted($event, 'salary1','INCOME','LAST_3_MONTHS','SALARY_SLIP', '', 0)"
+                                    [fileuploadresponse]="handleresponse">
+                                </app-uploadbtn>
+                                }
+                            </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('salary2')">
+                                Salary Slip 2<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('salary2')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('salary2')">
                             @if( hasDocument('salary2')){
                             <div class="text-label">Salary Slip 2<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -143,8 +158,23 @@
                                 [disabled]="isViewMode" label="Salary Slip 2">
                             </app-uploadbtn>
                             }
+                            </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('salary3')">
+                                Salary Slip 3<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('salary3')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('salary3')">
                             @if( hasDocument('salary3')){
                             <div class="text-label">Salary Slip 3<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -168,6 +198,7 @@
                                 [disabled]="isViewMode" label="Salary Slip 3">
                             </app-uploadbtn>
                             }
+                            </ng-container>
                         </div>
                     </div>
 
@@ -193,6 +224,20 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('Form16')">
+                                Form 16<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('Form16')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('Form16')">
                             @if( hasDocument('Form16')){
                             <div class="text-label">Form 16<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -216,6 +261,7 @@
                                 [required]="true" label="Form 16">
                             </app-uploadbtn>
                             }
+                            </ng-container>
                         </div>
 
                     </div>
@@ -239,6 +285,20 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('oneyearbankstatement')">
+                               1 Year bank statement<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('oneyearbankstatement')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('oneyearbankstatement')">
                             @if( hasDocument('oneyearbankstatement')){
                             <div class="text-label">1 Year bank statement<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -262,6 +322,7 @@
                                 label="1 Year bank statement">
                             </app-uploadbtn>
                             }
+                            </ng-container>
                         </div>
 
                     </div>
@@ -286,6 +347,20 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('ay1')">
+                                Year 1<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('ay1')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('ay1')">
                             @if( hasDocument('ay1')){
                             <div class="text-label">Year 1<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -309,8 +384,23 @@
                                 label="Year 1">
                             </app-uploadbtn>
                             }
+                            </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('ay2')">
+                               Year 2<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('ay2')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('ay2')">
                             @if( hasDocument('ay2')){
                             <div class="text-label">Year 2<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -334,8 +424,23 @@
                                 label="Year 2">
                             </app-uploadbtn>
                             }
+                            </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('ay3')">
+                                Year 3<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('ay3')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('ay3')">
                             @if( hasDocument('ay3')){
                             <div class="text-label">Year 3<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -360,6 +465,7 @@
                                 label="Year 3">
                             </app-uploadbtn>
                             }
+                            </ng-container>
                         </div>
 
                     </div>
@@ -403,7 +509,20 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-4 col-sm-12 ">
+ <div class="text-label" *ngIf="isDocUploading(slot.key)">
+                                Salary Slip 1<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading(slot.key)"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
 
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading(slot.key)">
                                     @if ( getDocumentByKey( slot.key)) {
 
                                     <div class="text-label mt-0"> Upload Document <span class="text-danger">*</span>
@@ -439,7 +558,7 @@
                                     </app-uploadbtn>
 
                                     }
-
+</ng-container>
                                 </div>
                                 <div class="col-lg-4 d-flex justify-content-end align-items-end mt-5">
                                     <span class="delete d-none d-lg-block"
@@ -506,6 +625,20 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('year1')">
+                                Year 1<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('year1')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('year1')">
                             @if( hasDocument('year1')){
                             <div class="text-label">Year 1<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -528,9 +661,24 @@
                                 [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
                                 label="Year 1">
                             </app-uploadbtn>}
+                            </ng-container>
                         </div>
 
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('year2')">
+                                Year 2 <span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('year2')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('year2')">
                             @if( hasDocument('year2')){
                             <div class="text-label">Year 2<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -553,8 +701,23 @@
                                 [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
                                 label="Year 2">
                             </app-uploadbtn>}
+                            </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('year3')">
+                                Year 3<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('year3')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('year3')">
                             @if( hasDocument('year3')){
                             <div class="text-label">Year 3<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -577,6 +740,7 @@
                                 [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
                                 label="Year 3">
                             </app-uploadbtn>}
+                            </ng-container>
                         </div>
                     </div>
 
@@ -600,6 +764,20 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('businessITR1')">
+                                Year 1<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('businessITR1')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('businessITR1')">
                             @if( hasDocument('businessITR1')){
                             <div class="text-label">Year 1<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -622,8 +800,23 @@
                                 [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
                                 label="Year 1">
                             </app-uploadbtn>}
+                            </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('businessITR2')">
+                                Year 2<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('businessITR2')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('businessITR2')">
                             @if( hasDocument('businessITR2')){
                             <div class="text-label">Year 2<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -646,8 +839,23 @@
                                 [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
                                 label="Year 2">
                             </app-uploadbtn>}
+                            </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('businessITR3')">
+                                Year 3<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('businessITR3')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('businessITR3')">
                             @if( hasDocument('businessITR3')){
                             <div class="text-label">Year 3<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -670,6 +878,7 @@
                                 [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
                                 label="Year 3">
                             </app-uploadbtn>}
+                            </ng-container>
                         </div>
 
                     </div>
@@ -692,6 +901,20 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('businessGST')">
+                               1 Year GST Return<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('businessGST')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('businessGST')">
                             @if( hasDocument('businessGST')){
                             <div class="text-label">1 Year GST Return<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -714,6 +937,7 @@
                                 [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
                                 label="1 Year GST Return">
                             </app-uploadbtn>}
+                            </ng-container>
                         </div>
 
                     </div>
@@ -737,6 +961,20 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
+                             <div class="text-label" *ngIf="isDocUploading('businessBankstatement')">
+                                1 Year bank statement<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading('businessBankstatement')"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading('businessBankstatement')">
                             @if( hasDocument('businessBankstatement')){
                             <div class="text-label">1 Year bank statement<span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -760,6 +998,7 @@
                                 [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
                                 label="1 Year bank statement">
                             </app-uploadbtn>}
+                            </ng-container>
                         </div>
 
                     </div>
@@ -809,7 +1048,20 @@
 
 
                                 <div class="col-lg-4 col-sm-12 ">
+ <div class="text-label" *ngIf="isDocUploading(slot.key)">
+                                Upload Document<span class="text-danger">*</span>
+                            </div>
+                            <div *ngIf="isDocUploading(slot.key)"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
 
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                                </div>
+
+                                <span>Uploading...</span>
+                            </div>
+
+                            <!-- File Upload / Preview -->
+                            <ng-container *ngIf="!isDocUploading(slot.key)">
                                     @if ( getDocumentByKey(slot.key)) {
                                     <div class="text-label mt-0"> Upload Document <span class="text-danger">*</span>
                                     </div>
@@ -845,7 +1097,7 @@
                                     </app-uploadbtn>
 
                                     }
-
+</ng-container>
                                 </div>
 
 
@@ -908,7 +1160,8 @@
             <app-buttons type="button" label="Back" class="btn btncustomClass" [outline]="true" (click)="back()">
             </app-buttons>
             <app-buttons type="button" label="Next" class="btn btncustomClass" color="primary" (click)="next()"
-                [ngClass]="{'disabled-div' : !allRequiredFilesUploaded || isCurrentStepUploading()}" [disabled]="!allRequiredFilesUploaded || isCurrentStepUploading()">
+                [ngClass]="{'disabled-div' : !allRequiredFilesUploaded || isCurrentStepUploading()}"
+                [disabled]="!allRequiredFilesUploaded || isCurrentStepUploading()">
             </app-buttons>
 
         </div>
@@ -950,4 +1203,3 @@
 
     </div>
 </div>
-
