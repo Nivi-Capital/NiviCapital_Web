@@ -1055,6 +1055,10 @@ export class Educationinfo implements OnInit {
       return;
     }
 
+    if (step === 'offerletter') {
+  this.educationForms['offerletter']?.get('offerLetter')?.setValue(file);
+}
+
     this.uploadedFiles[key] = file;
 
     this.uploadedFiles = {
@@ -1633,19 +1637,28 @@ export class Educationinfo implements OnInit {
   canProceedToNext(): boolean {
     const step = this.activeEducation as StepKey;
     const form = this.educationForms[step];
+     // Disable if any upload is currently in progress
+  if (this.isCurrentStepUploading?.()) {
+    return false;
+  }
 
-
-    if (!form || !form.valid || this.isCurrentStepUploading()) return false;
+    // if (!form || !form.valid || this.isCurrentStepUploading()) return false;
 
     
-    const hasUploadInProgress = Object.entries(
-      this.uploadingEducationFiles
-    ).some(([key, uploading]) =>
-      key.startsWith(`${step}_`) && uploading
-    );
+    // const hasUploadInProgress = Object.entries(
+    //   this.uploadingEducationFiles
+    // ).some(([key, uploading]) =>
+    //   key.startsWith(`${step}_`) && uploading
+    // );
 
-    if (hasUploadInProgress) {
-      return false;
+    // if (hasUploadInProgress) {
+    //   return false;
+    // }
+ 
+ //  Offer Letter
+    if (step === 'offerletter') {
+
+      return this.hasFileOrSavedMeta(step, 'offerletter');
     }
 
     //  PG → Nothing mandatory
@@ -1661,13 +1674,9 @@ export class Educationinfo implements OnInit {
 
     }
 
-    //  Offer Letter
-    if (step === 'offerletter') {
+   
 
-      return this.hasFileOrSavedMeta(step, 'offerletter');
-    }
-
-    if (form.invalid) return false;
+    if (!form || !form.valid) return false;
 
 
     const otherDocs = this.getOtherDocumentsForStep(step);
@@ -2311,11 +2320,7 @@ export class Educationinfo implements OnInit {
       });
   }
 
-  private hasFileOrSavedMeta1(step: StepKey, doc: DocType, index?: number): boolean {
-    const key = this.buildKey(step, this.normalizeDocType(doc), index);
 
-    return this.uploadedFiles[key] instanceof File || !!this.savedFileMeta[key];
-  }
   private hasFileOrSavedMeta(
     step: StepKey,
     doc: DocType,
@@ -4967,6 +4972,18 @@ export class Educationinfo implements OnInit {
           this.isSubmitted = false;
       this.moveToNextEducationStep(step);
       return;
+    }
+ if (step === 'offerletter' ) {
+         const isOfferLetterUploaded = this.hasFileOrSavedMeta('offerletter', 'offerletter');
+    if (!isOfferLetterUploaded) {
+      this.showValidationErrors(step);
+      return;
+    }
+    // Directly mark complete and move to next (no metadata API needed)
+    this.isSubmitted = false;
+    this.stepperService.markEducationSectionComplete('offerletter');
+    this.moveToNextEducationStep(step);
+    return;
     }
 
 
