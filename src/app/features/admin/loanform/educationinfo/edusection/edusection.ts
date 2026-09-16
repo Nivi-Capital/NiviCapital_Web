@@ -175,7 +175,7 @@ export class Edusection {
   @Input() isDataLoading = false;
   isUploadProgressRunning = false;
   @Input() isApiUploadRunning = false;
-
+ @Input() isSubmitted = false;
   constructor(private fb: FormBuilder, private stepperService: Loanstepperservice, private cd: ChangeDetectorRef, private route: ActivatedRoute, private router: Router,
     public main: Main, private msgBox: Msgboxservice, public loanformservice: Loanformservice, private storageservice: Storage) { }
 
@@ -1332,9 +1332,38 @@ onEditClick(): void {
       queryParamsHandling: 'merge'
     });
   }
+  // 1. Marksheet check (already present)
+ isMarksheetMissing(index: number): boolean {
+    return this.isSubmitted && this.isMarksheetRequired(index) && !this.hasLocal('marksheet', index);
+  }
+
+// 2. Leaving Certificate check
+isLcRequired(): boolean {
+  return !this.isPostGraduate; // LC is required for all except Post Graduate
+}
+
+isLcMissing(): boolean {
+  return this.isSubmitted && this.isLcRequired() && !this.hasLocal('lc');
+}
+
+// 3. Other Documents check (if any other doc slot was added)
+isOtherTitleMissing(slot: any): boolean {
+  return this.isSubmitted && (!slot?.title || !slot.title.trim());
+}
+
+isOtherFileMissing(slot: any): boolean {
+  return this.isSubmitted && !slot?.file && !slot?.fileUrl;
+}
 
   //check uploading bar
 onUploadProgressChange(isUploading: boolean): void {
   this.isUploadProgressRunning = isUploading;
+}
+
+@Input() uploadingFiles: Record<string, boolean> = {};
+
+isDocUploading(doc: DocType, index?: number): boolean {
+  const key = this.buildKey(doc, index);
+  return !!this.uploadingFiles?.[key];
 }
 }

@@ -270,7 +270,7 @@ export class Educationinfo implements OnInit {
   loadError = '';
   private forceNextApiForDraft = false;
   isUploadProgressRunning = false;
-
+  isSubmitted = false
 
   constructor(private fb: FormBuilder, private stepperService: Loanstepperservice, private cd: ChangeDetectorRef, private formSvc: Loanformservice, private msgBox: Msgboxservice,
     private route: ActivatedRoute, private router: Router, private msgbox: Msgboxservice, public main: Main, private storageservice: Storage) { }
@@ -506,6 +506,7 @@ export class Educationinfo implements OnInit {
   //check which data to display priority wise
   private async hydrateEducationStep(step: StepKey): Promise<void> {
     if (!step) return;
+        this.isSubmitted = false;
     this.isDataLoading = true;
     try {
       // 1. local restore
@@ -543,6 +544,7 @@ export class Educationinfo implements OnInit {
 
 
   onEducationSelect(value: any) {
+        this.isSubmitted = false;
     this.activeEducation = this.normalizeQualification(value.label.toLowerCase());
   }
 
@@ -1633,8 +1635,9 @@ export class Educationinfo implements OnInit {
     const form = this.educationForms[step];
 
 
-    if (!form) return false;
+    if (!form || !form.valid || this.isCurrentStepUploading()) return false;
 
+    
     const hasUploadInProgress = Object.entries(
       this.uploadingEducationFiles
     ).some(([key, uploading]) =>
@@ -1695,95 +1698,32 @@ export class Educationinfo implements OnInit {
     );
   }
 
-  showValidationErrors1(step: StepKey): void {
+  showValidationErrors(step: StepKey): void {
+        this.isSubmitted = true;
     const form = this.educationForms[step] as FormGroup | undefined;
 
     if (form) {
-      (Object.values(form.controls) as AbstractControl[]).forEach(control => {
+      (Object.values(form.controls) as AbstractControl[]).forEach(
+        (control: AbstractControl) => {
         control.markAsTouched();
-        control.updateValueAndValidity();
+        control.updateValueAndValidity({
+          emitEvent: false});
       });
     }
 
-    const missingDocs = this.requiredDocs(step).filter(doc =>
-      !this.getFile(step, doc.doc, doc.index)
-    );
+    // const missingDocs = this.requiredDocs(step).filter(doc =>
+    //   !this.getFile(step, doc.doc, doc.index)
+    // );
 
-    let message = 'Please fill all required fields';
+    // let message = 'Please fill all required fields';
 
-    if (missingDocs.length) {
-      message += ' and upload required documents.';
-    } else {
-      message += '.';
-    }
+    // if (missingDocs.length) {
+    //   message += ' and upload required documents.';
+    // } else {
+    //   message += '.';
+    // }
 
-
-  }
-  showValidationErrors(step: StepKey): void {
-    const form =
-      this.educationForms[step] as FormGroup | undefined;
-
-    if (form) {
-      Object.values(form.controls).forEach(
-        (control: AbstractControl) => {
-          control.markAsTouched();
-          control.updateValueAndValidity({
-            emitEvent: false
-          });
-        }
-      );
-    }
-
-    const hasInvalidFields = !!form?.invalid;
-
-    const missingDocs = this.requiredDocs(step)
-      .filter(doc =>
-        !this.hasFileOrSavedMeta(
-          step,
-          doc.doc,
-          doc.index
-        )
-      );
-
-    const missingOtherDocs =
-      this.getOtherDocumentsForStep(step)
-        .some(doc =>
-          !doc.title?.trim() ||
-          !doc.file
-        );
-
-    let message = '';
-
-    if (hasInvalidFields && missingDocs.length > 0) {
-      message =
-        'Please fill all required fields and upload the required documents.';
-    } else if (hasInvalidFields) {
-      message =
-        'Please fill all required fields.';
-    } else if (missingDocs.length > 0) {
-      const documentNames =
-        missingDocs.map(doc => doc.title).join(', ');
-
-      message =
-        `Please upload the required documents: ${documentNames}.`;
-    } else if (missingOtherDocs) {
-      message =
-        'Please enter the document title and upload the Other Document.';
-    }
-
-    if (!message) {
-      message =
-        'Please complete all required information.';
-    }
-
-    this.msgbox.open({
-      title: 'Required Information',
-      message,
-      showCancel: false,
-      okText: 'OK'
-    });
-
-    this.cd.detectChanges();
+  this.cd.detectChanges();
   }
 
   private getOtherDocumentsForStep(step: StepKey) {
@@ -4743,17 +4683,17 @@ export class Educationinfo implements OnInit {
     fd.append('applicantId', this.applicantId);
 
 
-    const multiDocSteps: StepKey[] = [
-      'ug',
-      'pg',
-      'diploma10',
-      'diploma12',
-      'others12',
-      'othersdiploma'
-    ];
+    // const multiDocSteps: StepKey[] = [
+    //   'ug',
+    //   'pg',
+    //   'diploma10',
+    //   'diploma12',
+    //   'others12',
+    //   'othersdiploma'
+    // ];
 
     let othersArr = [];
-    let requestIndex = 0;
+    let requestIndex = index ?? 0;
      let marksheetArr: any[] = [];
 
 // A. Looping for OTHER documents (max 5 docs)
@@ -4778,38 +4718,38 @@ export class Educationinfo implements OnInit {
       }
     }
     // B. Looping for MARKSHEETS (same logic as other)
-    else if (multiDocSteps.includes(step) && (doc === 'marksheet' || normalizedDoc === 'marksheet')) {
-      if (this.uploadedFiles) {
-        for (let [keyName, value] of Object.entries(this.uploadedFiles)) {
-          const lastUnderscore = keyName.lastIndexOf('_');
-          const fileName = keyName.substring(0, lastUnderscore);
-          const secondLastUnderscore = fileName.lastIndexOf('_');
-          const doctype = fileName.substring(0, secondLastUnderscore);
-          const fileType = fileName.substring(secondLastUnderscore + 1);
+    // else if (multiDocSteps.includes(step) && (doc === 'marksheet' || normalizedDoc === 'marksheet')) {
+    //   if (this.uploadedFiles) {
+    //     for (let [keyName, value] of Object.entries(this.uploadedFiles)) {
+    //       const lastUnderscore = keyName.lastIndexOf('_');
+    //       const fileName = keyName.substring(0, lastUnderscore);
+    //       const secondLastUnderscore = fileName.lastIndexOf('_');
+    //       const doctype = fileName.substring(0, secondLastUnderscore);
+    //       const fileType = fileName.substring(secondLastUnderscore + 1);
 
-          // Only count valid file entries for this step's marksheets
-          if (fileType === 'marksheet' && step === doctype && value) {
-            marksheetArr.push(value);
-          }
-        }
+    //       // Only count valid file entries for this step's marksheets
+    //       if (fileType === 'marksheet' && step === doctype && value) {
+    //         marksheetArr.push(value);
+    //       }
+    //     }
 
-        if (marksheetArr.length > 0) {
-          requestIndex = marksheetArr.length - 1;
-        }
-      }
-    }
-    // C. Explicit index for any other multi-doc step if passed
-    else if (multiDocSteps.includes(step) && index !== undefined && index !== null) {
-      requestIndex = Number(index);
-    }
-    // D. Single documents (10th, 12th, LC, etc.): always files[0]
-    else {
-      requestIndex = 0;
-    }
+    //     if (marksheetArr.length > 0) {
+    //       requestIndex = marksheetArr.length - 1;
+    //     }
+    //   }
+    // }
+    // // C. Explicit index for any other multi-doc step if passed
+    // else if (multiDocSteps.includes(step) && index !== undefined && index !== null) {
+    //   requestIndex = Number(index);
+    // }
+    // // D. Single documents (10th, 12th, LC, etc.): always files[0]
+    // else {
+    //   requestIndex = 0;
+    // }
 
     // Ensure key uses the proper index (e.g. ug_marksheet_0, ug_marksheet_1, ug_marksheet_2)
     const actualIndex = (index !== undefined && index !== null) ? index : requestIndex;
-  const key = this.buildKey(step, normalizedDoc, actualIndex);
+  const key = this.buildKey(step, normalizedDoc, index);
 
     fd.append(
       `files[${requestIndex}].type`,
@@ -4866,7 +4806,7 @@ export class Educationinfo implements OnInit {
           this.uploadingEducationFiles = {
             ...this.uploadingEducationFiles
           };
-
+ this.uploadingEducationFiles[key] = false;
           this.cd.detectChanges();
           return;
         }
@@ -4970,7 +4910,7 @@ export class Educationinfo implements OnInit {
         delete this.uploadedFiles[key];
         delete this.savedFileMeta[key];
         delete this.uploadingEducationFiles[key];
-
+ this.uploadingEducationFiles[key] = false;
 
         this.uploadedFiles = {
           ...this.uploadedFiles
@@ -5020,12 +4960,14 @@ export class Educationinfo implements OnInit {
 
     if (!form) return;
 
+    
+ 
     // PG is optional
     if (step === 'pg' && !this.hasPgData(form, step)) {
+          this.isSubmitted = false;
       this.moveToNextEducationStep(step);
       return;
     }
-
 
 
     if (!this.canProceedToNext()) {
@@ -5070,6 +5012,7 @@ export class Educationinfo implements OnInit {
     );
 
     if (!this.shouldCallNextApi(step)) {
+          this.isSubmitted = false;
       this.completeEducationStepAndMove(step);
       return;
     }
@@ -5085,6 +5028,7 @@ export class Educationinfo implements OnInit {
         this.markStepPersisted(step);
         this.hasUnsavedChanges = false;
         this.forceNextApiForDraft = false;
+            this.isSubmitted = false;
 
         this.stepperService.markEducationSectionComplete(step);
 

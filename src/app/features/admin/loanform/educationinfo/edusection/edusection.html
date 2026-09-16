@@ -36,7 +36,7 @@
 
                 <!-- <div [ngClass]="{'col-6': isOtherEducation, 'col-12': !isOtherEducation  }"> -->
 
-<div [ngClass]="{
+                <div [ngClass]="{
   'col-6': isOtherEducation || !!group.get('institutetitle')?.value,
   'col-12': !(isOtherEducation || !!group.get('institutetitle')?.value)
 }">
@@ -92,7 +92,7 @@
             </div>
             <div class="row mt-20">
                 <!-- <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }"> -->
-                    <div [ngClass]="{
+                <div [ngClass]="{
   'col-3': isOtherLocation || !!group.get('otherLocation')?.value,
   'col-4': !(isOtherLocation || !!group.get('otherLocation')?.value)
 }">
@@ -112,7 +112,7 @@
                 </div>
 
                 <!-- <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }"> -->
-                      <div [ngClass]="{
+                <div [ngClass]="{
   'col-3': isOtherLocation || !!group.get('otherLocation')?.value,
   'col-4': !(isOtherLocation || !!group.get('otherLocation')?.value)
 }">
@@ -138,7 +138,7 @@
                 </div>
 
                 <!-- <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }"> -->
-                      <div [ngClass]="{
+                <div [ngClass]="{
   'col-3': isOtherLocation || !!group.get('otherLocation')?.value,
   'col-4': !(isOtherLocation || !!group.get('otherLocation')?.value)
 }">
@@ -189,7 +189,8 @@
                         @if (hasLocal('marksheet' ,i)) {
                         <div class="text-label">Marksheet <span class="text-danger">*</span></div>
                         <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
-                            <p class="text-label file-name" [title]="getLocalName('marksheet', i, false)">{{ getLocalName('marksheet', i) }}</p>
+                            <p class="text-label file-name" [title]="getLocalName('marksheet', i, false)">{{
+                                getLocalName('marksheet', i) }}</p>
                             <div class="icons">
 
                                 <span class="view" (click)="viewLocalFile('marksheet', i)">
@@ -213,6 +214,10 @@
                             [disabled]="isViewModeon" label="Marksheet "
                             (fileChange)="onFileChange($event, educationType, 'marksheet')">
                         </app-uploadbtn>
+                        <div *ngIf="isMarksheetMissing(i)" class="text-danger mt-1">
+                            {{ marksheetlabel }} is required
+                        </div>
+
                         }
 
                     </div>
@@ -222,10 +227,10 @@
                     <div class="text-label fw-bold mt-20">Passing / Leaving Certificate</div>
                     <div class=" col-sm-12 mt-20">
                         @if (hasLocal('lc')) {
-                        <div class="text-label">Passing / Leaving Certificate <span
-                                class="text-danger">*</span></div>
+                        <div class="text-label">Passing / Leaving Certificate <span class="text-danger">*</span></div>
                         <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
-                            <p class="text-label file-name" [title]="getLocalName('lc', undefined, false)">{{ getLocalName('lc') }}</p>
+                            <p class="text-label file-name" [title]="getLocalName('lc', undefined, false)">{{
+                                getLocalName('lc') }}</p>
                             <div class="icons">
 
                                 <span class="view" (click)="viewLocalFile('lc')">
@@ -247,6 +252,10 @@
                         <app-uploadbtn [config]="basicConfig" [required]="true" label="Passing / Leaving Certificate "
                             [disabled]="isViewModeon" (fileChange)="onFileChange($event, educationType,'lc')">
                         </app-uploadbtn>
+                        <div *ngIf="isLcMissing()" class="text-danger mt-1">
+                            Passing / Leaving Certificate is required
+                        </div>
+
                         }
 
 
@@ -270,7 +279,8 @@
                             </div>
 
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
-                                <p class="text-label file-name" [title]="getLocalName('marksheet', i, false)">{{ getLocalName('marksheet', i) }}</p>
+                                <p class="text-label file-name" [title]="getLocalName('marksheet', i, false)">{{
+                                    getLocalName('marksheet', i) }}</p>
                                 <div class="icons">
 
                                     <span class="view" (click)="viewLocalFile('marksheet', i)">
@@ -295,7 +305,9 @@
                                 [required]="isMarksheetRequired(i)" label="Marksheet {{ i + 1 }}"
                                 (fileChange)="onFileChange($event, educationType, 'marksheet',i)">
                             </app-uploadbtn>
-
+                            <div *ngIf="isMarksheetMissing(i)" class="text-danger mt-1">
+                                {{ marksheetlabel }} {{ i + 1 }} is required
+                            </div>
                             }
                         </div>
                     </div>
@@ -310,7 +322,8 @@
                         </div>
 
                         <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
-                            <p class="text-label file-name" [title]="getLocalName('lc', undefined, false)">{{ getLocalName('lc') }}</p>
+                            <p class="text-label file-name" [title]="getLocalName('lc', undefined, false)">{{
+                                getLocalName('lc') }}</p>
                             <div class="icons">
 
                                 <span class="view" (click)="viewLocalFile('lc')">
@@ -336,6 +349,9 @@
                             label="Passing / Leaving Certificate "
                             (fileChange)="onFileChange($event, educationType,'lc')">
                         </app-uploadbtn>
+                        <div *ngIf="isLcMissing()" class="text-danger mt-1">
+                            Passing / Leaving Certificate is required
+                        </div>
 
                         }
                     </div>
@@ -402,7 +418,8 @@
                                 </div>
                                 } @else {
                                 <app-uploadbtn [config]="basicConfig" [required]="educationType !== 'POSTGRADUATE'"
-                                    [disabled]="isViewModeon" label="Upload Document" (uploadingChange)="onUploadProgressChange($event)"
+                                    [disabled]="isViewModeon" label="Upload Document"
+                                    (uploadingChange)="onUploadProgressChange($event)"
                                     (fileChange)="onOtherFileChange($event, slot)">
                                 </app-uploadbtn>
                                 }
@@ -439,8 +456,8 @@
 
                     <!-- Add button -->
                     <div class="col-lg-4 col-sm-12 mt-20 pt-2">
-                        <app-buttons label="Add More Document" class="btn btn-icon Add btncustomClass" [outline]="true" 
-                            (click)="addotherdocuments()">
+                        <app-buttons label="Add More Document" class="btn btn-icon Add btncustomClass" [outline]="true"
+                            (click)="addotherdocuments()" [disabled]="isAddDocumentDisabled">
                             <img src="/assets/images/icons/addred.svg">
                         </app-buttons>
                     </div>
