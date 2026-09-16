@@ -7,7 +7,8 @@
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" [isDataLoading]="isDataLoading"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [uploadedFiles]="uploadedFiles"
         [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (fileSelected)="onFileSelectedFromSection($event)"
-        (otherDocAdded)="onOtherDocAdded($event)" (instituteChanged)="onInstituteChanged($event)">
+        (otherDocAdded)="onOtherDocAdded($event)" (instituteChanged)="onInstituteChanged($event)"
+        [isApiUploadRunning]="isEducationStepUploading(activeEducation)">
     </app-edusection>
     }
 
@@ -16,7 +17,8 @@
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" [isDataLoading]="isDataLoading"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [uploadedFiles]="uploadedFiles"
         [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (fileSelected)="onFileSelectedFromSection($event)"
-        (otherDocAdded)="onOtherDocAdded($event)" (instituteChanged)="onInstituteChanged($event)">
+        (otherDocAdded)="onOtherDocAdded($event)" (instituteChanged)="onInstituteChanged($event)"
+        [isApiUploadRunning]="isEducationStepUploading(activeEducation)">
     </app-edusection>
     }
 
@@ -25,7 +27,8 @@
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" [isDataLoading]="isDataLoading"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [stepKey]="activeEducation"
         [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (instituteChanged)="onInstituteChanged($event)"
-        (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)"  />
+        (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)" 
+        [isApiUploadRunning]="isEducationStepUploading(activeEducation)" />
     }
 
     @case ('diploma12') {
@@ -33,7 +36,8 @@
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" [isDataLoading]="isDataLoading"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [stepKey]="activeEducation"
         [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (instituteChanged)="onInstituteChanged($event)"
-        (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)" />
+        (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)" 
+        [isApiUploadRunning]="isEducationStepUploading(activeEducation)"/>
     }
 
     @case ('ug') {
@@ -41,7 +45,8 @@
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" [isDataLoading]="isDataLoading"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [stepKey]="activeEducation"
         [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (instituteChanged)="onInstituteChanged($event)"
-        (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)" />
+        (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)"
+        [isApiUploadRunning]="isEducationStepUploading(activeEducation)" />
     }
 
     @case ('pg') {
@@ -49,7 +54,8 @@
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" (instituteChanged)="onInstituteChanged($event)"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [uploadedFiles]="uploadedFiles"
         [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (fileSelected)="onFileSelectedFromSection($event)"
-        (otherDocAdded)="onOtherDocAdded($event)" />
+        (otherDocAdded)="onOtherDocAdded($event)" 
+        [isApiUploadRunning]="isEducationStepUploading(activeEducation)"/>
     }
 
     @case ('others12') {
@@ -57,14 +63,16 @@
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" (instituteChanged)="onInstituteChanged($event)"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [stepKey]="activeEducation"
         [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap"
-        (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)" />
+        (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)"
+        [isApiUploadRunning]="isEducationStepUploading(activeEducation)" />
     }
     @case ('othersdiploma') {
     <app-edusection [group]="educationForms.othersdiploma" title="Others (After Diploma)" sectionType="others" [isDataLoading]="isDataLoading"
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" (instituteChanged)="onInstituteChanged($event)"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [stepKey]="activeEducation"
         [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap"
-        (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)" />
+        (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)" 
+        [isApiUploadRunning]="isEducationStepUploading(activeEducation)"/>
     }
 
     @case ('ielts') {
@@ -232,7 +240,7 @@
                 <app-buttons type="button" label="Back" class="btn btncustomClass" [outline]="true" (click)="back()">
                 </app-buttons>
                 <app-buttons type="button" label="Next" class="btn btncustomClass" color="primary" (click)=" next()"
-                    [disabled]="!canProceedToNext()">
+                    [disabled]="!canProceedToNext() || isCurrentStepUploading()">
                 </app-buttons>
 
             </div>

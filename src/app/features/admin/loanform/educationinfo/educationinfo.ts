@@ -240,7 +240,7 @@ export class Educationinfo implements OnInit {
 
   instituteOptions: { label: string; value: string }[] = [];
   cityOptions: { label: string; value: string }[] = [];
-private summaryEducationLoaded = false;
+  private summaryEducationLoaded = false;
   //edit from summary
   isFromSummary = false;
   isViewMode = false;
@@ -267,266 +267,269 @@ private summaryEducationLoaded = false;
 
 
   isDataLoading = true;
-loadError = '';
-private forceNextApiForDraft = false;
+  loadError = '';
+  private forceNextApiForDraft = false;
+  isUploadProgressRunning = false;
+
+
   constructor(private fb: FormBuilder, private stepperService: Loanstepperservice, private cd: ChangeDetectorRef, private formSvc: Loanformservice, private msgBox: Msgboxservice,
     private route: ActivatedRoute, private router: Router, private msgbox: Msgboxservice, public main: Main, private storageservice: Storage) { }
   async ngOnInit(): Promise<void> {
 
- this.isDataLoading = true;
-   this.loadError = '';
-     try {
-    let Allids = this.stepperService.getLoanId();
+    this.isDataLoading = true;
+    this.loadError = '';
+    try {
+      let Allids = this.stepperService.getLoanId();
 
-    this.applicantId = Allids[0];
-    this.applicationId = Allids[1];
+      this.applicantId = Allids[0];
+      this.applicationId = Allids[1];
 
-    //1.create forms for all education types
-    this.educationForms = {
-      '10th': this.createForm(),
-      '12th': this.createForm(),
-      diploma10: this.createForm(),
-      diploma12: this.createForm(),
-      ug: this.createForm(),
-      pg: this.createForm(),
-      ielts: this.createIeltsForm(),
-      offerletter: this.fb.group({
-        offerLetter: [null, Validators.required]
-      }),
-      others12: this.createForm(),
-      othersdiploma: this.createForm()
-    }
-    await this.loadEducationFromSummary();
-
-    combineLatest([
-      this.formSvc.getInstitutesCached(),
-      this.formSvc.getAllCities()
-    ]).subscribe(([inst, citiesRes]: any) => {
-      this.instituteOptions = inst || [];
-
-      const list = citiesRes.data ?? citiesRes;
-      // this.cityOptions = list.map((c: any) => ({
-      //   value: c.id,
-      //   label: c.name
-      // }));
-
-      this.cityOptions = list.map((c: any) => ({
-  value: c.id || c.cityId || c.locationId || c.value,
-  label: c.name || c.cityName || c.locationName || c.label
-})).filter((x: any) => x.value && x.label);
-
-      // optional, if you still use these elsewhere
-      this.selectlocation = [...this.cityOptions];
-
-
-      // re-normalize existing saved state to IDs after options load
-      Object.keys(this.educationFormState || {}).forEach((stepKey) => {
-        const stepState = this.educationFormState[stepKey];
-        if (!stepState) return;
-
-        this.educationFormState[stepKey] = {
-          ...stepState,
-          institutename: (stepState.institutename),
-          location: this.resolveLocationId(stepState.location),
-        };
-      });
-
-      if (this.activeEducation) {
-        this.restoreFormState(this.activeEducation as StepKey);
-        this.cd.detectChanges();
+      //1.create forms for all education types
+      this.educationForms = {
+        '10th': this.createForm(),
+        '12th': this.createForm(),
+        diploma10: this.createForm(),
+        diploma12: this.createForm(),
+        ug: this.createForm(),
+        pg: this.createForm(),
+        ielts: this.createIeltsForm(),
+        offerletter: this.fb.group({
+          offerLetter: [null, Validators.required]
+        }),
+        others12: this.createForm(),
+        othersdiploma: this.createForm()
       }
+      await this.loadEducationFromSummary();
 
-    });
+      combineLatest([
+        this.formSvc.getInstitutesCached(),
+        this.formSvc.getAllCities()
+      ]).subscribe(([inst, citiesRes]: any) => {
+        this.instituteOptions = inst || [];
 
+        const list = citiesRes.data ?? citiesRes;
+        // this.cityOptions = list.map((c: any) => ({
+        //   value: c.id,
+        //   label: c.name
+        // }));
 
+        this.cityOptions = list.map((c: any) => ({
+          value: c.id || c.cityId || c.locationId || c.value,
+          label: c.name || c.cityName || c.locationName || c.label
+        })).filter((x: any) => x.value && x.label);
 
-    //  2. QUERY PARAMS
-    this.route.queryParams.subscribe(params => {
-      this.applySummaryMode(params);
-      if (params['qualificationlabel']) {
-
-        const step = params['qualificationlabel'] as StepKey;
-
-        this.activeEducation = step;
-
-        // this.restoreEducationStateFromLocalStorage();
-        setTimeout(async () => {
-
-          await this.hydrateEducationStep(step);
-
-
-
-          // ✅ keep currently active step enabled/disabled correctly
-          if (this.isEditMode) {
-            this.educationForms[step]?.enable({ emitEvent: false });
-          } else if (this.isViewMode) {
-            this.educationForms[step]?.disable({ emitEvent: false });
-          }
-          this.cd.detectChanges();
-        }, 200);
+        // optional, if you still use these elsewhere
+        this.selectlocation = [...this.cityOptions];
 
 
+        // re-normalize existing saved state to IDs after options load
+        Object.keys(this.educationFormState || {}).forEach((stepKey) => {
+          const stepState = this.educationFormState[stepKey];
+          if (!stepState) return;
 
-        //   build submenu only when flow qualificationId changes
-        const qid = params['qualificationId'];
-        if (qid && qid !== this.flowQualificationId) {
-          this.flowQualificationId = qid;
-          this.educationOrder = [];
-          this.formSvc.getselectedEducation(qid).subscribe((res: any) => {
-            this.educationdetails = res.data ?? res;
-
-            //   ONLY ONCE per flow
-            this.stepperService.setEducationSubSteps(this.educationdetails);
-
-            const orderFromApi = this.educationdetails
-              .map((d: any) => this.normalizeQualification(d.qualificationName))
-              .filter((x: StepKey | string) => !!x);
-
-            this.educationOrder = [...new Set([...orderFromApi, 'ielts', 'offerletter'])] as Array<'10th' | '12th' | 'diploma10' | 'diploma12' | 'ug' | 'pg' | 'ielts' | 'offerletter' | 'others' | 'others12' | 'othersdiploma'>;
-
-            this.syncPersistedStepsWithCurrentOrder();
-            this.isEducationFlowInitialized = true;
-            // this.saveEducationStateToLocalStorage();
-            // this.restoreEducationStateFromLocalStorage();
-
-            setTimeout(() => {
-              this.restoreFormState(step);
-
-              if (this.isEditMode) {
-                this.educationForms[step]?.enable({ emitEvent: false });
-              } else if (this.isViewMode) {
-                this.educationForms[step]?.disable({ emitEvent: false });
-              }
-              this.cd.detectChanges();
-            }, 200);
-
-          });
-        }
-
-      }
-
-    });
-
-    // 3.
-    Object.keys(this.educationForms).forEach(step => {
-      const form = this.educationForms[step] as FormGroup;
-
-      form.valueChanges.subscribe(() => {
-        if (this.activeEducation === step) {
-          const raw = form.getRawValue();
-
-          this.hasUnsavedChanges = true;
-
-         
-
-          this.educationFormState[step] = {
-            ...raw,
-
-            instituteId: raw.instituteId || this.educationFormState[step]?.instituteId || '',
-            instituteName: raw.instituteName || this.educationFormState[step]?.instituteName || raw.institutename || '',
-            institutename: raw.institutename || this.educationFormState[step]?.instituteName || '',
-
-            institutetitle: raw.institutetitle || '',
-           location:this.resolveLocationId(raw.location) || raw.location || this.educationFormState[step]?.location || '',
-            otherLocation: raw.otherLocation || '',
-
-            passingyear: this.normalizeDropdownValue(raw.passingyear),
+          this.educationFormState[stepKey] = {
+            ...stepState,
+            institutename: (stepState.institutename),
+            location: this.resolveLocationId(stepState.location),
           };
-          this.stepperService.setEducationStepData(
-            step,
-            this.educationFormState[step]
-          );
+        });
 
-          // this.saveEducationStateToLocalStorage();
+        if (this.activeEducation) {
+          this.restoreFormState(this.activeEducation as StepKey);
+          this.cd.detectChanges();
         }
+
       });
-    });
+
+
+
+      //  2. QUERY PARAMS
+      this.route.queryParams.subscribe(params => {
+        this.applySummaryMode(params);
+        if (params['qualificationlabel']) {
+
+          const step = params['qualificationlabel'] as StepKey;
+
+          this.activeEducation = step;
+
+          // this.restoreEducationStateFromLocalStorage();
+          setTimeout(async () => {
+
+            await this.hydrateEducationStep(step);
+
+
+
+            // ✅ keep currently active step enabled/disabled correctly
+            if (this.isEditMode) {
+              this.educationForms[step]?.enable({ emitEvent: false });
+            } else if (this.isViewMode) {
+              this.educationForms[step]?.disable({ emitEvent: false });
+            }
+            this.cd.detectChanges();
+          }, 200);
+
+
+
+          //   build submenu only when flow qualificationId changes
+          const qid = params['qualificationId'];
+          if (qid && qid !== this.flowQualificationId) {
+            this.flowQualificationId = qid;
+            this.educationOrder = [];
+            this.formSvc.getselectedEducation(qid).subscribe((res: any) => {
+              this.educationdetails = res.data ?? res;
+
+              //   ONLY ONCE per flow
+              this.stepperService.setEducationSubSteps(this.educationdetails);
+
+              const orderFromApi = this.educationdetails
+                .map((d: any) => this.normalizeQualification(d.qualificationName))
+                .filter((x: StepKey | string) => !!x);
+
+              this.educationOrder = [...new Set([...orderFromApi, 'ielts', 'offerletter'])] as Array<'10th' | '12th' | 'diploma10' | 'diploma12' | 'ug' | 'pg' | 'ielts' | 'offerletter' | 'others' | 'others12' | 'othersdiploma'>;
+
+              this.syncPersistedStepsWithCurrentOrder();
+              this.isEducationFlowInitialized = true;
+              // this.saveEducationStateToLocalStorage();
+              // this.restoreEducationStateFromLocalStorage();
+
+              setTimeout(() => {
+                this.restoreFormState(step);
+
+                if (this.isEditMode) {
+                  this.educationForms[step]?.enable({ emitEvent: false });
+                } else if (this.isViewMode) {
+                  this.educationForms[step]?.disable({ emitEvent: false });
+                }
+                this.cd.detectChanges();
+              }, 200);
+
+            });
+          }
+
+        }
+
+      });
+
+      // 3.
+      Object.keys(this.educationForms).forEach(step => {
+        const form = this.educationForms[step] as FormGroup;
+
+        form.valueChanges.subscribe(() => {
+          if (this.activeEducation === step) {
+            const raw = form.getRawValue();
+
+            this.hasUnsavedChanges = true;
+
+
+
+            this.educationFormState[step] = {
+              ...raw,
+
+              instituteId: raw.instituteId || this.educationFormState[step]?.instituteId || '',
+              instituteName: raw.instituteName || this.educationFormState[step]?.instituteName || raw.institutename || '',
+              institutename: raw.institutename || this.educationFormState[step]?.instituteName || '',
+
+              institutetitle: raw.institutetitle || '',
+              location: this.resolveLocationId(raw.location) || raw.location || this.educationFormState[step]?.location || '',
+              otherLocation: raw.otherLocation || '',
+
+              passingyear: this.normalizeDropdownValue(raw.passingyear),
+            };
+            this.stepperService.setEducationStepData(
+              step,
+              this.educationFormState[step]
+            );
+
+            // this.saveEducationStateToLocalStorage();
+          }
+        });
+      });
 
 
 
 
-    this.getEducationdetails();
+      this.getEducationdetails();
 
-    if (this.selectedLabel.includes('postgraduate') || this.selectedLabel.includes('pg')) {
-      this.group.get('institutename')?.clearValidators();
-      this.group.get('passingyear')?.clearValidators();
-      this.group.get('per_cgpa')?.clearValidators();
-      this.group.get('location')?.clearValidators();
-      this.group.get('otherLocation')?.clearValidators();
+      if (this.selectedLabel.includes('postgraduate') || this.selectedLabel.includes('pg')) {
+        this.group.get('institutename')?.clearValidators();
+        this.group.get('passingyear')?.clearValidators();
+        this.group.get('per_cgpa')?.clearValidators();
+        this.group.get('location')?.clearValidators();
+        this.group.get('otherLocation')?.clearValidators();
 
-      this.group.get('institutename')?.updateValueAndValidity();
-      this.group.get('passingyear')?.updateValueAndValidity();
-      this.group.get('per_cgpa')?.updateValueAndValidity();
-      this.group.get('location')?.updateValueAndValidity();
-      this.group.get('otherLocation')?.updateValueAndValidity();
+        this.group.get('institutename')?.updateValueAndValidity();
+        this.group.get('passingyear')?.updateValueAndValidity();
+        this.group.get('per_cgpa')?.updateValueAndValidity();
+        this.group.get('location')?.updateValueAndValidity();
+        this.group.get('otherLocation')?.updateValueAndValidity();
+      }
+
+    } catch (error) {
+      console.error(
+        'Failed to initialize education page',
+        error
+      );
+
+      this.loadError =
+        'Unable to load education details. Please try again.';
+    } finally {
+      this.isDataLoading = false;
+
+      this.applyEducationFormMode();
+
+      this.cd.detectChanges();
     }
 
-      } catch (error) {
-    console.error(
-      'Failed to initialize education page',
-      error
-    );
-
-    this.loadError =
-      'Unable to load education details. Please try again.';
-  } finally {
-    this.isDataLoading = false;
-
-    this.applyEducationFormMode();
-
-    this.cd.detectChanges();
-  }
-
 
   }
-//load data
+  //load data
   private applyEducationFormMode(): void {
-  Object.values(
-    this.educationForms || {}
-  ).forEach((form: any) => {
-    if (!(form instanceof FormGroup)) {
-      return;
-    }
+    Object.values(
+      this.educationForms || {}
+    ).forEach((form: any) => {
+      if (!(form instanceof FormGroup)) {
+        return;
+      }
 
-    if (this.isViewMode && !this.isEditMode) {
-      form.disable({
-        emitEvent: false
-      });
-    } else {
-      form.enable({
-        emitEvent: false
-      });
-    }
-  });
-}
+      if (this.isViewMode && !this.isEditMode) {
+        form.disable({
+          emitEvent: false
+        });
+      } else {
+        form.enable({
+          emitEvent: false
+        });
+      }
+    });
+  }
 
   //check which data to display priority wise
   private async hydrateEducationStep(step: StepKey): Promise<void> {
     if (!step) return;
-this.isDataLoading = true;
-  try {
-    // 1. local restore
-    // this.restoreEducationStateFromLocalStorage();
+    this.isDataLoading = true;
+    try {
+      // 1. local restore
+      // this.restoreEducationStateFromLocalStorage();
 
-    // 2. summary for completed sections
-    await this.loadEducationFromSummary();
+      // 2. summary for completed sections
+      await this.loadEducationFromSummary();
 
-    // 3. current step draft should override summary
-    await this.loadSavedEducationInfoFromApi(step);
+      // 3. current step draft should override summary
+      await this.loadSavedEducationInfoFromApi(step);
 
-    // 4. restore form UI
-    this.restoreFormState(step);
+      // 4. restore form UI
+      this.restoreFormState(step);
     } catch (error) {
-    console.error(
-      `Failed to hydrate education step: ${step}`,
-      error
-    );
-  } finally {
-    this.isDataLoading = false;
-    this.applyEducationFormMode();
-    this.cd.detectChanges();
-  }
- 
+      console.error(
+        `Failed to hydrate education step: ${step}`,
+        error
+      );
+    } finally {
+      this.isDataLoading = false;
+      this.applyEducationFormMode();
+      this.cd.detectChanges();
+    }
+
   }
 
   toggle(index: number) {
@@ -813,30 +816,91 @@ this.isDataLoading = true;
   }
 
   onFileSelectedFromSection(e: {
-  step: StepKey;
-  control: 'marksheet' | 'lc' | 'other';
-  index?: number;
-  file: File | null;
-  gropudata?: { title?: string };
-}): void {
-  const fg = this.educationForms[e.step] as FormGroup;
+    step: StepKey;
+    control: 'marksheet' | 'lc' | 'other';
+    index?: number;
+    file: File | null;
+    gropudata?: { title?: string };
+  }): void {
+    const fg = this.educationForms[e.step] as FormGroup;
 
-  fg?.get(e.control)?.setValue(e.file);
-  fg?.get(e.control)?.markAsTouched();
-  fg?.get(e.control)?.updateValueAndValidity();
+    fg?.get(e.control)?.setValue(e.file);
+    fg?.get(e.control)?.markAsTouched();
+    fg?.get(e.control)?.updateValueAndValidity();
 
-  this.hasUnsavedChanges = true;
+    this.hasUnsavedChanges = true;
 
-  // Other document
-  if (e.control === 'other') {
-    const index = e.index ?? 0;
-    const key = this.buildKey(e.step, 'other', index);
-    const title = e.gropudata?.title?.trim() || '';
+    // Other document
+    if (e.control === 'other') {
+      const index = e.index ?? 0;
+      const key = this.buildKey(e.step, 'other', index);
+      const title = e.gropudata?.title?.trim() || '';
+
+      if (e.file === null) {
+        delete this.uploadedFiles[key];
+        delete this.savedFileMeta[key];
+        delete this.otherDocMap[key];
+
+        this.uploadedFiles = {
+          ...this.uploadedFiles
+        };
+
+        this.savedFileMeta = {
+          ...this.savedFileMeta
+        };
+
+        this.otherDocMap = {
+          ...this.otherDocMap
+        };
+
+        this.cd.detectChanges();
+        return;
+      }
+
+      this.otherDocMap[key] = {
+        title
+      };
+
+      this.uploadedFiles[key] = e.file;
+
+      this.otherDocMap = {
+        ...this.otherDocMap
+      };
+
+      this.uploadedFiles = {
+        ...this.uploadedFiles
+      };
+      this.hasUnsavedChanges = true;
+      this.cd.detectChanges();
+      // this.uploadOtherDocuments(e.step)
+      this.uploadSingleEducationDocument(
+        e.step,
+        'other',
+        e.file,
+        index,
+        title
+      );
+
+      return;
+    }
+
+    // Marksheet or LC
+    const normalizedDoc = this.normalizeDocType(e.control);
+
+    const index =
+      e.control === 'marksheet'
+        ? (e.index ?? 0)
+        : undefined;
+
+    const key = this.buildKey(
+      e.step,
+      normalizedDoc,
+      index
+    );
 
     if (e.file === null) {
       delete this.uploadedFiles[key];
       delete this.savedFileMeta[key];
-      delete this.otherDocMap[key];
 
       this.uploadedFiles = {
         ...this.uploadedFiles
@@ -846,84 +910,23 @@ this.isDataLoading = true;
         ...this.savedFileMeta
       };
 
-      this.otherDocMap = {
-        ...this.otherDocMap
-      };
-
       this.cd.detectChanges();
       return;
     }
 
-    this.otherDocMap[key] = {
-      title
-    };
-
     this.uploadedFiles[key] = e.file;
 
-    this.otherDocMap = {
-      ...this.otherDocMap
-    };
-
     this.uploadedFiles = {
       ...this.uploadedFiles
     };
-this.hasUnsavedChanges = true;
-this.cd.detectChanges();
-// this.uploadOtherDocuments(e.step)
+
     this.uploadSingleEducationDocument(
       e.step,
-      'other',
+      normalizedDoc,
       e.file,
-      index,
-      title
+      index
     );
-
-    return;
   }
-
-  // Marksheet or LC
-  const normalizedDoc = this.normalizeDocType(e.control);
-
-  const index =
-    e.control === 'marksheet'
-      ? (e.index ?? 0)
-      : undefined;
-
-  const key = this.buildKey(
-    e.step,
-    normalizedDoc,
-    index
-  );
-
-  if (e.file === null) {
-    delete this.uploadedFiles[key];
-    delete this.savedFileMeta[key];
-
-    this.uploadedFiles = {
-      ...this.uploadedFiles
-    };
-
-    this.savedFileMeta = {
-      ...this.savedFileMeta
-    };
-
-    this.cd.detectChanges();
-    return;
-  }
-
-  this.uploadedFiles[key] = e.file;
-
-  this.uploadedFiles = {
-    ...this.uploadedFiles
-  };
-
-  this.uploadSingleEducationDocument(
-    e.step,
-    normalizedDoc,
-    e.file,
-    index
-  );
-}
 
   getFile(step: StepKey, doc: DocType, index?: number) {
     return this.getStoredFileMeta(step, doc, index);
@@ -942,7 +945,7 @@ this.cd.detectChanges();
       ...saved,
       instituteId: (saved?.instituteId),
       institutename: saved?.instituteName || saved?.institutename || '',
-        instituteName: saved?.instituteName || saved?.institutename || '',
+      instituteName: saved?.instituteName || saved?.institutename || '',
       institutetitle: saved?.institutetitle || saved?.otherInstituteName || saved?.title || '',
       location: this.getOptionValue(this.cityOptions, saved?.location),
       otherLocation: saved?.otherLocation || saved?.otherLocationName || '',
@@ -986,23 +989,23 @@ this.cd.detectChanges();
   }
 
 
-isOtherInstituteSelected(step: StepKey): boolean {
-  const form = this.educationForms[step] as FormGroup;
-  if (!form) return false;
+  isOtherInstituteSelected(step: StepKey): boolean {
+    const form = this.educationForms[step] as FormGroup;
+    if (!form) return false;
 
-  const instituteName = form.get('instituteName')?.value;
-  const institutename = form.get('institutename')?.value;
+    const instituteName = form.get('instituteName')?.value;
+    const institutename = form.get('institutename')?.value;
 
-  const selectedOption = this.instituteOptions.find(
-    x => x.value === institutename || x.label === institutename
-  );
+    const selectedOption = this.instituteOptions.find(
+      x => x.value === institutename || x.label === institutename
+    );
 
-  return (
-    instituteName?.toString().trim().toLowerCase() === 'other' ||
-    institutename?.toString().trim().toLowerCase() === 'other' ||
-    selectedOption?.label?.toString().trim().toLowerCase() === 'other'
-  );
-}
+    return (
+      instituteName?.toString().trim().toLowerCase() === 'other' ||
+      institutename?.toString().trim().toLowerCase() === 'other' ||
+      selectedOption?.label?.toString().trim().toLowerCase() === 'other'
+    );
+  }
   getEducationGroup(key: string): FormGroup {
     return this.educationForm.get(key) as FormGroup;
   }
@@ -1022,50 +1025,50 @@ isOtherInstituteSelected(step: StepKey): boolean {
     fg?.get(doc)?.updateValueAndValidity();
     this.cd.detectChanges();
   }
-onFileChange(
-  step: StepKey,
-  docType: DocType,
-  result: UploadResult
-): void {
-  const file = result?.file ?? null;
-  const normalizedDoc = this.normalizeDocType(docType);
-  const key = this.buildKey(
-    step,
-    normalizedDoc
-  );
+  onFileChange(
+    step: StepKey,
+    docType: DocType,
+    result: UploadResult
+  ): void {
+    const file = result?.file ?? null;
+    const normalizedDoc = this.normalizeDocType(docType);
+    const key = this.buildKey(
+      step,
+      normalizedDoc
+    );
 
-  if (!file) {
-    delete this.uploadedFiles[key];
-    delete this.savedFileMeta[key];
+    if (!file) {
+      delete this.uploadedFiles[key];
+      delete this.savedFileMeta[key];
+
+      this.uploadedFiles = {
+        ...this.uploadedFiles
+      };
+
+      this.savedFileMeta = {
+        ...this.savedFileMeta
+      };
+
+      this.cd.detectChanges();
+      return;
+    }
+
+    this.uploadedFiles[key] = file;
 
     this.uploadedFiles = {
       ...this.uploadedFiles
     };
 
-    this.savedFileMeta = {
-      ...this.savedFileMeta
-    };
+    this.hasUnsavedChanges = true;
+
+    this.uploadSingleEducationDocument(
+      step,
+      normalizedDoc,
+      file
+    );
 
     this.cd.detectChanges();
-    return;
   }
-
-  this.uploadedFiles[key] = file;
-
-  this.uploadedFiles = {
-    ...this.uploadedFiles
-  };
-
-  this.hasUnsavedChanges = true;
-
-  this.uploadSingleEducationDocument(
-    step,
-    normalizedDoc,
-    file
-  );
-
-  this.cd.detectChanges();
-}
   buildDocKey(level: EducationType, docType: DocType, index?: number): string {
     // return index ? `${level}_${docType}_${index}` : `${level}_${docType}`;
 
@@ -1156,15 +1159,15 @@ onFileChange(
       title: 'Are you sure want to Remove',
       message: ``,
       showCancel: true,
-       okText:'Yes',
+      okText: 'Yes',
       onOk: () => {
         const key = this.buildKey(level as StepKey, this.normalizeDocType(docType), index);
 
         const deleteDoc =
-this.uploadedFiles?.[key] ||
-this.savedFileMeta?.[key] ||
-null;
-        if(deleteDoc?.documentId){
+          this.uploadedFiles?.[key] ||
+          this.savedFileMeta?.[key] ||
+          null;
+        if (deleteDoc?.documentId) {
           this.deleteItemArr([deleteDoc?.documentId]);
         }
 
@@ -1172,14 +1175,14 @@ null;
         delete this.savedFileMeta[key];
 
         const form =
-  this.educationForms[level as StepKey] as FormGroup;
+          this.educationForms[level as StepKey] as FormGroup;
 
-if (docType === 'offerletter') {
-  form?.get('offerLetter')?.setValue(
-    null,
-    { emitEvent: false }
-  );
-}
+        if (docType === 'offerletter') {
+          form?.get('offerLetter')?.setValue(
+            null,
+            { emitEvent: false }
+          );
+        }
 
         this.uploadedFiles = { ...this.uploadedFiles };
         this.savedFileMeta = { ...this.savedFileMeta };
@@ -1189,7 +1192,7 @@ if (docType === 'offerletter') {
       }
     });
   }
-  deleteItemArr(idArr: any){
+  deleteItemArr(idArr: any) {
     this.formSvc.deleteEducationDoc({
       applicationId: this.applicationId,
       applicantId: this.applicantId,
@@ -1213,7 +1216,7 @@ if (docType === 'offerletter') {
     return !!file;
   }
 
-  getLocalFileName(level: any, docType: DocType, index?: number,truncate=true): string {
+  getLocalFileName(level: any, docType: DocType, index?: number, truncate = true): string {
     const file: any = this.getStoredFileMeta(
       level as StepKey,
       docType,
@@ -1222,18 +1225,18 @@ if (docType === 'offerletter') {
 
     if (!file) return '';
 
-   
-     const fileName =
-    file instanceof File
-      ? file.name
-      : file.fileName || file.name || '';
+
+    const fileName =
+      file instanceof File
+        ? file.name
+        : file.fileName || file.name || '';
 
 
-     if (!truncate || fileName.length <= 30) {
-    return fileName;
-  }
+    if (!truncate || fileName.length <= 30) {
+      return fileName;
+    }
 
-  return `${fileName.substring(0, 30)}...`;
+    return `${fileName.substring(0, 30)}...`;
 
   }
   private getStoredFileMeta(step: StepKey, docType: DocType, index?: number): any {
@@ -1351,7 +1354,7 @@ if (docType === 'offerletter') {
       institutename: raw.institutename || this.educationFormState[step]?.instituteName || '',
       institutetitle: raw.institutetitle || '',
       // location: this.resolveLocationId(raw.location),
-      location:this.resolveLocationId(raw.location) || raw.location || this.educationFormState[step]?.location || '',
+      location: this.resolveLocationId(raw.location) || raw.location || this.educationFormState[step]?.location || '',
       otherLocation: raw.otherLocation || '',
 
 
@@ -1397,80 +1400,80 @@ if (docType === 'offerletter') {
     });
   }
   private performEducationBack(): void {
-  const currentStep =
-    this.activeEducation as StepKey;
+    const currentStep =
+      this.activeEducation as StepKey;
 
-  let previousStep: StepKey | null = null;
+    let previousStep: StepKey | null = null;
 
-  // Offer Letter must always go back to IELTS/PTE.
-  if (currentStep === 'offerletter') {
-    previousStep = 'ielts';
-  }
-
-  // IELTS/PTE must go back to the previous education step,
-  // normally PG or UG.
-  else if (currentStep === 'ielts') {
-    const ieltsIndex =
-      this.educationOrder.indexOf('ielts');
-
-    if (ieltsIndex > 0) {
-      previousStep =
-        this.educationOrder[ieltsIndex - 1] as StepKey;
-    } else if (
-      this.educationOrder.includes('pg')
-    ) {
-      previousStep = 'pg';
-    } else if (
-      this.educationOrder.includes('ug')
-    ) {
-      previousStep = 'ug';
+    // Offer Letter must always go back to IELTS/PTE.
+    if (currentStep === 'offerletter') {
+      previousStep = 'ielts';
     }
-  }
 
-  // Normal education-step navigation.
-  else {
-    const index =
-      this.educationOrder.indexOf(currentStep);
+    // IELTS/PTE must go back to the previous education step,
+    // normally PG or UG.
+    else if (currentStep === 'ielts') {
+      const ieltsIndex =
+        this.educationOrder.indexOf('ielts');
 
-    if (index > 0) {
-      previousStep =
-        this.educationOrder[index - 1] as StepKey;
-    }
-  }
-
-  if (previousStep) {
-    this.activeEducation = previousStep;
-
-    this.restoreFormState(previousStep);
-
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: {
-        qualificationId:
-          this.flowQualificationId,
-
-        qualificationlabel:
-          previousStep
-      },
-      queryParamsHandling: 'merge'
-    });
-
-    return;
-  }
-
-  // Only the first education step returns to education details.
-  this.router.navigate(
-    ['/loanform/educationDetails'],
-    {
-      queryParams: {
-        applicantId: this.applicantId,
-        applicationId: this.applicationId,
-        custName: this.custName,
-        custARN: this.custARN
+      if (ieltsIndex > 0) {
+        previousStep =
+          this.educationOrder[ieltsIndex - 1] as StepKey;
+      } else if (
+        this.educationOrder.includes('pg')
+      ) {
+        previousStep = 'pg';
+      } else if (
+        this.educationOrder.includes('ug')
+      ) {
+        previousStep = 'ug';
       }
     }
-  );
-}
+
+    // Normal education-step navigation.
+    else {
+      const index =
+        this.educationOrder.indexOf(currentStep);
+
+      if (index > 0) {
+        previousStep =
+          this.educationOrder[index - 1] as StepKey;
+      }
+    }
+
+    if (previousStep) {
+      this.activeEducation = previousStep;
+
+      this.restoreFormState(previousStep);
+
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {
+          qualificationId:
+            this.flowQualificationId,
+
+          qualificationlabel:
+            previousStep
+        },
+        queryParamsHandling: 'merge'
+      });
+
+      return;
+    }
+
+    // Only the first education step returns to education details.
+    this.router.navigate(
+      ['/loanform/educationDetails'],
+      {
+        queryParams: {
+          applicantId: this.applicantId,
+          applicationId: this.applicationId,
+          custName: this.custName,
+          custARN: this.custARN
+        }
+      }
+    );
+  }
   private persistEducationState() {
     sessionStorage.setItem(
       'educationState',
@@ -1488,140 +1491,140 @@ if (docType === 'offerletter') {
     );
   }
 
-private clearUnsavedEducationStep(step: StepKey): void {
-  const form = this.educationForms[step] as FormGroup;
-  const prefix = `${step}_`;
+  private clearUnsavedEducationStep(step: StepKey): void {
+    const form = this.educationForms[step] as FormGroup;
+    const prefix = `${step}_`;
 
-  // Reset all form fields for the active education step.
-  if (step === 'ielts') {
-    form?.reset(
-      {
-        score: ''
-      },
-      {
-        emitEvent: false
-      }
-    );
-  } else if (step === 'offerletter') {
-    form?.reset(
-      {
-        offerLetter: null
-      },
-      {
-        emitEvent: false
-      }
-    );
-  } else {
-    form?.reset(
-      {
-        instituteId: '',
-        instituteName: '',
-        institutename: '',
-        institutetitle: '',
-        passingyear: '',
-        per_cgpa: '',
-        location: '',
-        otherLocation: '',
-        marksheet: null,
-        lc: null
-      },
-      {
-        emitEvent: false
-      }
-    );
-  }
-
-  // Remove all newly selected files for this step.
-  Object.keys(this.uploadedFiles || {})
-    .filter(key => key.startsWith(prefix))
-    .forEach(key => {
-      delete this.uploadedFiles[key];
-    });
-
-  // Remove file metadata for an unsaved step.
-  if (!this.isStepPersisted(step)) {
-    Object.keys(this.savedFileMeta || {})
-      .filter(key => key.startsWith(prefix))
-      .forEach(key => {
-        delete this.savedFileMeta[key];
-      });
-  }
-
-  // Remove other document rows for this step.
-  Object.keys(this.otherDocMap || {})
-    .filter(key => key.startsWith(prefix))
-    .forEach(key => {
-      delete this.otherDocMap[key];
-    });
-
-  // Remove current form values from component cache.
-  delete this.educationFormState[step];
-
-  // Remove current form values from the stepper service.
-  this.stepperService.setEducationStepData(step, null);
-
-  // Remove current step values from local storage.
-  const storageKey = this.getEducationStateKey();
-  const storedValue = localStorage.getItem(storageKey);
-
-  if (storedValue) {
-    try {
-      const parsed = JSON.parse(storedValue);
-
-      if (parsed.educationFormState) {
-        delete parsed.educationFormState[step];
-      }
-
-      if (parsed.uploadedFileMeta) {
-        Object.keys(parsed.uploadedFileMeta)
-          .filter(key => key.startsWith(prefix))
-          .forEach(key => {
-            delete parsed.uploadedFileMeta[key];
-          });
-      }
-
-      if (parsed.otherDocMap) {
-        Object.keys(parsed.otherDocMap)
-          .filter(key => key.startsWith(prefix))
-          .forEach(key => {
-            delete parsed.otherDocMap[key];
-          });
-      }
-
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify(parsed)
+    // Reset all form fields for the active education step.
+    if (step === 'ielts') {
+      form?.reset(
+        {
+          score: ''
+        },
+        {
+          emitEvent: false
+        }
       );
-    } catch (error) {
-      console.error(
-        'Failed to clear discarded education state:',
-        error
+    } else if (step === 'offerletter') {
+      form?.reset(
+        {
+          offerLetter: null
+        },
+        {
+          emitEvent: false
+        }
+      );
+    } else {
+      form?.reset(
+        {
+          instituteId: '',
+          instituteName: '',
+          institutename: '',
+          institutetitle: '',
+          passingyear: '',
+          per_cgpa: '',
+          location: '',
+          otherLocation: '',
+          marksheet: null,
+          lc: null
+        },
+        {
+          emitEvent: false
+        }
       );
     }
+
+    // Remove all newly selected files for this step.
+    Object.keys(this.uploadedFiles || {})
+      .filter(key => key.startsWith(prefix))
+      .forEach(key => {
+        delete this.uploadedFiles[key];
+      });
+
+    // Remove file metadata for an unsaved step.
+    if (!this.isStepPersisted(step)) {
+      Object.keys(this.savedFileMeta || {})
+        .filter(key => key.startsWith(prefix))
+        .forEach(key => {
+          delete this.savedFileMeta[key];
+        });
+    }
+
+    // Remove other document rows for this step.
+    Object.keys(this.otherDocMap || {})
+      .filter(key => key.startsWith(prefix))
+      .forEach(key => {
+        delete this.otherDocMap[key];
+      });
+
+    // Remove current form values from component cache.
+    delete this.educationFormState[step];
+
+    // Remove current form values from the stepper service.
+    this.stepperService.setEducationStepData(step, null);
+
+    // Remove current step values from local storage.
+    const storageKey = this.getEducationStateKey();
+    const storedValue = localStorage.getItem(storageKey);
+
+    if (storedValue) {
+      try {
+        const parsed = JSON.parse(storedValue);
+
+        if (parsed.educationFormState) {
+          delete parsed.educationFormState[step];
+        }
+
+        if (parsed.uploadedFileMeta) {
+          Object.keys(parsed.uploadedFileMeta)
+            .filter(key => key.startsWith(prefix))
+            .forEach(key => {
+              delete parsed.uploadedFileMeta[key];
+            });
+        }
+
+        if (parsed.otherDocMap) {
+          Object.keys(parsed.otherDocMap)
+            .filter(key => key.startsWith(prefix))
+            .forEach(key => {
+              delete parsed.otherDocMap[key];
+            });
+        }
+
+        localStorage.setItem(
+          storageKey,
+          JSON.stringify(parsed)
+        );
+      } catch (error) {
+        console.error(
+          'Failed to clear discarded education state:',
+          error
+        );
+      }
+    }
+
+    this.uploadedFiles = {
+      ...this.uploadedFiles
+    };
+
+    this.savedFileMeta = {
+      ...this.savedFileMeta
+    };
+
+    this.otherDocMap = {
+      ...this.otherDocMap
+    };
+
+    form?.markAsPristine();
+    form?.markAsUntouched();
+    form?.updateValueAndValidity({
+      emitEvent: false
+    });
+
+    this.hasUnsavedChanges = false;
+
+    this.cd.detectChanges();
   }
-
-  this.uploadedFiles = {
-    ...this.uploadedFiles
-  };
-
-  this.savedFileMeta = {
-    ...this.savedFileMeta
-  };
-
-  this.otherDocMap = {
-    ...this.otherDocMap
-  };
-
-  form?.markAsPristine();
-  form?.markAsUntouched();
-  form?.updateValueAndValidity({
-    emitEvent: false
-  });
-
-  this.hasUnsavedChanges = false;
-
-  this.cd.detectChanges();
-}
 
   //-----------------disable next btn --------------------
 
@@ -1633,14 +1636,14 @@ private clearUnsavedEducationStep(step: StepKey): void {
     if (!form) return false;
 
     const hasUploadInProgress = Object.entries(
-  this.uploadingEducationFiles
-).some(([key, uploading]) =>
-  key.startsWith(`${step}_`) && uploading
-);
+      this.uploadingEducationFiles
+    ).some(([key, uploading]) =>
+      key.startsWith(`${step}_`) && uploading
+    );
 
-if (hasUploadInProgress) {
-  return false;
-}
+    if (hasUploadInProgress) {
+      return false;
+    }
 
     //  PG → Nothing mandatory
     if (step === 'pg') return true;
@@ -1680,7 +1683,19 @@ if (hasUploadInProgress) {
       this.hasFileOrSavedMeta(step, doc.doc, doc.index)
     );
   }
-  showValidationErrors(step: StepKey): void {
+  //upload disable
+  isCurrentStepUploading(): boolean {
+    const step = this.activeEducation as StepKey;
+
+    return Object.entries(
+      this.uploadingEducationFiles || {}
+    ).some(([key, uploading]) =>
+      key.startsWith(`${step}_`) &&
+      uploading
+    );
+  }
+
+  showValidationErrors1(step: StepKey): void {
     const form = this.educationForms[step] as FormGroup | undefined;
 
     if (form) {
@@ -1704,6 +1719,73 @@ if (hasUploadInProgress) {
 
 
   }
+  showValidationErrors(step: StepKey): void {
+    const form =
+      this.educationForms[step] as FormGroup | undefined;
+
+    if (form) {
+      Object.values(form.controls).forEach(
+        (control: AbstractControl) => {
+          control.markAsTouched();
+          control.updateValueAndValidity({
+            emitEvent: false
+          });
+        }
+      );
+    }
+
+    const hasInvalidFields = !!form?.invalid;
+
+    const missingDocs = this.requiredDocs(step)
+      .filter(doc =>
+        !this.hasFileOrSavedMeta(
+          step,
+          doc.doc,
+          doc.index
+        )
+      );
+
+    const missingOtherDocs =
+      this.getOtherDocumentsForStep(step)
+        .some(doc =>
+          !doc.title?.trim() ||
+          !doc.file
+        );
+
+    let message = '';
+
+    if (hasInvalidFields && missingDocs.length > 0) {
+      message =
+        'Please fill all required fields and upload the required documents.';
+    } else if (hasInvalidFields) {
+      message =
+        'Please fill all required fields.';
+    } else if (missingDocs.length > 0) {
+      const documentNames =
+        missingDocs.map(doc => doc.title).join(', ');
+
+      message =
+        `Please upload the required documents: ${documentNames}.`;
+    } else if (missingOtherDocs) {
+      message =
+        'Please enter the document title and upload the Other Document.';
+    }
+
+    if (!message) {
+      message =
+        'Please complete all required information.';
+    }
+
+    this.msgbox.open({
+      title: 'Required Information',
+      message,
+      showCancel: false,
+      okText: 'OK'
+    });
+
+    this.cd.detectChanges();
+  }
+
   private getOtherDocumentsForStep(step: StepKey) {
     return Object.keys(this.otherDocMap)
       .filter(key => key.startsWith(`${step}_other_`))
@@ -1717,7 +1799,7 @@ if (hasUploadInProgress) {
     const key = `${step}_other_${rowId}`;
     if (this.otherDocMap[key]) return;
     this.otherDocMap[key] = { title: '' };
-    this.uploadedFiles[key] = null;
+    // this.uploadedFiles[key] = null;
   }
   private ensureOtherDocEntry(step: StepKey, index: number, title: string = 'Other Document') {
     const key = this.buildKey(step, 'other', index);
@@ -1781,7 +1863,7 @@ if (hasUploadInProgress) {
           instituteName: raw.instituteName || this.educationFormState[activeStep]?.instituteName || raw.institutename || '',
           institutename: raw.institutename || this.educationFormState[activeStep]?.instituteName || '',
           institutetitle: raw.institutetitle || '',
-           location: this.resolveLocationId(raw.location) ||  raw.location ||  forms[activeStep]?.location || this.educationFormState[activeStep]?.location || '',
+          location: this.resolveLocationId(raw.location) || raw.location || forms[activeStep]?.location || this.educationFormState[activeStep]?.location || '',
           otherLocation: raw.otherLocation || '',
 
 
@@ -1948,48 +2030,70 @@ if (hasUploadInProgress) {
   }
 
 
-  private async loadSavedEducationInfoFromApi(step: StepKey,forceNextApi: boolean = true) {
+  private async loadSavedEducationInfoFromApi(step: StepKey, forceNextApi: boolean = true) {
     if (!this.applicationId || !this.applicantId || !step) return;
 
-    const savedData = await this.getSavedSectionEducationInfo();
+    const savedData = await this.getSavedSectionEducationInfo(step);
 
     if (!savedData) return;
 
     console.log('Saved education data from API:', savedData);
 
-    this.patchSavedEducationData(step, savedData);
+    this.patchSavedEducationData(step, savedData, false);
 
     const sectionKey = this.getCurrentEducationSectionKey();
     const localKey = `educationInfoData_${this.applicantId}_${sectionKey}`;
     localStorage.setItem(localKey, JSON.stringify(savedData));
     this.saveEducationStateToLocalStorage();
-    if(forceNextApi){
+    if (forceNextApi) {
       this.forceNextApiForDraft = true;
     }
     this.cd.detectChanges();
 
   }
-  private patchSavedEducationData(step: StepKey, savedData: any) {
-    this.clearOtherDocsForStep(step);
+  private patchSavedEducationData(step: StepKey, savedData: any, patchDocuments: boolean = false) {
+    // this.clearOtherDocsForStep(step);
     const form = this.educationForms[step] as FormGroup;
-    if (!form) return;
+    if (!form || !savedData) return;
 
     const data = savedData?.jsonData || savedData;
     const prev = this.educationFormState[step] || {};
-
+    if (!data) {
+      return;
+    }
     const instituteId =
       data.instituteId ||
       data.institutionId ||
       prev.instituteId ||
       '';
 
-    const instituteName =
-      data.instituteName ||
-      data.institutename ||
-      prev.instituteName ||
-      prev.institutename ||
-      '';
-      const apiLocation =  data.locationId ||  data.location ||  data.locationName ||  prev.location ||  '';
+  const instituteName =
+  data.instituteName ||
+  data.institutionName ||
+  data.institutename ||
+  prev.instituteName ||
+  prev.institutename ||
+  '';
+    const apiLocation = data.locationId || data.location || data.locationName || prev.location || '';
+
+      const otherInstituteName =
+    data.otherInstituteName ??
+    data.institutetitle ??
+    data.title ??
+    prev.institutetitle ??
+    '';
+
+  const otherLocationName =
+    data.otherLocationName ??
+    data.otherLocation ??
+    prev.otherLocation ??
+    '';
+
+    const locationValue =
+    this.getOptionValue(
+      this.cityOptions,
+      apiLocation
+    ) || apiLocation;
 
     if (!data) return;
 
@@ -2007,16 +2111,12 @@ if (hasUploadInProgress) {
         instituteName,
         institutename: instituteName,
 
-
-        institutetitle: data.title || data.otherInstituteName || data.institutetitle || '',
+        institutetitle: otherInstituteName ,
         passingyear: this.normalizeDropdownValue(data.passingyear || data.yearOfPassing),
         per_cgpa: data.percentageCgpa || data.per_cgpa || '',
 
-        location: this.getOptionValue(
-          this.cityOptions,
-         apiLocation
-        ),
-        otherLocation: data.otherLocation || data.otherLocationName || ''
+        location: locationValue,
+        otherLocation: otherLocationName
       }, { emitEvent: false });
     }
 
@@ -2026,21 +2126,63 @@ if (hasUploadInProgress) {
       instituteId,
       instituteName,
       institutename: instituteName,
+      institutetitle: otherInstituteName,
+      location:
+        form.get('location')?.value ||
+        apiLocation ||
+        prev.location ||
+        '',
 
-       location:
-    form.get('location')?.value ||
-    apiLocation ||
-    prev.location ||
-    '',
+      otherLocation:
+        form.get('otherLocation')?.value ||
+        data.otherLocationName ||
+        data.otherLocation ||
+        prev.otherLocation ||
+        ''
 
-  otherLocation:
-    form.get('otherLocation')?.value ||
-    data.otherLocationName ||
-    data.otherLocation ||
-    prev.otherLocation ||
-    ''
-    
     };
+
+    if (patchDocuments) {
+      this.patchEducationDocumentsFromSummary(
+        step,
+        savedData
+      )
+    }
+
+   
+
+    this.stepperService.setEducationStepData(step, form.getRawValue());
+
+      const hasData =
+    this.hasMeaningfulEducationValue(
+      form.getRawValue()
+    );
+
+  const hasDocuments = Object.keys(
+    this.savedFileMeta || {}
+  ).some(key => key.startsWith(`${step}_`));
+
+  if (hasData || hasDocuments) {
+    this.markStepPersisted(step);
+  }
+    this.cd.detectChanges();
+  }
+
+  private patchEducationDocumentsFromSummary(
+    step: StepKey,
+    summaryData: any
+  ): void {
+    /*
+     * Clear documents only when processing Summary API data.
+     * Draft API must never clear or overwrite documents.
+     */
+    this.clearOtherDocsForStep(step);
+    this.clearEducationDocumentsForStep(step);
+
+    const data =
+      summaryData?.jsonData ||
+      summaryData ||
+      {};
 
     if (data.otherDocMap) {
       this.otherDocMap = {
@@ -2049,171 +2191,217 @@ if (hasUploadInProgress) {
       };
     }
 
-
-
-    const uploadedDocuments =
-      data.uploadedDocuments ||
-      data.documents ||
-      [];
-
-    const uploadedFiles =
-      data.uploadedFiles ||
-      data.files ||
-      [];
-
-    const documentsToRestore =
-      Array.isArray(uploadedDocuments) && uploadedDocuments.length > 0
-        ? uploadedDocuments
-        : uploadedFiles;
+    
+    const documentsToRestore = Array.isArray(data)
+      ? data
+      : Array.isArray(data.uploadedDocuments)
+        ? data.uploadedDocuments
+        : Array.isArray(data.documents)
+          ? data.documents
+          : Array.isArray(data.uploadedFiles)
+            ? data.uploadedFiles
+            : Array.isArray(data.files)
+              ? data.files
+              : [];
 
     let marksheetCounter = 0;
     let otherCounter = 0;
 
-    documentsToRestore.forEach((doc: any, index: number) => {
-      const fallbackFile = uploadedFiles[index] || {};
+    documentsToRestore.forEach((doc: any) => {
+      const type = String(
+        doc.type ||
+        doc.docType ||
+        doc.documentType ||
+        ''
+      )
+        .trim()
+        .toUpperCase();
 
-      const type = doc.type || fallbackFile.type;
-      if (!type) return;
+      if (!type) {
+        return;
+      }
 
-      // let key = '';
+      const currentMarksheetIndex = marksheetCounter;
+      const currentOtherIndex = otherCounter;
 
       const key = this.getFileKeyFromApiType(
         step,
         type,
-        marksheetCounter,
-        otherCounter
+        currentMarksheetIndex,
+        currentOtherIndex
       );
 
-      if (type === 'MARKSHEET') {
-        // key = this.buildKey(step, 'marksheet', marksheetCounter);
-        marksheetCounter++;
-      } else if (
-        type === 'SCHOOL_LEAVING_CERT' ||
-        type === 'LEAVING_CERTIFICATE'
-      ) {
-        // key = this.buildKey(step, 'lc');
-      } else if (type === 'OTHER') {
-        // key = this.buildKey(step, 'other', otherCounter);
-        this.ensureOtherDocEntry(
-          step,
-          otherCounter,
-          doc.title || fallbackFile.title || 'Other Document'
-        );
-        otherCounter++;
-
-        this.otherDocMap[key] = {
-          title: doc.title || fallbackFile.title || 'Other Document'
-        };
-      } else if (
-        type === 'UPLOAD_CERTIFICATE' ||
-        type === 'IELTS'
-      ) {
-        if (step === 'ielts') {
-          // key = this.buildKey(step, 'ielts');
-        } else if (step === 'offerletter') {
-          // key = this.buildKey(step, 'offerletter');
-        }
-      } else if (type === 'OFFERLETTER') {
-        // key = this.buildKey(step, 'offerletter');
+      if (!key) {
+        return;
       }
 
-      if (!key) return;
+      if (type === 'MARKSHEET') {
+        marksheetCounter++;
+      }
+
+      if (type === 'OTHER') {
+        const title =
+          doc.title ||
+          doc.documentTitle ||
+          'Other Document';
+
+        this.ensureOtherDocEntry(
+          step,
+          currentOtherIndex,
+          title
+        );
+
+        this.otherDocMap[key] = {
+          title
+        };
+
+        otherCounter++;
+      }
+
+      const documentUrl =
+        doc.viewUrl ||
+        doc.fileUrl ||
+        doc.publicUrl ||
+        '';
+
+      const fileName =
+        doc.fileName ||
+        doc.name ||
+        this.getEducationFileNameFromUrl(documentUrl);
 
       const meta = {
         key,
-        name:
-          doc.fileName ||
-          fallbackFile.fileName ||
-          doc.name ||
-          fallbackFile.name ||
-          '',
-        fileName:
-          doc.fileName ||
-          fallbackFile.fileName ||
-          doc.name ||
-          fallbackFile.name ||
-          '',
+        name: fileName,
+        fileName,
+
         title:
           doc.title ||
-          fallbackFile.title ||
+          doc.documentTitle ||
           type,
+
         type,
+
         viewUrl:
           doc.viewUrl ||
-          fallbackFile.viewUrl ||
+          doc.fileUrl ||
+          doc.publicUrl ||
           '',
+
         fileUrl:
           doc.fileUrl ||
-          fallbackFile.fileUrl ||
+          doc.viewUrl ||
+          doc.publicUrl ||
           '',
+
         publicUrl:
           doc.publicUrl ||
-          fallbackFile.publicUrl ||
           '',
+
         objectKey:
           doc.objectKey ||
-          fallbackFile.objectKey ||
           '',
+
         documentId:
           doc.documentId ||
-          fallbackFile.documentId,
-        uploaded: true
+          doc.id ||
+          '',
+
+        uploaded: true,
+        localOnly: false
       };
 
       this.savedFileMeta[key] = meta;
       this.uploadedFiles[key] = meta as any;
     });
 
-    this.savedFileMeta = { ...this.savedFileMeta };
-    this.uploadedFiles = { ...this.uploadedFiles };
-    this.otherDocMap = { ...this.otherDocMap };
+    this.savedFileMeta = {
+      ...this.savedFileMeta
+    };
 
-    this.stepperService.setEducationStepData(step, form.getRawValue());
+    this.uploadedFiles = {
+      ...this.uploadedFiles
+    };
 
-    const hasData =
-      !!data &&
-      (
-        this.hasMeaningfulEducationValue(form.getRawValue()) ||
-        documentsToRestore.length > 0
-      );
-
-    if (hasData) {
-      this.markStepPersisted(step);
+    this.otherDocMap = {
+      ...this.otherDocMap
+    };
+  }
+  private getEducationFileNameFromUrl(
+    url: string
+  ): string {
+    if (!url) {
+      return '';
     }
 
-    this.cd.detectChanges();
+    try {
+      const cleanUrl = url.split('?')[0];
+
+      return decodeURIComponent(
+        cleanUrl.substring(
+          cleanUrl.lastIndexOf('/') + 1
+        )
+      );
+    } catch {
+      return '';
+    }
   }
+  private clearEducationDocumentsForStep(
+    step: StepKey
+  ): void {
+    const prefix = `${step}_`;
+
+    Object.keys(this.savedFileMeta || {})
+      .filter(key => key.startsWith(prefix))
+      .forEach(key => {
+        delete this.savedFileMeta[key];
+      });
+
+    Object.keys(this.uploadedFiles || {})
+      .filter(key => key.startsWith(prefix))
+      .forEach(key => {
+        delete this.uploadedFiles[key];
+      });
+
+    Object.keys(this.otherDocMap || {})
+      .filter(key =>
+        key.startsWith(`${step}_other_`)
+      )
+      .forEach(key => {
+        delete this.otherDocMap[key];
+      });
+  }
+
   private hasFileOrSavedMeta1(step: StepKey, doc: DocType, index?: number): boolean {
     const key = this.buildKey(step, this.normalizeDocType(doc), index);
 
     return this.uploadedFiles[key] instanceof File || !!this.savedFileMeta[key];
   }
   private hasFileOrSavedMeta(
-  step: StepKey,
-  doc: DocType,
-  index?: number
-): boolean {
-  const key = this.buildKey(
-    step,
-    this.normalizeDocType(doc),
-    index
-  );
+    step: StepKey,
+    doc: DocType,
+    index?: number
+  ): boolean {
+    const key = this.buildKey(
+      step,
+      this.normalizeDocType(doc),
+      index
+    );
 
-  if (this.uploadingEducationFiles[key]) {
-    return false;
-  }
+    if (this.uploadingEducationFiles[key]) {
+      return false;
+    }
 
-  return !!(
-    this.savedFileMeta[key]?.documentId ||
-    (
-      this.savedFileMeta[key]?.uploaded &&
+    return !!(
+      this.savedFileMeta[key]?.documentId ||
       (
-        this.savedFileMeta[key]?.viewUrl ||
-        this.savedFileMeta[key]?.objectKey
+        this.savedFileMeta[key]?.uploaded &&
+        (
+          this.savedFileMeta[key]?.viewUrl ||
+          this.savedFileMeta[key]?.objectKey
+        )
       )
-    )
-  );
-}
+    );
+  }
   private normalizeDropdownValue(value: any): any {
     if (Array.isArray(value)) {
       return value.length ? value[0] : '';
@@ -2270,64 +2458,64 @@ if (hasUploadInProgress) {
   }
 
   // payload for next btn click
-private buildEducationMetadataPayload(step: StepKey): any {
-  const form = this.educationForms[step] as FormGroup;
-  const raw = form.getRawValue();
+  private buildEducationMetadataPayload(step: StepKey): any {
+    const form = this.educationForms[step] as FormGroup;
+    const raw = form.getRawValue();
 
-  const basePayload: any = {
-    category: 'EDUCATION',
-    subcategory: this.stepToSubcategory[step],
-    applicantId: this.applicantId
-  };
+    const basePayload: any = {
+      category: 'EDUCATION',
+      subcategory: this.stepToSubcategory[step],
+      applicantId: this.applicantId
+    };
 
-  // IELTS/PTE contains score only.
-  // Certificate is already uploaded through single-file API.
-  if (step === 'ielts') {
+    // IELTS/PTE contains score only.
+    // Certificate is already uploaded through single-file API.
+    if (step === 'ielts') {
+      return {
+        ...basePayload,
+        score: Number(raw.score)
+      };
+    }
+
+    // Offer Letter has no additional metadata fields.
+    // Document is already uploaded separately.
+    if (step === 'offerletter') {
+      return basePayload;
+    }
+
+    const instituteId =
+      raw.instituteId ||
+      this.educationFormState[step]?.instituteId ||
+      this.resolveInstituteId(raw.institutename) ||
+      '';
+
     return {
       ...basePayload,
-      score: Number(raw.score)
+
+      instituteId,
+
+      locationId:
+        this.resolveLocationId(raw.location) ||
+        '',
+
+      yearOfPassing:
+        this.normalizeDropdownValue(raw.passingyear) ||
+        '',
+
+      percentageCgpa:
+        raw.per_cgpa !== null &&
+          raw.per_cgpa !== undefined &&
+          raw.per_cgpa !== ''
+          ? Number(raw.per_cgpa)
+          : null,
+
+      otherInstituteName:
+        raw.institutetitle || '',
+
+      otherLocationName:
+        raw.otherLocation || ''
     };
   }
-
-  // Offer Letter has no additional metadata fields.
-  // Document is already uploaded separately.
-  if (step === 'offerletter') {
-    return basePayload;
-  }
-
-  const instituteId =
-    raw.instituteId ||
-    this.educationFormState[step]?.instituteId ||
-    this.resolveInstituteId(raw.institutename) ||
-    '';
-
-  return {
-    ...basePayload,
-
-    instituteId,
-
-    locationId:
-      this.resolveLocationId(raw.location) ||
-      '',
-
-    yearOfPassing:
-      this.normalizeDropdownValue(raw.passingyear) ||
-      '',
-
-    percentageCgpa:
-      raw.per_cgpa !== null &&
-      raw.per_cgpa !== undefined &&
-      raw.per_cgpa !== ''
-        ? Number(raw.per_cgpa)
-        : null,
-
-    otherInstituteName:
-      raw.institutetitle || '',
-
-    otherLocationName:
-      raw.otherLocation || ''
-  };
-}
   private getFileKeyFromApiType(
     step: StepKey,
     type: string,
@@ -2410,11 +2598,11 @@ private buildEducationMetadataPayload(step: StepKey): any {
     return this.educationSectionKeyMap[step] || 'BATCH_UPLOAD_10';
   }
 
-  getSavedSectionEducationInfo(): Promise<any> {
-    const sectionkey = this.getCurrentEducationSectionKey();
-
+  getSavedSectionEducationInfo(step: StepKey): Promise<any> {
+    const sectionkey = "EDUCATIONAL_DETAILS" //this.getCurrentEducationSectionKey();
+    const stepKey = this.stepToSubcategory[step]
     return new Promise((resolve) => {
-      this.formSvc.getSavedData(this.applicationId, this.applicantId, sectionkey).pipe()
+      this.formSvc.getSavedDataEducation_income(this.applicationId, this.applicantId, sectionkey, "EDUCATION", stepKey).pipe()
 
         .subscribe({
           next: (res) => {
@@ -2822,7 +3010,7 @@ private buildEducationMetadataPayload(step: StepKey): any {
       if (!summaryEducation) return;
 
       this.patchEducationFromSummary(summaryEducation);
-       this.summaryEducationLoaded = true;
+      this.summaryEducationLoaded = true;
     } catch (error) {
       console.error('Failed to load education summary:', error);
     }
@@ -2885,7 +3073,7 @@ private buildEducationMetadataPayload(step: StepKey): any {
         form.patchValue({
           instituteId: first.instituteId,
           institutename: first.instituteName || '',
-           instituteName: first.instituteName || '',
+          instituteName: first.instituteName || '',
           institutetitle: first.otherInstituteName || '',
           passingyear: this.normalizeDropdownValue(
             first.yearOfPassing || ''
@@ -2914,8 +3102,8 @@ private buildEducationMetadataPayload(step: StepKey): any {
         ...form.getRawValue(),
         instituteId: first.instituteId || '',
         instituteName: first.instituteName || '',
-         institutename: first.instituteName || '',
-           institutetitle: first.otherInstituteName || ''
+        institutename: first.instituteName || '',
+        institutetitle: first.otherInstituteName || ''
       };
 
       this.stepperService.setEducationStepData(step, this.educationFormState[step]);
@@ -3084,7 +3272,7 @@ private buildEducationMetadataPayload(step: StepKey): any {
     this.msgBox.open({
       title: 'Are you sure you want to exit?',
       message: ``,
-      showCancel: true, okText:'Yes',
+      showCancel: true, okText: 'Yes',
       onOk: async () => {
 
         const step = this.activeEducation as StepKey;
@@ -3095,16 +3283,24 @@ private buildEducationMetadataPayload(step: StepKey): any {
         this.saveCurrentFormState();
         this.saveEducationStateToLocalStorage();
 
-        const sectionKey = this.getCurrentEducationSectionKey()
+        const sectionKey = "EDUCATIONAL_DETAILS"; //this.getCurrentEducationSectionKey()
         const payload = this.buildEducationInfoPayload();
 
         const localKey = `educationInfoData_${this.applicantId}_${sectionKey}`;
         localStorage.setItem(localKey, JSON.stringify(payload));
 
-        const fd = await this.buildEducationSaveExitFormData(sectionKey);
-        // fd.append('sectionKey', sectionKey);
+        // const fd = await this.buildEducationSaveExitFormData1(sectionKey);
+        const saveExitPayload =
+          this.buildEducationSaveExitFormData(sectionKey);
 
-        this.formSvc.saveandExit(fd).subscribe({
+        if (!saveExitPayload) {
+          console.error(
+            'Unable to create education Save and Exit payload'
+          );
+          return;
+        }
+
+        this.formSvc.saveandExit(saveExitPayload).subscribe({
           next: async (res: any) => {
 
             console.log('Education save and exit success:', res);
@@ -3144,8 +3340,88 @@ private buildEducationMetadataPayload(step: StepKey): any {
     });
   }
 
+  private buildEducationSaveExitFormData(
+    sectionKey: string
+  ): any {
+    const step = this.activeEducation as StepKey;
+    const form = this.educationForms[step] as FormGroup;
 
-  private async buildEducationSaveExitFormData(sectionKey: string): Promise<FormData> {
+    if (!form) {
+      return null;
+    }
+
+    const raw = form.getRawValue();
+
+    const jsonData: any = {
+      category: 'EDUCATION',
+      subcategory: this.stepToSubcategory[step],
+      applicantId: this.applicantId || ''
+    };
+
+    // IELTS
+    if (step === 'ielts') {
+      jsonData.score = raw.score || '';
+
+      return {
+        applicationId: this.applicationId,
+        applicantId: this.applicantId,
+        action: 'auto-save',
+        sectionKey,
+        jsonData
+      };
+    }
+
+    // Offer letter has no education fields
+    if (step === 'offerletter') {
+      return {
+        applicationId: this.applicationId,
+        applicantId: this.applicantId,
+        action: 'auto-save',
+        sectionKey,
+        jsonData
+      };
+    }
+
+    const instituteId =
+      raw.instituteId ||
+      this.educationFormState[step]?.instituteId ||
+      '';
+    const institutionName =
+      raw.instituteName ||
+      this.educationFormState[step]?.instituteName ||
+      '';
+
+    jsonData.locationId =
+      this.resolveLocationId(raw.location) || '';
+
+    jsonData.instituteId = instituteId;
+    jsonData.institutionName = institutionName;
+
+    jsonData.yearOfPassing =
+      raw.passingyear || '';
+
+    jsonData.percentageCgpa =
+      raw.per_cgpa !== null &&
+        raw.per_cgpa !== undefined &&
+        raw.per_cgpa !== ''
+        ? Number(raw.per_cgpa)
+        : null;
+
+    jsonData.otherInstituteName =
+      raw.institutetitle || '';
+
+    jsonData.otherLocationName =
+      raw.otherLocation || '';
+
+    return {
+      applicationId: this.applicationId,
+      applicantId: this.applicantId,
+      action: 'auto-save',
+      sectionKey,
+      jsonData
+    };
+  }
+  private async buildEducationSaveExitFormData1(sectionKey: string): Promise<FormData> {
     const step = this.activeEducation as StepKey;
     const form = this.educationForms[step] as FormGroup;
     const fd = new FormData();
@@ -3690,7 +3966,7 @@ private buildEducationMetadataPayload(step: StepKey): any {
 
 
         //  refresh current step data from saved section API
-        await this.loadSavedEducationInfoFromApi(step,false);
+        await this.loadSavedEducationInfoFromApi(step, false);
 
         //  then refresh summary (if summary now contains latest saved docs)
         await this.loadEducationFromSummary();
@@ -3724,8 +4000,8 @@ private buildEducationMetadataPayload(step: StepKey): any {
         }
         else {
           sessionStorage.removeItem(
-'educationFlowQualificationId'
-);
+            'educationFlowQualificationId'
+          );
           this.stepperService.markStepCompleted('educationDetails');
           this.stepperService.next();
         }
@@ -3738,26 +4014,26 @@ private buildEducationMetadataPayload(step: StepKey): any {
   }
 
 
-private completeEducationStepAndMove(
-  step: StepKey
-): void {
-  this.stepperService
-    .markEducationSectionComplete(step);
+  private completeEducationStepAndMove(
+    step: StepKey
+  ): void {
+    this.stepperService
+      .markEducationSectionComplete(step);
 
-  const currentIndex =
-    this.educationOrder.indexOf(step);
+    const currentIndex =
+      this.educationOrder.indexOf(step);
 
-  if (currentIndex >= 0) {
-    for (let i = 0; i <= currentIndex; i++) {
-      this.stepperService
-        .markEducationSectionComplete(
-          this.educationOrder[i]
-        );
+    if (currentIndex >= 0) {
+      for (let i = 0; i <= currentIndex; i++) {
+        this.stepperService
+          .markEducationSectionComplete(
+            this.educationOrder[i]
+          );
+      }
     }
-  }
 
-  this.moveToNextEducationStep(step);
-}
+    this.moveToNextEducationStep(step);
+  }
 
   //move to next if nothing changes
   private moveToNextEducationStep(step: StepKey): void {
@@ -3782,7 +4058,7 @@ private completeEducationStepAndMove(
         queryParamsHandling: 'merge'
       });
     } else {
-  
+
       this.stepperService.markStepCompleted('educationDetails');
       this.stepperService.next();
     }
@@ -3800,25 +4076,25 @@ private completeEducationStepAndMove(
 
 
   private resolveOptionValue(list: any[], rawValue: any): string {
-  const normalized = this.normalizeDropdownValue(rawValue);
+    const normalized = this.normalizeDropdownValue(rawValue);
 
-  if (!normalized) return '';
+    if (!normalized) return '';
 
-  // Important for SIT/server slow API case
-  if (!list || !list.length) {
-    return normalized;
+    // Important for SIT/server slow API case
+    if (!list || !list.length) {
+      return normalized;
+    }
+
+    // already ID
+    const existsAsValue = list.some((x: any) => x.value === normalized);
+    if (existsAsValue) return normalized;
+
+    // label to ID
+    const valueByLabel = this.getValueByLabel(list, normalized);
+
+    // Important: do not return blank if label not found
+    return valueByLabel || normalized;
   }
-
-  // already ID
-  const existsAsValue = list.some((x: any) => x.value === normalized);
-  if (existsAsValue) return normalized;
-
-  // label to ID
-  const valueByLabel = this.getValueByLabel(list, normalized);
-
-  // Important: do not return blank if label not found
-  return valueByLabel || normalized;
-}
   private getValueByLabel(list: any[], label: string) {
     if (!label || !list?.length) return '';
 
@@ -3841,21 +4117,21 @@ private completeEducationStepAndMove(
     if (this.isFromSummary) {
       this.stepperService.unlockSummaryEducationSubsteps();
     }
-this.disableAllEducationForms()
+    this.disableAllEducationForms()
     const form = this.getCurrentForm();
     if (!form) return;
 
-     if (this.isEditMode) {
-    form.enable({
-      emitEvent: false
-    });
-  } else {
-    form.disable({
-      emitEvent: false
-    });
-  }
+    if (this.isEditMode) {
+      form.enable({
+        emitEvent: false
+      });
+    } else {
+      form.disable({
+        emitEvent: false
+      });
+    }
 
-  this.cd.detectChanges();
+    this.cd.detectChanges();
 
     // if (this.isEditMode) {
     //   this.enableAllEducationForms();
@@ -3922,48 +4198,48 @@ this.disableAllEducationForms()
     });
   }
 
- 
+
   onEditClick(): void {
-  if (this.isDataLoading) {
-    return;
+    if (this.isDataLoading) {
+      return;
+    }
+
+    const step =
+      this.activeEducation as StepKey;
+
+    const currentForm =
+      this.educationForms[step] as FormGroup;
+
+    if (!currentForm) {
+      return;
+    }
+
+    this.originalFormValue =
+      currentForm.getRawValue();
+
+    this.isViewMode = false;
+    this.isEditMode = true;
+    this.isFromSummary = true;
+
+    currentForm.enable({
+      emitEvent: false
+    });
+
+    this.stepperService
+      .unlockSummaryEducationSubsteps();
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        fromSummary: true,
+        mode: 'edit',
+        section: 'education'
+      },
+      queryParamsHandling: 'merge'
+    });
+
+    this.cd.detectChanges();
   }
-
-  const step =
-    this.activeEducation as StepKey;
-
-  const currentForm =
-    this.educationForms[step] as FormGroup;
-
-  if (!currentForm) {
-    return;
-  }
-
-  this.originalFormValue =
-    currentForm.getRawValue();
-
-  this.isViewMode = false;
-  this.isEditMode = true;
-  this.isFromSummary = true;
-
-  currentForm.enable({
-    emitEvent: false
-  });
-
-  this.stepperService
-    .unlockSummaryEducationSubsteps();
-
-  this.router.navigate([], {
-    relativeTo: this.route,
-    queryParams: {
-      fromSummary: true,
-      mode: 'edit',
-       section: 'education'
-    },
-    queryParamsHandling: 'merge'
-  });
-
-  this.cd.detectChanges();
-}
   cancelSummaryEdit() {
 
 
@@ -4122,7 +4398,7 @@ this.disableAllEducationForms()
 
     return null;
   }
- 
+
   private async appendUpdateItem(
     fd: FormData,
     fileIndex: number,
@@ -4149,7 +4425,7 @@ this.disableAllEducationForms()
       fd.append(`files[${fileIndex}].title`, title);
     }
 
-    
+
     const documentId =
       fileOrMeta.documentId ||
       this.savedFileMeta[key]?.documentId ||
@@ -4192,7 +4468,7 @@ this.disableAllEducationForms()
       return fileIndex;
     }
   }
- 
+
   private async buildEducationUpdateFormData(): Promise<FormData> {
     const step = this.getCurrentStep();
     const form = this.getCurrentForm();
@@ -4347,7 +4623,7 @@ this.disableAllEducationForms()
   }
 
   private shouldCallNextApi(step: StepKey): boolean {
-    return  this.forceNextApiForDraft || this.hasUnsavedChanges || !this.isStepPersisted(step);
+    return this.forceNextApiForDraft || this.hasUnsavedChanges || !this.isStepPersisted(step);
   }
   private syncPersistedStepsWithCurrentOrder(): void {
     const allowed = new Set(this.educationOrder as StepKey[]);
@@ -4367,23 +4643,12 @@ this.disableAllEducationForms()
       this.showValidationErrors(step);
       return;
     }
+    const fd = await this.buildEducationMetadataPayload(step);
+    // const fd = await this.buildEducationUpdateFormData();
 
-    const fd = await this.buildEducationUpdateFormData();
+ 
 
-    // debug payload
-    for (const [key, value] of fd.entries()) {
-      if (value instanceof File) {
-        console.log(key, 'FILE =>', {
-          name: value.name,
-          type: value.type,
-          size: value.size
-        });
-      } else {
-        console.log(key, '=>', value);
-      }
-    }
-
-    this.formSvc.uploadIncome(fd, this.applicationId, true).subscribe({
+    this.formSvc.saveEducationMetadata(fd, this.applicationId, true).subscribe({
       next: async (res: any) => {
         if (res?.status === 'success') {
           this.forceNextApiForDraft = false;
@@ -4460,288 +4725,111 @@ this.disableAllEducationForms()
 
   //single file upload
   private uploadSingleEducationDocument(
-  step: StepKey,
-  doc: DocType,
-  file: File,
-  index?: number,
-  title?: string
-): void {
-  const normalizedDoc = this.normalizeDocType(doc);
-//   if (normalizedDoc === 'other') {
-// return;
-//   }
-  const key = this.buildKey(step, normalizedDoc, index);
-
-  const fd = new FormData();
-
-  fd.append('category', 'EDUCATION');
-  fd.append('subcategory', this.stepToSubcategory[step]);
-  fd.append('applicantId', this.applicantId);
-
+    step: StepKey,
+    doc: DocType,
+    file: File,
+    index?: number,
+    title?: string
+  ): void {
+    const normalizedDoc = this.normalizeDocType(doc);
  
-
-  // fd.append(
-  //   'files[0].type',
-  //   this.getEducationDocumentType(key)
-  // );
-
-  // fd.append(
-  //   'files[0].file',
-  //   file,
-  //   file.name
-  // );
-
-  const requestIndex = 0;
-
-fd.append(
-  `files[${requestIndex}].type`,
-  this.getEducationDocumentType(key)
-);
-
-if (normalizedDoc === 'other') {
-  fd.append(
-    `files[${requestIndex}].title`,
-    title?.trim() || 'Other Document'
-  );
-}
-
-fd.append(
-  `files[${requestIndex}].file`,
-  file,
-  file.name
-);
-
-  this.uploadingEducationFiles[key] = true;
-  this.uploadingEducationFiles = {
-    ...this.uploadingEducationFiles
-  };
-
-  this.formSvc.uploadIncome(
-    fd,
-    this.applicationId,
-    this.isEditMode
-  ).subscribe({
-    next: (res: any) => {
-      const responseData =
-        res?.data?.data ||
-        res?.data ||
-        {};
-
-      const uploadedDocuments =
-        responseData.uploadedDocuments ||
-        responseData.documents ||
-        [];
-
-      const uploadedDocument =
-        uploadedDocuments[uploadedDocuments.length - 1] ||
-        responseData.uploadedDocument ||
-        responseData.document ||
-        null;
-
-      if (!uploadedDocument) {
-        console.error(
-          'Education upload succeeded, but document metadata was not found:',
-          res
-        );
-
-        delete this.uploadingEducationFiles[key];
-        this.uploadingEducationFiles = {
-          ...this.uploadingEducationFiles
-        };
-
-        this.cd.detectChanges();
-        return;
-      }
-
-      const apiType =
-        uploadedDocument.type ||
-        this.getEducationDocumentType(key);
-
-      const meta = {
-        key,
-
-        documentId:
-          uploadedDocument.documentId ||
-          uploadedDocument.id ||
-          '',
-
-        name:
-          uploadedDocument.fileName ||
-          uploadedDocument.name ||
-          file.name,
-
-        fileName:
-          uploadedDocument.fileName ||
-          uploadedDocument.name ||
-          file.name,
-
-        title:
-          uploadedDocument.title ||
-          title ||
-          apiType,
-
-        type: apiType,
-
-        viewUrl:
-          uploadedDocument.viewUrl ||
-          uploadedDocument.fileUrl ||
-          uploadedDocument.publicUrl ||
-          '',
-
-        fileUrl:
-          uploadedDocument.fileUrl ||
-          uploadedDocument.viewUrl ||
-          '',
-
-        publicUrl:
-          uploadedDocument.publicUrl ||
-          '',
-
-        objectKey:
-          uploadedDocument.objectKey ||
-          '',
-
-        uploaded: true
-      };
-
-      /*
-       * Replace local File with persisted API metadata.
-       * This ensures Next considers this an already uploaded document.
-       */
-      this.savedFileMeta[key] = meta;
-      this.uploadedFiles[key] = meta as any;
-
+    
   
-
-      delete this.uploadingEducationFiles[key];
-
-      this.savedFileMeta = {
-        ...this.savedFileMeta
-      };
-
-      this.uploadedFiles = {
-        ...this.uploadedFiles
-      };
-
-      this.otherDocMap = {
-        ...this.otherDocMap
-      };
-
-      this.uploadingEducationFiles = {
-        ...this.uploadingEducationFiles
-      };
-
-      this.hasUnsavedChanges = true;
-
-      this.saveCurrentFormState();
-      this.saveEducationStateToLocalStorage();
-
-      this.cd.detectChanges();
-    },
-
-    error: (err: any) => {
-      console.error(
-        'Single education document upload failed:',
-        err
-      );
-
-      /*
-       * Remove failed local selection so that validation does not
-       * incorrectly consider the document uploaded.
-       */
-      delete this.uploadedFiles[key];
-      delete this.savedFileMeta[key];
-      delete this.uploadingEducationFiles[key];
-
-
-      this.uploadedFiles = {
-        ...this.uploadedFiles
-      };
-
-      this.savedFileMeta = {
-        ...this.savedFileMeta
-      };
-
-      this.uploadingEducationFiles = {
-        ...this.uploadingEducationFiles
-      };
-
-      const errorMessage =
-        err?.error?.message ||
-        'Failed to upload education document. Please try again.';
-
-      console.error(errorMessage);
-
-      this.cd.detectChanges();
-    }
-  });
-}
-//upload other documnets to pass index file[0],file[1]
-private uploadOtherDocuments(
-  step: StepKey
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const otherKeys = Object.keys(
-      this.uploadedFiles || {}
-    )
-      .filter(key =>
-        key.startsWith(`${step}_other_`) &&
-        this.uploadedFiles[key] instanceof File
-      )
-      .sort((a, b) => {
-        const aRowId = Number(
-          a.match(/_other_(\d+)$/)?.[1] ?? 0
-        );
-
-        const bRowId = Number(
-          b.match(/_other_(\d+)$/)?.[1] ?? 0
-        );
-
-        return aRowId - bRowId;
-      });
-
-    // No new Other documents to upload.
-    if (!otherKeys.length) {
-      resolve();
-      return;
-    }
 
     const fd = new FormData();
 
     fd.append('category', 'EDUCATION');
-    fd.append(
-      'subcategory',
-      this.stepToSubcategory[step]
-    );
+    fd.append('subcategory', this.stepToSubcategory[step]);
     fd.append('applicantId', this.applicantId);
 
-    otherKeys.forEach((key, requestIndex) => {
-      const file =
-        this.uploadedFiles[key] as File;
 
-      const title =
-        this.otherDocMap[key]?.title?.trim() ||
-        'Other Document';
+    const multiDocSteps: StepKey[] = [
+      'ug',
+      'pg',
+      'diploma10',
+      'diploma12',
+      'others12',
+      'othersdiploma'
+    ];
 
-      fd.append(
-        `files[${requestIndex}].type`,
-        'OTHER'
-      );
+    let othersArr = [];
+    let requestIndex = 0;
+     let marksheetArr: any[] = [];
 
+// A. Looping for OTHER documents (max 5 docs)
+    if (doc === 'other' || normalizedDoc === 'other') {
+      if (this.uploadedFiles) {
+        for (let [keyName, value] of Object.entries(this.uploadedFiles)) {
+          const lastUnderscore = keyName.lastIndexOf('_');
+          const fileName = keyName.substring(0, lastUnderscore);
+          const secondLastUnderscore = fileName.lastIndexOf('_');
+          const doctype = fileName.substring(0, secondLastUnderscore);
+          const fileType = fileName.substring(secondLastUnderscore + 1);
+
+          // Only count valid file entries (ignores null/undefined placeholders)
+          if (fileType === 'other' && step === doctype && value) {
+            othersArr.push(value);
+          }
+        }
+
+        if (othersArr.length > 0) {
+          requestIndex = othersArr.length - 1;
+        }
+      }
+    }
+    // B. Looping for MARKSHEETS (same logic as other)
+    else if (multiDocSteps.includes(step) && (doc === 'marksheet' || normalizedDoc === 'marksheet')) {
+      if (this.uploadedFiles) {
+        for (let [keyName, value] of Object.entries(this.uploadedFiles)) {
+          const lastUnderscore = keyName.lastIndexOf('_');
+          const fileName = keyName.substring(0, lastUnderscore);
+          const secondLastUnderscore = fileName.lastIndexOf('_');
+          const doctype = fileName.substring(0, secondLastUnderscore);
+          const fileType = fileName.substring(secondLastUnderscore + 1);
+
+          // Only count valid file entries for this step's marksheets
+          if (fileType === 'marksheet' && step === doctype && value) {
+            marksheetArr.push(value);
+          }
+        }
+
+        if (marksheetArr.length > 0) {
+          requestIndex = marksheetArr.length - 1;
+        }
+      }
+    }
+    // C. Explicit index for any other multi-doc step if passed
+    else if (multiDocSteps.includes(step) && index !== undefined && index !== null) {
+      requestIndex = Number(index);
+    }
+    // D. Single documents (10th, 12th, LC, etc.): always files[0]
+    else {
+      requestIndex = 0;
+    }
+
+    // Ensure key uses the proper index (e.g. ug_marksheet_0, ug_marksheet_1, ug_marksheet_2)
+    const actualIndex = (index !== undefined && index !== null) ? index : requestIndex;
+  const key = this.buildKey(step, normalizedDoc, actualIndex);
+
+    fd.append(
+      `files[${requestIndex}].type`,
+      this.getEducationDocumentType(key)
+    );
+
+    if (normalizedDoc === 'other') {
       fd.append(
         `files[${requestIndex}].title`,
-        title
+        title?.trim() || 'Other Document'
       );
+    }
 
-      fd.append(
-        `files[${requestIndex}].file`,
-        file,
-        file.name
-      );
+    fd.append(
+      `files[${requestIndex}].file`,
+      file,
+      file.name
+    );
 
-      this.uploadingEducationFiles[key] = true;
-    });
-
+    this.uploadingEducationFiles[key] = true;
     this.uploadingEducationFiles = {
       ...this.uploadingEducationFiles
     };
@@ -4762,78 +4850,88 @@ private uploadOtherDocuments(
           responseData.documents ||
           [];
 
-        otherKeys.forEach((key, responseIndex) => {
-          const oldFile =
-            this.uploadedFiles[key] as File;
+        const uploadedDocument =
+          uploadedDocuments[uploadedDocuments.length - 1] ||
+          responseData.uploadedDocument ||
+          responseData.document ||
+          null;
 
-          const uploadedDocument =
-            uploadedDocuments[responseIndex];
-
-          if (!uploadedDocument) {
-            delete this.uploadingEducationFiles[key];
-            return;
-          }
-
-          const title =
-            uploadedDocument.title ||
-            this.otherDocMap[key]?.title ||
-            'Other Document';
-
-          const meta = {
-            key,
-
-            documentId:
-              uploadedDocument.documentId ||
-              uploadedDocument.id ||
-              '',
-
-            name:
-              uploadedDocument.fileName ||
-              uploadedDocument.name ||
-              oldFile.name,
-
-            fileName:
-              uploadedDocument.fileName ||
-              uploadedDocument.name ||
-              oldFile.name,
-
-            title,
-
-            type:
-              uploadedDocument.type ||
-              'OTHER',
-
-            viewUrl:
-              uploadedDocument.viewUrl ||
-              uploadedDocument.fileUrl ||
-              uploadedDocument.publicUrl ||
-              '',
-
-            fileUrl:
-              uploadedDocument.fileUrl ||
-              uploadedDocument.viewUrl ||
-              '',
-
-            publicUrl:
-              uploadedDocument.publicUrl ||
-              '',
-
-            objectKey:
-              uploadedDocument.objectKey ||
-              '',
-
-            uploaded: true
-          };
-
-          this.savedFileMeta[key] = meta;
-          this.uploadedFiles[key] = meta as any;
-
-          this.otherDocMap[key] = {
-            title
-          };
+        if (!uploadedDocument) {
+          console.error(
+            'Education upload succeeded, but document metadata was not found:',
+            res
+          );
 
           delete this.uploadingEducationFiles[key];
-        });
+          this.uploadingEducationFiles = {
+            ...this.uploadingEducationFiles
+          };
+
+          this.cd.detectChanges();
+          return;
+        }
+
+        const apiType =
+          uploadedDocument.type ||
+          this.getEducationDocumentType(key);
+
+        const meta = {
+          key,
+
+          documentId:
+            uploadedDocument.documentId ||
+            uploadedDocument.id ||
+            '',
+
+          name:
+            uploadedDocument.fileName ||
+            uploadedDocument.name ||
+            file.name,
+
+          fileName:
+            uploadedDocument.fileName ||
+            uploadedDocument.name ||
+            file.name,
+
+          title:
+            uploadedDocument.title ||
+            title ||
+            apiType,
+
+          type: apiType,
+
+          viewUrl:
+            uploadedDocument.viewUrl ||
+            uploadedDocument.fileUrl ||
+            uploadedDocument.publicUrl ||
+            '',
+
+          fileUrl:
+            uploadedDocument.fileUrl ||
+            uploadedDocument.viewUrl ||
+            '',
+
+          publicUrl:
+            uploadedDocument.publicUrl ||
+            '',
+
+          objectKey:
+            uploadedDocument.objectKey ||
+            '',
+
+          uploaded: true
+        };
+
+        /*
+         * Replace local File with persisted API metadata.
+         * This ensures Next considers this an already uploaded document.
+         */
+        this.savedFileMeta[key] = meta;
+        this.uploadedFiles[key] = meta as any;
+
+
+
+        delete this.uploadingEducationFiles[key];
 
         this.savedFileMeta = {
           ...this.savedFileMeta
@@ -4851,135 +4949,177 @@ private uploadOtherDocuments(
           ...this.uploadingEducationFiles
         };
 
+        this.hasUnsavedChanges = true;
+
         this.saveCurrentFormState();
         this.saveEducationStateToLocalStorage();
-        this.cd.detectChanges();
 
-        resolve();
+        this.cd.detectChanges();
       },
 
       error: (err: any) => {
-        otherKeys.forEach(key => {
-          delete this.uploadingEducationFiles[key];
-        });
+        console.error(
+          'Single education document upload failed:',
+          err
+        );
+
+        /*
+         * Remove failed local selection so that validation does not
+         * incorrectly consider the document uploaded.
+         */
+        delete this.uploadedFiles[key];
+        delete this.savedFileMeta[key];
+        delete this.uploadingEducationFiles[key];
+
+
+        this.uploadedFiles = {
+          ...this.uploadedFiles
+        };
+
+        this.savedFileMeta = {
+          ...this.savedFileMeta
+        };
 
         this.uploadingEducationFiles = {
           ...this.uploadingEducationFiles
         };
 
+        const errorMessage =
+          err?.error?.message ||
+          'Failed to upload education document. Please try again.';
+
+        console.error(errorMessage);
+
         this.cd.detectChanges();
-        reject(err);
       }
     });
-  });
-}
+  }
+
+
+  isEducationStepUploading1(step?: StepKey): boolean {
+    return Object.entries(
+      this.uploadingEducationFiles || {}
+    ).some(([key, uploading]) =>
+      key.startsWith(`${step}_`) && uploading
+    );
+  }
+  isEducationStepUploading(step?: StepKey): boolean {
+    //  Fall back to activeEducation if step is not provided
+    const targetStep = step || (this.activeEducation as StepKey);
+    if (!targetStep) return false;
+
+    return Object.entries(this.uploadingEducationFiles || {}).some(
+      ([key, uploading]) => key.startsWith(`${targetStep}_`) && !!uploading
+    );
+  }
+
 
   async next(): Promise<void> {
-  const step = this.activeEducation as StepKey;
-  const form = this.educationForms[step] as FormGroup;
+    const step = this.activeEducation as StepKey;
+    const form = this.educationForms[step] as FormGroup;
 
-  if (!form) return;
+    if (!form) return;
 
-  // PG is optional
-  if (step === 'pg' && !this.hasPgData(form, step)) {
-    this.moveToNextEducationStep(step);
-    return;
-  }
-
-
-
-  if (!this.canProceedToNext()) {
-    this.showValidationErrors(step);
-    return;
-  }
-
-  this.saveCurrentFormState();
-  this.persistEducationState();
-
-  this.stepperService.setEducationStepData(
-    step,
-    {
-      ...form.getRawValue(),
-
-      instituteId:
-        form.get('instituteId')?.value ||
-        this.educationFormState[step]?.instituteId ||
-        '',
-
-      instituteName:
-        form.get('instituteName')?.value ||
-        form.get('institutename')?.value ||
-        '',
-
-      institutename:
-        form.get('institutename')?.value ||
-        '',
-
-      location: this.resolveLocationId(
-        form.get('location')?.value
-      ),
-
-      institutetitle:
-        form.get('institutetitle')?.value ||
-        '',
-
-      otherLocation:
-        form.get('otherLocation')?.value ||
-        ''
+    // PG is optional
+    if (step === 'pg' && !this.hasPgData(form, step)) {
+      this.moveToNextEducationStep(step);
+      return;
     }
-  );
 
-  if (!this.shouldCallNextApi(step)) {
-this.completeEducationStepAndMove(step);
-return;
-}
 
-const payload = this.buildEducationMetadataPayload(step);
 
-  this.formSvc.saveEducationMetadata(
-    payload,
-    this.applicationId,
-    this.isEditMode
-  ).subscribe({
-    next: async (res: any) => {
-      this.markStepPersisted(step);
-      this.hasUnsavedChanges = false;
-      this.forceNextApiForDraft = false;
-
-      this.stepperService.markEducationSectionComplete(step);
-
-      // const currentIndex =
-      //   this.educationOrder.indexOf(step);
-
-      // for (let i = 0; i <= currentIndex; i++) {
-      //   this.stepperService.markEducationSectionComplete(
-      //     this.educationOrder[i]
-      //   );
-      // }
-
-      this.saveCurrentFormState();
-      this.saveEducationStateToLocalStorage();
-this.completeEducationStepAndMove(step);
-     
-      // await this.loadSavedEducationInfoFromApi(
-      //   step,
-      //   false
-      // );
-
-      // this.moveToNextEducationStep(step);
-    },
-
-    error: (err: any) => {
-      console.error(
-        'Failed to save education field data:',
-        err
-      );
-
-      alert(
-        err?.error?.message ||
-        'Failed to save education details.'
-      );
+    if (!this.canProceedToNext()) {
+      this.showValidationErrors(step);
+      return;
     }
-  });
-}
+
+    this.saveCurrentFormState();
+    this.persistEducationState();
+
+    this.stepperService.setEducationStepData(
+      step,
+      {
+        ...form.getRawValue(),
+
+        instituteId:
+          form.get('instituteId')?.value ||
+          this.educationFormState[step]?.instituteId ||
+          '',
+
+        instituteName:
+          form.get('instituteName')?.value ||
+          form.get('institutename')?.value ||
+          '',
+
+        institutename:
+          form.get('institutename')?.value ||
+          '',
+
+        location: this.resolveLocationId(
+          form.get('location')?.value
+        ),
+
+        institutetitle:
+          form.get('institutetitle')?.value ||
+          '',
+
+        otherLocation:
+          form.get('otherLocation')?.value ||
+          ''
+      }
+    );
+
+    if (!this.shouldCallNextApi(step)) {
+      this.completeEducationStepAndMove(step);
+      return;
+    }
+
+    const payload = this.buildEducationMetadataPayload(step);
+
+    this.formSvc.saveEducationMetadata(
+      payload,
+      this.applicationId,
+      this.isEditMode
+    ).subscribe({
+      next: async (res: any) => {
+        this.markStepPersisted(step);
+        this.hasUnsavedChanges = false;
+        this.forceNextApiForDraft = false;
+
+        this.stepperService.markEducationSectionComplete(step);
+
+        // const currentIndex =
+        //   this.educationOrder.indexOf(step);
+
+        // for (let i = 0; i <= currentIndex; i++) {
+        //   this.stepperService.markEducationSectionComplete(
+        //     this.educationOrder[i]
+        //   );
+        // }
+
+        this.saveCurrentFormState();
+        this.saveEducationStateToLocalStorage();
+        this.completeEducationStepAndMove(step);
+
+        // await this.loadSavedEducationInfoFromApi(
+        //   step,
+        //   false
+        // );
+
+        // this.moveToNextEducationStep(step);
+      },
+
+      error: (err: any) => {
+        console.error(
+          'Failed to save education field data:',
+          err
+        );
+
+        alert(
+          err?.error?.message ||
+          'Failed to save education details.'
+        );
+      }
+    });
+  }
 }

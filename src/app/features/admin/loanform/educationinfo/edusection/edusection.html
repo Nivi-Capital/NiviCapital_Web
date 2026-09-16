@@ -34,9 +34,12 @@
             <div class="row mt-20">
 
 
-                <div [ngClass]="{'col-6': isOtherEducation, 'col-12': !isOtherEducation  }">
+                <!-- <div [ngClass]="{'col-6': isOtherEducation, 'col-12': !isOtherEducation  }"> -->
 
-
+<div [ngClass]="{
+  'col-6': isOtherEducation || !!group.get('institutetitle')?.value,
+  'col-12': !(isOtherEducation || !!group.get('institutetitle')?.value)
+}">
 
                     <app-dropdown [options]="filteredInstitutes" [placeholder]="'Select Institute Name'"
                         [required]="!isPostGraduate" [searchable]="true" [label]="'Institution Name'"
@@ -55,7 +58,7 @@
                     </div>
                 </div>
 
-                <div class="col-6" *ngIf="isOtherEducation">
+                <div class="col-6" *ngIf="isOtherEducation || !!group.get('institutetitle')?.value">
                     <div class="form-group">
                         <app-inputfield formControlName="institutetitle" name="institutetitle"
                             label="Other Institution Name" placeholder="Enter Institution Name"
@@ -88,7 +91,12 @@
 
             </div>
             <div class="row mt-20">
-                <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }">
+                <!-- <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }"> -->
+                    <div [ngClass]="{
+  'col-3': isOtherLocation || !!group.get('otherLocation')?.value,
+  'col-4': !(isOtherLocation || !!group.get('otherLocation')?.value)
+}">
+
                     <app-dropdown [options]="selectpassingyr" [placeholder]="'Select Year'" [required]="!isPostGraduate"
                         [avatarUrl]="avatarUrl" formControlName="passingyear" [hasAvatar]="hasAvatar"
                         [label]="passingyear">
@@ -103,7 +111,11 @@
 
                 </div>
 
-                <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }">
+                <!-- <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }"> -->
+                      <div [ngClass]="{
+  'col-3': isOtherLocation || !!group.get('otherLocation')?.value,
+  'col-4': !(isOtherLocation || !!group.get('otherLocation')?.value)
+}">
                     <app-inputfield type="number" formControlName="per_cgpa" [required]="!isPostGraduate"
                         label="Percentage / CGPA" placeholder="Enter Percentage/CGPA" helpText="Help text"
                         name="per_cgpa" [min]="0" suffix="">
@@ -125,7 +137,11 @@
 
                 </div>
 
-                <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }">
+                <!-- <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }"> -->
+                      <div [ngClass]="{
+  'col-3': isOtherLocation || !!group.get('otherLocation')?.value,
+  'col-4': !(isOtherLocation || !!group.get('otherLocation')?.value)
+}">
                     <app-dropdown [options]="filteredlocation" [placeholder]="'Select Location'"
                         (searchChange)="filtercities($event)" [required]="!isPostGraduate" [avatarUrl]="avatarUrl"
                         formControlName="location" [enableSearchEvent]="true" [searchable]="true"
@@ -138,7 +154,7 @@
                         </span>
                     </div>
                 </div>
-                <div class="col-3" *ngIf="isOtherLocation">
+                <div class="col-3" *ngIf="isOtherLocation || !!group.get('otherLocation')?.value">
                     <div class="form-group">
                         <app-inputfield formControlName="otherLocation" name="otherLocation" label="Other Location"
                             [maxlength]="100" placeholder="Enter Location Name" [required]="!isPostGraduate">
@@ -386,7 +402,7 @@
                                 </div>
                                 } @else {
                                 <app-uploadbtn [config]="basicConfig" [required]="educationType !== 'POSTGRADUATE'"
-                                    [disabled]="isViewModeon" label="Upload Document"
+                                    [disabled]="isViewModeon" label="Upload Document" (uploadingChange)="onUploadProgressChange($event)"
                                     (fileChange)="onOtherFileChange($event, slot)">
                                 </app-uploadbtn>
                                 }
@@ -423,8 +439,8 @@
 
                     <!-- Add button -->
                     <div class="col-lg-4 col-sm-12 mt-20 pt-2">
-                        <app-buttons label="Add More Document" class="btn btn-icon Add btncustomClass" [outline]="true"
-                            (click)="addotherdocuments()" [disabled]="otherDocuments.length >= maxOtherDocuments">
+                        <app-buttons label="Add More Document" class="btn btn-icon Add btncustomClass" [outline]="true" 
+                            (click)="addotherdocuments()">
                             <img src="/assets/images/icons/addred.svg">
                         </app-buttons>
                     </div>

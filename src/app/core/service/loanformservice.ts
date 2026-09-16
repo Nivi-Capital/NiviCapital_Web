@@ -278,7 +278,7 @@ submitAdditionalInfo(
   getKycId() {
     return this.kycdetailsID;
   }
-
+//update passport document
   uploadpassport(data: any, id: string): Observable<ApiResponse<any>> {
     console.log("service--", data);
 
@@ -293,7 +293,40 @@ submitAdditionalInfo(
 
     );
   }
+submitKycMetadata(payload: any) {
+  return this.http.post(
+    `${this.baseUrl}/v1/kyc/metadata`,
+    payload
+  );
+}
+//upload single kyc documents 
+uploadKycDocument(
+  custId: string,
+  file: File,
+  docType: string,
+ 
+): Observable<ApiResponse<any>> {
+  const formData = new FormData();
 
+  formData.append('file', file);
+  formData.append('docType', docType);
+
+ 
+
+  return this.http.post<ApiResponse<any>>(
+    `${this.baseUrl}/v1/kyc/${custId}/document`,
+    formData
+  );
+}
+//update passport number
+updatepassportNumber(data: any): Observable<ApiResponse<any>> {
+    console.log("service--", data);
+
+    return this.http.post<ApiResponse<any>>(
+      `${this.baseUrl}/v1/kyc/metadata/passport`,
+      data
+    );
+  }
 
   // ************************* estimate expense  *************************
   getlivingexp(): Observable<ApiResponse<any>> {
@@ -699,6 +732,13 @@ submitAdditionalInfo(
     );
   }
 
+//education and income get data 
+    getSavedDataEducation_income(id1: string, id2: string, sectionkey: string,category:string,subcategory:string): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(
+      `${this.baseUrl}/v1/los/draft/get?applicationId=${id1}&applicantId=${id2}&sectionKey=${sectionkey}&category=${category}&subcategory=${subcategory}`,
+
+    );
+  }
     // *************************get saved KYC data *************************
 
      saveandExitKYCData(data: any): Observable<ApiResponse<any>> {

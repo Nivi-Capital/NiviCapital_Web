@@ -173,6 +173,9 @@ export class Edusection {
   description1 = `Great ! Your Additional Info Details\n Uploaded Successfully.`;
 
   @Input() isDataLoading = false;
+  isUploadProgressRunning = false;
+  @Input() isApiUploadRunning = false;
+
   constructor(private fb: FormBuilder, private stepperService: Loanstepperservice, private cd: ChangeDetectorRef, private route: ActivatedRoute, private router: Router,
     public main: Main, private msgBox: Msgboxservice, public loanformservice: Loanformservice, private storageservice: Storage) { }
 
@@ -984,11 +987,18 @@ SelectedInstitute(values: string | string[]) {
     }, {} as { [key: string]: Document });
   }
 
+  get isAddDocumentDisabled(): boolean {
+  return (
+    this.otherDocuments.length >= this.maxOtherDocuments ||
+    this.isUploadProgressRunning ||
+    this.isApiUploadRunning
+  );
+}
   addotherdocuments() {
-
-    if (this.otherDocuments.length >= this.maxOtherDocuments) {
-      return;
-    }
+ 
+   if (this.isAddDocumentDisabled) {
+    return;
+  }
     const id = ++this.slotCounter;
     this.otherDocuments.push({
 
@@ -1323,4 +1333,8 @@ onEditClick(): void {
     });
   }
 
+  //check uploading bar
+onUploadProgressChange(isUploading: boolean): void {
+  this.isUploadProgressRunning = isUploading;
+}
 }

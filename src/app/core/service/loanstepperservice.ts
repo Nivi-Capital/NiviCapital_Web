@@ -1159,7 +1159,7 @@ getStepData1(step: string): any {
       'existing';
   }
 
-  // ✅ Keep summary edit params only if user came from summary
+  //  Keep summary edit params only if user came from summary
   const isFromSummary =
     currentParams['fromSummary'] === true ||
     currentParams['fromSummary'] === 'true';
