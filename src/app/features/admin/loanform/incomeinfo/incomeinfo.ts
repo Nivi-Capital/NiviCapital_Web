@@ -284,6 +284,10 @@ export class Incomeinfo {
 
   isDataLoading = true;
   loadError = '';
+  isDocumentUploading = false;
+  uploadingFiles: Record<string, boolean> = {};
+  uploadingDocs: Record<string, boolean> = {};
+
   constructor(private fb: FormBuilder, private stepperService: Loanstepperservice, private router: Router, private cd: ChangeDetectorRef, private msgBox: Msgboxservice, public loanformservice: Loanformservice, private route: ActivatedRoute, public main: Main, private storageservice: Storage) { }
   async ngOnInit(): Promise<void> {
 
@@ -625,15 +629,15 @@ export class Incomeinfo {
       return;
     }
 
-     if (this.isIncomeCacheForCurrentApplicant(stepData)) {
-    this.restoreIncomeStepData(stepData);
-   return;
-  }
+    if (this.isIncomeCacheForCurrentApplicant(stepData)) {
+      this.restoreIncomeStepData(stepData);
+      return;
+    }
 
-  if (this.isIncomeCacheForCurrentApplicant(safeLocal)) {
-    this.restoreIncomeStepData(safeLocal);
-    return;
-  }
+    if (this.isIncomeCacheForCurrentApplicant(safeLocal)) {
+      this.restoreIncomeStepData(safeLocal);
+      return;
+    }
 
     this.resetIncomeDocuments();
 
@@ -645,34 +649,34 @@ export class Incomeinfo {
 
   }
 
-  private isIncomeCacheForCurrentApplicant( data: any
-): boolean {
-  if (!data) {
-    return false;
+  private isIncomeCacheForCurrentApplicant(data: any
+  ): boolean {
+    if (!data) {
+      return false;
+    }
+
+    const currentApplicantId = String(
+      this.getApiApplicantId() || ''
+    );
+    const ownerApplicantId = String(data.ownerApplicantId ||
+      data.applicantId ||
+      ''
+    );
+
+    /*
+     * Old cache may not contain ow*erApplicantId.
+     * For co-applica*ts, do not use an unowned cache be*ause it
+     * can belong to another*co-applicant.
+     */
+    if (this.isCoApplicant && !ownerApplicantId) {
+      return false;
+    }
+
+    return (
+      !this.isCoApplicant ||
+      ownerApplicantId === currentApplicantId
+    );
   }
-
-  const currentApplicantId = String(
-    this.getApiApplicantId() || ''
-  );
-  const ownerApplicantId = String(   data.ownerApplicantId ||
-    data.applicantId ||
-    ''
-  );
-
-  /*
-   * Old cache may not contain ow*erApplicantId.
-   * For co-applica*ts, do not use an unowned cache be*ause it
-   * can belong to another*co-applicant.
-   */
-  if (this.isCoApplicant && !ownerApplicantId) {
-  return false;
-  }
-
-  return (
-  !this.isCoApplicant ||
-    ownerApplicantId === currentApplicantId
- );
-}
 
   private markIncomeStepCompletedIfValid() {
     const isFromSummaryRoute =
@@ -962,6 +966,9 @@ export class Incomeinfo {
     }
     this.uploadedFiles[key] = result.file;
 
+    this.uploadingFiles[key] = true;
+    this.isDocumentUploading = true;
+
     const fd = new FormData();
     fd.append('category', category);
     fd.append('subcategory', subcategory);
@@ -985,6 +992,8 @@ export class Incomeinfo {
     fd.append(`files[${index}].type`, type);
     fd.append(`files[${index}].file`, result.file);
 
+    this.startDocUpload(key);
+    
     this.loanformservice.uploadIncome(fd, this.applicationId, this.isEditMode).subscribe({
       next: (res) => {
 
@@ -1040,12 +1049,21 @@ export class Incomeinfo {
           stepData
         );
         this.stepperService.setStepData1(this.getStepRoute(), stepData);
+        this.uploadingFiles[key] = false;
+
+        this.isDocumentUploading =
+          Object.values(this.uploadingFiles)
+            .some(v => v);
 
         // this.getAllDocuments();
         this.cd.detectChanges();
       },
       error: (err) => {
+        this.uploadingFiles[key] = false;
 
+        this.isDocumentUploading =
+          Object.values(this.uploadingFiles)
+            .some(v => v);
         const errorMsg = err.error?.message || 'Failed to upload file';
         this.uploadComponent.setErrorFromApi(errorMsg);
       }
@@ -2474,5 +2492,23 @@ export class Incomeinfo {
       this.incomeForm.disable();
     }
   }
+
+isDocUploading(docKey: string): boolean {
+  return this.uploadingDocs[docKey] === true;
+}
+
+startDocUpload(docKey: string): void {
+  this.uploadingDocs[docKey] = true;
+}
+
+finishDocUpload(docKey: string): void {
+  this.uploadingDocs[docKey] = false;
+}
+  isCurrentStepUploading(): boolean {
+    return Object.values(this.uploadingFiles).some(
+      uploading => uploading
+    );
+  }
+
 }
 

@@ -185,7 +185,14 @@
 
 
                     <div class=" col-sm-12 mt-20" *ngFor="let m of [].constructor(marksheetCount); let i = index">
+ <!-- 1. SHOW LOADER WHILE UPLOADING -->
+                        <div *ngIf="isDocUploading('marksheet', i)" class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+                            <div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>
+                            
+                        </div>
 
+                        <!-- 2. SHOW COMPLETED CARD WHEN UPLOADED -->
+                        <ng-container *ngIf="!isDocUploading('marksheet', i)">
                         @if (hasLocal('marksheet' ,i)) {
                         <div class="text-label">Marksheet <span class="text-danger">*</span></div>
                         <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
@@ -219,6 +226,7 @@
                         </div>
 
                         }
+                        </ng-container>
 
                     </div>
                 </div>
@@ -226,6 +234,14 @@
                 <div class="col-6">
                     <div class="text-label fw-bold mt-20">Passing / Leaving Certificate</div>
                     <div class=" col-sm-12 mt-20">
+                          <!-- 1. SHOW LOADER WHILE UPLOADING -->
+                        <div *ngIf="isDocUploading('lc')" class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+                            <div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>
+                          
+                        </div>
+
+                        <!-- 2. SHOW COMPLETED CARD WHEN UPLOADED -->
+                        <ng-container *ngIf="!isDocUploading('lc')">
                         @if (hasLocal('lc')) {
                         <div class="text-label">Passing / Leaving Certificate <span class="text-danger">*</span></div>
                         <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
@@ -257,7 +273,7 @@
                         </div>
 
                         }
-
+</ng-container>
 
                     </div>
                 </div>
@@ -272,6 +288,14 @@
                     <div class="row">
                         <div class="col-md-4 col-sm-6 mt-20"
                             *ngFor="let _ of [].constructor(marksheetCount); let i = index">
+                             <!-- 1. SHOW LOADER WHILE UPLOADING -->
+                        <div *ngIf="isDocUploading('marksheet', i)" class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+                            <div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>
+                           
+                        </div>
+
+                        <!-- 2. SHOW COMPLETED CARD WHEN UPLOADED -->
+                        <ng-container *ngIf="!isDocUploading('marksheet', i)">
                             <!-- Dynamic document key -->
                             @if (hasLocal('marksheet' ,i)) {
                             <div class="text-label">
@@ -309,12 +333,21 @@
                                 {{ marksheetlabel }} {{ i + 1 }} is required
                             </div>
                             }
+                            </ng-container>
                         </div>
                     </div>
                 </div>
                 <div class="col-4 mt-20">
                     <div class="text-label fw-bold">Passing / Leaving Certificate</div>
                     <div class=" col-sm-12 mt-20">
+                          <!-- 1. SHOW LOADER WHILE UPLOADING -->
+                        <div *ngIf="isDocUploading('lc')" class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+                            <div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>
+                           
+                        </div>
+
+                        <!-- 2. SHOW COMPLETED CARD WHEN UPLOADED -->
+                        <ng-container *ngIf="!isDocUploading('lc')">
                         @if (hasLocal('lc' )) {
 
                         <div class="text-label">
@@ -354,6 +387,7 @@
                         </div>
 
                         }
+                        </ng-container>
                     </div>
                 </div>
             </div>

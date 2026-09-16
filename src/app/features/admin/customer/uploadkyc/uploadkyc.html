@@ -18,7 +18,7 @@
 
         <div class="accordion-collapse collapse" [class.show]="openIndex.includes(i)">
 
-          <div class="accordion-body mobiledetails" >
+          <div class="accordion-body mobiledetails">
 
             <ng-container *ngIf="i === 0">
               <ng-container *ngTemplateOutlet="identityTemplate; context:{index:i}">
@@ -73,12 +73,13 @@
         <div class="col-lg-6 col-sm-12 loan-mt-4">
 
           @if (hasLocalFile('aadharfront')) {
-          
-  <div class=" text-label">
+
+          <div class=" text-label">
             Aadhaar Card Front<span class="text-danger">*</span>
           </div>
           <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-            <p class="text-label file-name" [title]="getLocalFileName('aadharfront', false)">{{ getLocalFileName('aadharfront') }}</p>
+            <p class="text-label file-name" [title]="getLocalFileName('aadharfront', false)">{{
+              getLocalFileName('aadharfront') }}</p>
 
             <div class="icons">
               <span class="view" (click)="viewLocalFile('aadharfront')">
@@ -107,12 +108,13 @@
 
         <div class="col-lg-6 col-sm-12 loan-mt-4">
           @if (hasLocalFile('aadharback')) {
-         
-  <div class=" text-label">
+
+          <div class=" text-label">
             Aadhaar Card Back<span class="text-danger">*</span>
           </div>
           <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-            <p class="text-label file-name" [title]="getLocalFileName('aadharback', false)">{{ getLocalFileName('aadharback') }}</p>
+            <p class="text-label file-name" [title]="getLocalFileName('aadharback', false)">{{
+              getLocalFileName('aadharback') }}</p>
 
             <div class="icons">
               <span class="view" (click)="viewLocalFile('aadharback')">
@@ -160,10 +162,10 @@
         <div class="col-lg-6 loan-mt-4 col-sm-12">
 
           @if (hasLocalFile('pan')) {
-            <div class=" text-label">
+          <div class=" text-label">
             PAN Card<span class="text-danger">*</span>
           </div>
-        
+
 
           <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
             <p class="text-label file-name" [title]="getLocalFileName('pan', false)">{{ getLocalFileName('pan') }}</p>
@@ -217,13 +219,14 @@
         <div class="col-lg-6 loan-mt-4 col-sm-12">
 
           @if (hasLocalFile('passport')) {
-         
-            <div class=" text-label">
+
+          <div class=" text-label">
             Passport<span class="text-danger">*</span>
           </div>
 
           <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-            <p class="text-label file-name" [title]="getLocalFileName('passport', false)">{{ getLocalFileName('passport') }}</p>
+            <p class="text-label file-name" [title]="getLocalFileName('passport', false)">{{
+              getLocalFileName('passport') }}</p>
 
             <div class="icons">
               <span class="view" (click)="viewLocalFile('passport')">
@@ -240,8 +243,9 @@
             </div>
           </div>
           } @else {
-          <app-uploadbtn [config]="basicConfig" (fileChange)="onFileChange($event, 'passport')" label="Passport" [disabled]="isViewMode">
-          </app-uploadbtn >
+          <app-uploadbtn [config]="basicConfig" (fileChange)="onFileChange($event, 'passport')" label="Passport"
+            [disabled]="isViewMode">
+          </app-uploadbtn>
           }
           <!-- <app-uploadbtn [config]="basicConfig" (fileChange)="onFileChange($event, 'passport')" label="Passport">
           </app-uploadbtn> -->
@@ -257,7 +261,7 @@
         </div>
 
 
-       
+
         <div class="text-danger error" *ngIf="dob.invalid && dob.touched">
 
           <small *ngIf="dob.errors?.['required'] && !dob.errors?.['invalidDate']">
@@ -382,12 +386,14 @@
       <!-- <div class="loan-heading text-label">Current Address</div> -->
 
       <div class="addresscheck d-flex justify-content-start align-items-center gap-4">
-        <app-checkbox label="Same as Permanent Address" [checked]="addressType === 'same'" [ngClass]="{'disabled-div' : isViewMode}"
-          [disabled]="addressType === 'same'" (checkedChange)="selectSameAddress($event)"></app-checkbox>
+        <app-checkbox label="Same as Permanent Address" [checked]="addressType === 'same'"
+          [ngClass]="{'disabled-div' : isViewMode}" [disabled]="addressType === 'same'"
+          (checkedChange)="selectSameAddress($event)"></app-checkbox>
         <label for="sameAddress"></label>
 
-        <app-checkbox label="Different Address" [checked]="addressType === 'different'" [ngClass]="{'disabled-div' : isViewMode}"
-          [disabled]="addressType === 'different'" (checkedChange)="selectDifferentAddress($event)"></app-checkbox>
+        <app-checkbox label="Different Address" [checked]="addressType === 'different'"
+          [ngClass]="{'disabled-div' : isViewMode}" [disabled]="addressType === 'different'"
+          (checkedChange)="selectDifferentAddress($event)"></app-checkbox>
         <label for="differentAddress"></label>
       </div>
 
@@ -397,19 +403,20 @@
         <div class="col-lg-6  col-sm-12 ">
           <app-dropdown [options]="secondaryaddproof" [required]="true" [(selectedValue)]="selectedSecondaryProof"
             placeholder="Select Secondary Address Proof" name="secondary_address_prrof" [searchable]="true"
-            (selectedValueChange)="onSelectionChange($event)"   [disabled]="isViewMode"
+            (selectedValueChange)="onSelectionChange($event)" [disabled]="isViewMode"
             label="Secondary Address Proof"></app-dropdown>
         </div>
         <div class="col-lg-6  col-sm-12 ">
           @if (hasLocalFile('secaddress')) {
-         
 
-            <div class=" text-label">
+
+          <div class=" text-label">
             Secondary Address Proof Name<span class="text-danger">*</span>
           </div>
 
           <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-            <p class="text-label file-name" [title]="getLocalFileName('secaddress', false)">{{ getLocalFileName('secaddress') }}</p>
+            <p class="text-label file-name" [title]="getLocalFileName('secaddress', false)">{{
+              getLocalFileName('secaddress') }}</p>
 
             <div class="icons">
               <span class="view" (click)="viewLocalFile('secaddress')">
@@ -530,37 +537,38 @@
           (checkedChange)="currentmailcheck($event)" [disabled]="isPermanentMailingChecked"></app-checkbox>
       </div>
 
-    
+
     </ng-template>
 
-      <!-- footer btns -->
-      <div class="row  d-flex justify-content-center space-evenly align-items-center " *ngIf="!isCoApplicant">
-        <div class="col-lg-6  col-sm-12">
-          <app-buttons label="Back to dashboard" [outline]="true" class="btncustomClass primary "
-            (click)="goToDashboard()"></app-buttons>
-
-        </div>
-        <div class="col-lg-6  col-sm-12">
-          <app-buttons label="Submit" type="submit" color="primary" class="btncustomClass btn"
-            [disabled]="!kycForm.valid || !allRequiredFilesUploaded  || !(isPermanentMailingChecked || isCurrentMailingChecked )"></app-buttons>
-
-        </div>
-
+    <!-- footer btns -->
+    <div class="row  d-flex justify-content-center space-evenly align-items-center " *ngIf="!isCoApplicant">
+      <div class="col-lg-6  col-sm-12">
+        <app-buttons label="Back to dashboard" [outline]="true" class="btncustomClass primary "
+          (click)="goToDashboard()"></app-buttons>
 
       </div>
-      
+      <div class="col-lg-6  col-sm-12">
+        <app-buttons label="Submit" type="submit" color="primary" class="btncustomClass btn"
+          [disabled]="!kycForm.valid || !allRequiredFilesUploaded  || !(isPermanentMailingChecked || isCurrentMailingChecked )"></app-buttons>
+
+      </div>
+
+
+    </div>
+
     <hr class="footer-hr-class" *ngIf="isCoApplicant" [ngClass]="{'m-0':isCoApplicant}">
     <div class="loan-footerbtns row w-100  d-flex justify-content-between align-items-center" *ngIf="isCoApplicant">
 
       <div class="col-lg-4 pointer" *ngIf="!stepperService.isCoApplicantStepCompleted('co-summaryinfo')">
         <img src="../assets/images/icons/save.svg">
-        <span class="text-dp-3-regular mx-2 blue-text" (click)="saveExit()"> Save and Exit</span>
+        <span class="text-dp-3-regular mx-2 blue-text" [class.disabled-div]="isCurrentStepUploading()"
+          (click)="!isCurrentStepUploading() && saveExit()"> Save and Exit</span>
       </div>
       <div class="col-lg-4  d-flex justify-content-end ms-auto">
         <app-buttons type="button" label="Back" class="btn btncustomClass" [outline]="true" (click)="back()">
         </app-buttons>
         <app-buttons type="button" label="Next" class="btn btncustomClass" color="primary" (click)="next()"
-          [disabled]="!kycForm.valid || !allRequiredFilesUploaded  || !(isPermanentMailingChecked || isCurrentMailingChecked )"></app-buttons>
+          [disabled]="!kycForm.valid ||isCurrentStepUploading() || !allRequiredFilesUploaded  || !(isPermanentMailingChecked || isCurrentMailingChecked )"></app-buttons>
 
       </div>
     </div>
@@ -591,4 +599,14 @@ the profile is now active.`" [boxText]="custName" [id]="NCId" [buttons]="[
 
 
 
+</div>
+
+<div *ngIf="isCurrentStepUploading()" class="page-loader-overlay">
+  <div class="spinner-border text-danger" style="width: 3rem; height: 3rem;" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+
+  <span class="loader-text">
+    Uploading document, please wait...
+  </span>
 </div>

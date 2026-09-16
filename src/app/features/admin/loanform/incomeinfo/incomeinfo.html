@@ -80,6 +80,18 @@
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
 
+ <div *ngIf="isDocUploading('salary1')"
+        class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+
+        <div class="spinner-border spinner-border-sm text-danger me-2"
+            role="status">
+        </div>
+
+        <span>Uploading...</span>
+    </div>
+
+    <!-- File Upload / Preview -->
+    <ng-container *ngIf="!isDocUploading('salary1')">
 
 
                             @if( hasDocument('salary1')){
@@ -105,7 +117,7 @@
                                 [fileuploadresponse]="handleresponse">
                             </app-uploadbtn>
                             }
-
+</ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
                             @if( hasDocument('salary2')){
@@ -896,7 +908,7 @@
             <app-buttons type="button" label="Back" class="btn btncustomClass" [outline]="true" (click)="back()">
             </app-buttons>
             <app-buttons type="button" label="Next" class="btn btncustomClass" color="primary" (click)="next()"
-                [ngClass]="{'disabled-div' : !allRequiredFilesUploaded}" [disabled]="!allRequiredFilesUploaded">
+                [ngClass]="{'disabled-div' : !allRequiredFilesUploaded || isCurrentStepUploading()}" [disabled]="!allRequiredFilesUploaded || isCurrentStepUploading()">
             </app-buttons>
 
         </div>
@@ -938,3 +950,4 @@
 
     </div>
 </div>
+

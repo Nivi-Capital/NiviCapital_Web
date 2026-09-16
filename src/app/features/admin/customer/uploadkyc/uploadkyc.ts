@@ -143,6 +143,7 @@ export class Uploadkyc implements OnDestroy, AfterViewInit {
   uploadingKycFiles: Record<string, boolean> = {};
 private isKycAlreadySubmitted: boolean = false;
 
+
   constructor(public main: Main, private addcustomerservice: Addcustomerservice, private cd: ChangeDetectorRef, private loanformservice: Loanformservice, private route: ActivatedRoute, public stepperService: Loanstepperservice, private loanservice: Loanformservice, private msgBox: Msgboxservice, private router: Router) { }
 
   async ngOnInit(): Promise<void> {
@@ -2814,6 +2815,7 @@ return true;
       return response;
     } finally {
       this.uploadingKycFiles[key] = false;
+      this.cd.detectChanges();
     }
   }
 
@@ -3236,6 +3238,10 @@ return true;
       this.uploadingKycFiles
     ).some(uploading => uploading === true);
   }
+
+  isCurrentStepUploading(): boolean {
+  return this.isAnyKycFileUploading;
+}
   ngOnDestroy(): void {
     sessionStorage.removeItem('kycs');
 
