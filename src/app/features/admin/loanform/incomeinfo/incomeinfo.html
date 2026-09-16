@@ -88,7 +88,7 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                               
                             </div>
 
                             <!-- File Upload / Preview -->
@@ -121,7 +121,7 @@
                             </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('salary2')">
+                            <div class="text-label" *ngIf="isDocUploading('salary2')">
                                 Salary Slip 2<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('salary2')"
@@ -130,38 +130,38 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                                
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('salary2')">
-                            @if( hasDocument('salary2')){
-                            <div class="text-label">Salary Slip 2<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('salary2',false)">{{
-                                    getDocumentName('salary2') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('salary2'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('salary2'), getDocumentName('salary2'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span (click)="deleteImage('salary2')"><img src="/assets/images/icons/close.svg"
-                                            alt="Download"></span>
+                                @if( hasDocument('salary2')){
+                                <div class="text-label">Salary Slip 2<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('salary2',false)">{{
+                                        getDocumentName('salary2') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('salary2'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('salary2'), getDocumentName('salary2'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span (click)="deleteImage('salary2')"><img src="/assets/images/icons/close.svg"
+                                                alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig"
-                                (uploadStarted)="onUploadStarted($event, 'salary2' ,'INCOME' ,'LAST_3_MONTHS','SALARY_SLIP', '', 1)"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                [disabled]="isViewMode" label="Salary Slip 2">
-                            </app-uploadbtn>
-                            }
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig"
+                                    (uploadStarted)="onUploadStarted($event, 'salary2' ,'INCOME' ,'LAST_3_MONTHS','SALARY_SLIP', '', 1)"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    [disabled]="isViewMode" label="Salary Slip 2">
+                                </app-uploadbtn>
+                                }
                             </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('salary3')">
+                            <div class="text-label" *ngIf="isDocUploading('salary3')">
                                 Salary Slip 3<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('salary3')"
@@ -170,34 +170,34 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                                
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('salary3')">
-                            @if( hasDocument('salary3')){
-                            <div class="text-label">Salary Slip 3<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('salary3',false)">{{
-                                    getDocumentName('salary3') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('salary3'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('salary3'), getDocumentName('salary3'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span class="delete" (click)="deleteImage('salary3')"><img
-                                            src="/assets/images/icons/close.svg" alt="Download"></span>
+                                @if( hasDocument('salary3')){
+                                <div class="text-label">Salary Slip 3<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('salary3',false)">{{
+                                        getDocumentName('salary3') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('salary3'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('salary3'), getDocumentName('salary3'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span class="delete" (click)="deleteImage('salary3')"><img
+                                                src="/assets/images/icons/close.svg" alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig"
-                                (uploadStarted)="onUploadStarted($event, 'salary3','INCOME' , 'LAST_3_MONTHS','SALARY_SLIP', '', 2)"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                [disabled]="isViewMode" label="Salary Slip 3">
-                            </app-uploadbtn>
-                            }
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig"
+                                    (uploadStarted)="onUploadStarted($event, 'salary3','INCOME' , 'LAST_3_MONTHS','SALARY_SLIP', '', 2)"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    [disabled]="isViewMode" label="Salary Slip 3">
+                                </app-uploadbtn>
+                                }
                             </ng-container>
                         </div>
                     </div>
@@ -224,7 +224,7 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('Form16')">
+                            <div class="text-label" *ngIf="isDocUploading('Form16')">
                                 Form 16<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('Form16')"
@@ -233,34 +233,34 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                               
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('Form16')">
-                            @if( hasDocument('Form16')){
-                            <div class="text-label">Form 16<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('Form16',false)">{{
-                                    getDocumentName('Form16') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('Form16'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('Form16'), getDocumentName('Form16'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span (click)="deleteImage('Form16')"><img src="/assets/images/icons/close.svg"
-                                            alt="Download"></span>
+                                @if( hasDocument('Form16')){
+                                <div class="text-label">Form 16<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('Form16',false)">{{
+                                        getDocumentName('Form16') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('Form16'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('Form16'), getDocumentName('Form16'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span (click)="deleteImage('Form16')"><img src="/assets/images/icons/close.svg"
+                                                alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig"
-                                (uploadStarted)="onUploadStarted($event, 'Form16' ,'INCOME','FORM_16','FORM_16')"
-                                [disabled]="isViewMode" [uploadViaApi]="true" [fileuploadresponse]="handleresponse"
-                                [required]="true" label="Form 16">
-                            </app-uploadbtn>
-                            }
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig"
+                                    (uploadStarted)="onUploadStarted($event, 'Form16' ,'INCOME','FORM_16','FORM_16')"
+                                    [disabled]="isViewMode" [uploadViaApi]="true" [fileuploadresponse]="handleresponse"
+                                    [required]="true" label="Form 16">
+                                </app-uploadbtn>
+                                }
                             </ng-container>
                         </div>
 
@@ -285,8 +285,8 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('oneyearbankstatement')">
-                               1 Year bank statement<span class="text-danger">*</span>
+                            <div class="text-label" *ngIf="isDocUploading('oneyearbankstatement')">
+                                1 Year bank statement<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('oneyearbankstatement')"
                                 class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
@@ -294,34 +294,36 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                                
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('oneyearbankstatement')">
-                            @if( hasDocument('oneyearbankstatement')){
-                            <div class="text-label">1 Year bank statement<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('oneyearbankstatement',false)">
-                                    {{ getDocumentName('oneyearbankstatement') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('oneyearbankstatement'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('oneyearbankstatement'), getDocumentName('oneyearbankstatement'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span (click)="deleteImage('oneyearbankstatement')"><img
-                                            src="/assets/images/icons/close.svg" alt="Download"></span>
+                                @if( hasDocument('oneyearbankstatement')){
+                                <div class="text-label">1 Year bank statement<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name"
+                                        [title]="getDocumentName('oneyearbankstatement',false)">
+                                        {{ getDocumentName('oneyearbankstatement') }}</p>
+                                    <div class="icons">
+                                        <span class="view"
+                                            (click)="viewImage(getDocumentUrl('oneyearbankstatement'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('oneyearbankstatement'), getDocumentName('oneyearbankstatement'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span (click)="deleteImage('oneyearbankstatement')"><img
+                                                src="/assets/images/icons/close.svg" alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                (uploadStarted)="onUploadStarted($event, 'oneyearbankstatement','INCOME','BANK_STATEMENT_1_YEAR', 'BANK_STATEMENT')"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                label="1 Year bank statement">
-                            </app-uploadbtn>
-                            }
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                    (uploadStarted)="onUploadStarted($event, 'oneyearbankstatement','INCOME','BANK_STATEMENT_1_YEAR', 'BANK_STATEMENT')"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    label="1 Year bank statement">
+                                </app-uploadbtn>
+                                }
                             </ng-container>
                         </div>
 
@@ -347,7 +349,7 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('ay1')">
+                            <div class="text-label" *ngIf="isDocUploading('ay1')">
                                 Year 1<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('ay1')"
@@ -356,39 +358,39 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                               
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('ay1')">
-                            @if( hasDocument('ay1')){
-                            <div class="text-label">Year 1<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('ay1',false)">{{
-                                    getDocumentName('ay1') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('ay1'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('ay1'), getDocumentName('ay1'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span (click)="deleteImage('ay1')"><img src="/assets/images/icons/close.svg"
-                                            alt="Download"></span>
+                                @if( hasDocument('ay1')){
+                                <div class="text-label">Year 1<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('ay1',false)">{{
+                                        getDocumentName('ay1') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('ay1'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('ay1'), getDocumentName('ay1'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span (click)="deleteImage('ay1')"><img src="/assets/images/icons/close.svg"
+                                                alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                (uploadStarted)="onUploadStarted($event, 'ay1','INCOME','ITR_LAST_3_YEARS','ITR', '', 0)"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                label="Year 1">
-                            </app-uploadbtn>
-                            }
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                    (uploadStarted)="onUploadStarted($event, 'ay1','INCOME','ITR_LAST_3_YEARS','ITR', '', 0)"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    label="Year 1">
+                                </app-uploadbtn>
+                                }
                             </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('ay2')">
-                               Year 2<span class="text-danger">*</span>
+                            <div class="text-label" *ngIf="isDocUploading('ay2')">
+                                Year 2<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('ay2')"
                                 class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
@@ -396,38 +398,38 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                                
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('ay2')">
-                            @if( hasDocument('ay2')){
-                            <div class="text-label">Year 2<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('ay2',false)">{{
-                                    getDocumentName('ay2') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('ay2'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('ay2'), getDocumentName('ay2'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span class="delete" (click)="deleteImage('ay2')"><img
-                                            src="/assets/images/icons/close.svg" alt="Download"></span>
+                                @if( hasDocument('ay2')){
+                                <div class="text-label">Year 2<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('ay2',false)">{{
+                                        getDocumentName('ay2') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('ay2'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('ay2'), getDocumentName('ay2'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span class="delete" (click)="deleteImage('ay2')"><img
+                                                src="/assets/images/icons/close.svg" alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                (uploadStarted)="onUploadStarted($event, 'ay2','INCOME','ITR_LAST_3_YEARS','ITR','', 1)"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                label="Year 2">
-                            </app-uploadbtn>
-                            }
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                    (uploadStarted)="onUploadStarted($event, 'ay2','INCOME','ITR_LAST_3_YEARS','ITR','', 1)"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    label="Year 2">
+                                </app-uploadbtn>
+                                }
                             </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('ay3')">
+                            <div class="text-label" *ngIf="isDocUploading('ay3')">
                                 Year 3<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('ay3')"
@@ -436,35 +438,35 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                               
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('ay3')">
-                            @if( hasDocument('ay3')){
-                            <div class="text-label">Year 3<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('ay3',false)">{{
-                                    getDocumentName('ay3') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('ay3'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('ay3'), getDocumentName('ay3'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span class="delete" (click)="deleteImage('ay3')"><img
-                                            src="/assets/images/icons/close.svg" alt="Download"></span>
+                                @if( hasDocument('ay3')){
+                                <div class="text-label">Year 3<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('ay3',false)">{{
+                                        getDocumentName('ay3') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('ay3'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('ay3'), getDocumentName('ay3'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span class="delete" (click)="deleteImage('ay3')"><img
+                                                src="/assets/images/icons/close.svg" alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
+                                } @else{
 
-                            <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                (uploadStarted)="onUploadStarted($event, 'ay3','INCOME','ITR_LAST_3_YEARS','ITR', '', 2)"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                label="Year 3">
-                            </app-uploadbtn>
-                            }
+                                <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                    (uploadStarted)="onUploadStarted($event, 'ay3','INCOME','ITR_LAST_3_YEARS','ITR', '', 2)"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    label="Year 3">
+                                </app-uploadbtn>
+                                }
                             </ng-container>
                         </div>
 
@@ -509,56 +511,57 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-4 col-sm-12 ">
- <div class="text-label" *ngIf="isDocUploading(slot.key)">
-                                Salary Slip 1<span class="text-danger">*</span>
-                            </div>
-                            <div *ngIf="isDocUploading(slot.key)"
-                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
-
-                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
-                                </div>
-
-                                <span>Uploading...</span>
-                            </div>
-
-                            <!-- File Upload / Preview -->
-                            <ng-container *ngIf="!isDocUploading(slot.key)">
-                                    @if ( getDocumentByKey( slot.key)) {
-
-                                    <div class="text-label mt-0"> Upload Document <span class="text-danger">*</span>
+                                    <div class="text-label" *ngIf="isDocUploading(slot.key)">
+                                        Salary Slip 1<span class="text-danger">*</span>
                                     </div>
+                                    <div *ngIf="isDocUploading(slot.key)"
+                                        class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
 
-                                    <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                        <p class="text-label file-name" [title]="getDocumentName(slot.key,false)">
-                                            {{ getDocumentName(slot.key) }}
-                                        </p>
-
-                                        <div class="icons">
-                                            <span class="view" (click)="viewImage(getDocumentUrl(slot.key))">
-                                                <img src="/assets/images/icons/eyered.svg">
-                                            </span>
-
-                                            <span class="download"
-                                                (click)="downloadImage(getDocumentUrl(slot.key), getDocumentName(slot.key))">
-                                                <img src="/assets/images/icons/import-red.svg">
-                                            </span>
-
-                                            <span class="delete" (click)="deleteImage(slot.key, 'other', slot.id)">
-                                                <img src="/assets/images/icons/close.svg">
-                                            </span>
+                                        <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                         </div>
+
+                                        
                                     </div>
 
-                                    } @else {
+                                    <!-- File Upload / Preview -->
+                                    <ng-container *ngIf="!isDocUploading(slot.key)">
+                                        @if ( getDocumentByKey( slot.key)) {
 
-                                    <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                        (uploadStarted)="onUploadStarted($event,  slot.key,'OTHER' ,'OTHER_INCOME','OTHER',slot.title)"
-                                        [disabled]="!slot.title && slot.title.trim().length === 0" [uploadViaApi]="true"
-                                        [fileuploadresponse]="handleresponse" [required]="true" label="Other Documents">
-                                    </app-uploadbtn>
+                                        <div class="text-label mt-0"> Upload Document <span class="text-danger">*</span>
+                                        </div>
 
-                                    }
-</ng-container>
+                                        <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                            <p class="text-label file-name" [title]="getDocumentName(slot.key,false)">
+                                                {{ getDocumentName(slot.key) }}
+                                            </p>
+
+                                            <div class="icons">
+                                                <span class="view" (click)="viewImage(getDocumentUrl(slot.key))">
+                                                    <img src="/assets/images/icons/eyered.svg">
+                                                </span>
+
+                                                <span class="download"
+                                                    (click)="downloadImage(getDocumentUrl(slot.key), getDocumentName(slot.key))">
+                                                    <img src="/assets/images/icons/import-red.svg">
+                                                </span>
+
+                                                <span class="delete" (click)="deleteImage(slot.key, 'other', slot.id)">
+                                                    <img src="/assets/images/icons/close.svg">
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        } @else {
+
+                                        <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                            (uploadStarted)="onUploadStarted($event,  slot.key,'OTHER' ,'OTHER_INCOME','OTHER',slot.title)"
+                                            [disabled]="!slot.title && slot.title.trim().length === 0"
+                                            [uploadViaApi]="true" [fileuploadresponse]="handleresponse"
+                                            [required]="true" label="Other Documents">
+                                        </app-uploadbtn>
+
+                                        }
+                                    </ng-container>
                                 </div>
                                 <div class="col-lg-4 d-flex justify-content-end align-items-end mt-5">
                                     <span class="delete d-none d-lg-block"
@@ -625,7 +628,7 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('year1')">
+                            <div class="text-label" *ngIf="isDocUploading('year1')">
                                 Year 1<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('year1')"
@@ -634,38 +637,38 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                                
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('year1')">
-                            @if( hasDocument('year1')){
-                            <div class="text-label">Year 1<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('year1',false)">{{
-                                    getDocumentName('year1') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('year1'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('year1'), getDocumentName('year1'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span class="delete" (click)="deleteImage('year1')"><img
-                                            src="/assets/images/icons/close.svg" alt="Download"></span>
+                                @if( hasDocument('year1')){
+                                <div class="text-label">Year 1<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('year1',false)">{{
+                                        getDocumentName('year1') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('year1'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('year1'), getDocumentName('year1'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span class="delete" (click)="deleteImage('year1')"><img
+                                                src="/assets/images/icons/close.svg" alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                (uploadStarted)="onUploadStarted($event,  'year1' ,'BUSINESS','BUSINESS_FINANCE_3_YEARS','BUSINESS_FINANCE', '', 0)"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                label="Year 1">
-                            </app-uploadbtn>}
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                    (uploadStarted)="onUploadStarted($event,  'year1' ,'BUSINESS','BUSINESS_FINANCE_3_YEARS','BUSINESS_FINANCE', '', 0)"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    label="Year 1">
+                                </app-uploadbtn>}
                             </ng-container>
                         </div>
 
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('year2')">
+                            <div class="text-label" *ngIf="isDocUploading('year2')">
                                 Year 2 <span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('year2')"
@@ -674,37 +677,37 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                               
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('year2')">
-                            @if( hasDocument('year2')){
-                            <div class="text-label">Year 2<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('year2',false)">{{
-                                    getDocumentName('year2') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('year2'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('year2'), getDocumentName('year2'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span class="delete" (click)="deleteImage('year2')"><img
-                                            src="/assets/images/icons/close.svg" alt="Download"></span>
+                                @if( hasDocument('year2')){
+                                <div class="text-label">Year 2<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('year2',false)">{{
+                                        getDocumentName('year2') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('year2'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('year2'), getDocumentName('year2'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span class="delete" (click)="deleteImage('year2')"><img
+                                                src="/assets/images/icons/close.svg" alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                (uploadStarted)="onUploadStarted($event,  'year2' ,'BUSINESS','BUSINESS_FINANCE_3_YEARS','BUSINESS_FINANCE', '', 1)"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                label="Year 2">
-                            </app-uploadbtn>}
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                    (uploadStarted)="onUploadStarted($event,  'year2' ,'BUSINESS','BUSINESS_FINANCE_3_YEARS','BUSINESS_FINANCE', '', 1)"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    label="Year 2">
+                                </app-uploadbtn>}
                             </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('year3')">
+                            <div class="text-label" *ngIf="isDocUploading('year3')">
                                 Year 3<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('year3')"
@@ -713,33 +716,33 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                               
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('year3')">
-                            @if( hasDocument('year3')){
-                            <div class="text-label">Year 3<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('year3',false)">{{
-                                    getDocumentName('year3') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('year3'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('year3'), getDocumentName('year3'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span class="delete" (click)="deleteImage('year3')"><img
-                                            src="/assets/images/icons/close.svg" alt="Download"></span>
+                                @if( hasDocument('year3')){
+                                <div class="text-label">Year 3<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('year3',false)">{{
+                                        getDocumentName('year3') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('year3'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('year3'), getDocumentName('year3'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span class="delete" (click)="deleteImage('year3')"><img
+                                                src="/assets/images/icons/close.svg" alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                (uploadStarted)="onUploadStarted($event,  'year3' ,'BUSINESS','BUSINESS_FINANCE_3_YEARS','BUSINESS_FINANCE', '', 2)"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                label="Year 3">
-                            </app-uploadbtn>}
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                    (uploadStarted)="onUploadStarted($event,  'year3' ,'BUSINESS','BUSINESS_FINANCE_3_YEARS','BUSINESS_FINANCE', '', 2)"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    label="Year 3">
+                                </app-uploadbtn>}
                             </ng-container>
                         </div>
                     </div>
@@ -764,7 +767,7 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('businessITR1')">
+                            <div class="text-label" *ngIf="isDocUploading('businessITR1')">
                                 Year 1<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('businessITR1')"
@@ -773,37 +776,37 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                                
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('businessITR1')">
-                            @if( hasDocument('businessITR1')){
-                            <div class="text-label">Year 1<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('businessITR1',false)">{{
-                                    getDocumentName('businessITR1') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('businessITR1'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('businessITR1'), getDocumentName('businessITR1'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span class="delete" (click)="deleteImage('businessITR1')"><img
-                                            src="/assets/images/icons/close.svg" alt="Download"></span>
+                                @if( hasDocument('businessITR1')){
+                                <div class="text-label">Year 1<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('businessITR1',false)">{{
+                                        getDocumentName('businessITR1') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('businessITR1'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('businessITR1'), getDocumentName('businessITR1'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span class="delete" (click)="deleteImage('businessITR1')"><img
+                                                src="/assets/images/icons/close.svg" alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                (uploadStarted)="onUploadStarted($event,  'businessITR1' ,'BUSINESS','BUSINESS_ITR_3_YEARS','BUSINESS_ITR', '', 0)"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                label="Year 1">
-                            </app-uploadbtn>}
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                    (uploadStarted)="onUploadStarted($event,  'businessITR1' ,'BUSINESS','BUSINESS_ITR_3_YEARS','BUSINESS_ITR', '', 0)"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    label="Year 1">
+                                </app-uploadbtn>}
                             </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('businessITR2')">
+                            <div class="text-label" *ngIf="isDocUploading('businessITR2')">
                                 Year 2<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('businessITR2')"
@@ -812,37 +815,37 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                                
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('businessITR2')">
-                            @if( hasDocument('businessITR2')){
-                            <div class="text-label">Year 2<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('businessITR2',false)">{{
-                                    getDocumentName('businessITR2') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('businessITR2'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('businessITR2'), getDocumentName('businessITR2'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span class="delete" (click)="deleteImage('businessITR2')"><img
-                                            src="/assets/images/icons/close.svg" alt="Download"></span>
+                                @if( hasDocument('businessITR2')){
+                                <div class="text-label">Year 2<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('businessITR2',false)">{{
+                                        getDocumentName('businessITR2') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('businessITR2'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('businessITR2'), getDocumentName('businessITR2'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span class="delete" (click)="deleteImage('businessITR2')"><img
+                                                src="/assets/images/icons/close.svg" alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                (uploadStarted)="onUploadStarted($event,  'businessITR2' ,'BUSINESS','BUSINESS_ITR_3_YEARS','BUSINESS_ITR', '', 1)"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                label="Year 2">
-                            </app-uploadbtn>}
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                    (uploadStarted)="onUploadStarted($event,  'businessITR2' ,'BUSINESS','BUSINESS_ITR_3_YEARS','BUSINESS_ITR', '', 1)"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    label="Year 2">
+                                </app-uploadbtn>}
                             </ng-container>
                         </div>
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('businessITR3')">
+                            <div class="text-label" *ngIf="isDocUploading('businessITR3')">
                                 Year 3<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('businessITR3')"
@@ -851,33 +854,33 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                                
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('businessITR3')">
-                            @if( hasDocument('businessITR3')){
-                            <div class="text-label">Year 3<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('businessITR3',false)">{{
-                                    getDocumentName('businessITR3') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('businessITR3'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('businessITR3'), getDocumentName('businessITR3'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span class="delete" (click)="deleteImage('businessITR3')"><img
-                                            src="/assets/images/icons/close.svg" alt="Download"></span>
+                                @if( hasDocument('businessITR3')){
+                                <div class="text-label">Year 3<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('businessITR3',false)">{{
+                                        getDocumentName('businessITR3') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('businessITR3'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('businessITR3'), getDocumentName('businessITR3'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span class="delete" (click)="deleteImage('businessITR3')"><img
+                                                src="/assets/images/icons/close.svg" alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                (uploadStarted)="onUploadStarted($event,  'businessITR3','BUSINESS' ,'BUSINESS_ITR_3_YEARS','BUSINESS_ITR', '', 2)"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                label="Year 3">
-                            </app-uploadbtn>}
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                    (uploadStarted)="onUploadStarted($event,  'businessITR3','BUSINESS' ,'BUSINESS_ITR_3_YEARS','BUSINESS_ITR', '', 2)"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    label="Year 3">
+                                </app-uploadbtn>}
                             </ng-container>
                         </div>
 
@@ -901,8 +904,8 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('businessGST')">
-                               1 Year GST Return<span class="text-danger">*</span>
+                            <div class="text-label" *ngIf="isDocUploading('businessGST')">
+                                1 Year GST Return<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('businessGST')"
                                 class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
@@ -910,33 +913,33 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                               
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('businessGST')">
-                            @if( hasDocument('businessGST')){
-                            <div class="text-label">1 Year GST Return<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name" [title]="getDocumentName('businessGST',false)">{{
-                                    getDocumentName('businessGST') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('businessGST'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('businessGST'), getDocumentName('businessGST'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span class="delete" (click)="deleteImage('businessGST')"><img
-                                            src="/assets/images/icons/close.svg" alt="Download"></span>
+                                @if( hasDocument('businessGST')){
+                                <div class="text-label">1 Year GST Return<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name" [title]="getDocumentName('businessGST',false)">{{
+                                        getDocumentName('businessGST') }}</p>
+                                    <div class="icons">
+                                        <span class="view" (click)="viewImage(getDocumentUrl('businessGST'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('businessGST'), getDocumentName('businessGST'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span class="delete" (click)="deleteImage('businessGST')"><img
+                                                src="/assets/images/icons/close.svg" alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                (uploadStarted)="onUploadStarted($event,  'businessGST','BUSINESS' ,'BUSINESS_GST_1_YEAR','BUSINESS_GST')"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                label="1 Year GST Return">
-                            </app-uploadbtn>}
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                    (uploadStarted)="onUploadStarted($event,  'businessGST','BUSINESS' ,'BUSINESS_GST_1_YEAR','BUSINESS_GST')"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    label="1 Year GST Return">
+                                </app-uploadbtn>}
                             </ng-container>
                         </div>
 
@@ -961,7 +964,7 @@
                     </div>
                     <div class="row mt-20">
                         <div class="col-lg-4 col-sm-12">
-                             <div class="text-label" *ngIf="isDocUploading('businessBankstatement')">
+                            <div class="text-label" *ngIf="isDocUploading('businessBankstatement')">
                                 1 Year bank statement<span class="text-danger">*</span>
                             </div>
                             <div *ngIf="isDocUploading('businessBankstatement')"
@@ -970,34 +973,35 @@
                                 <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                 </div>
 
-                                <span>Uploading...</span>
+                                
                             </div>
 
                             <!-- File Upload / Preview -->
                             <ng-container *ngIf="!isDocUploading('businessBankstatement')">
-                            @if( hasDocument('businessBankstatement')){
-                            <div class="text-label">1 Year bank statement<span class="text-danger">*</span></div>
-                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                <p class="text-label file-name"
-                                    [title]="getDocumentName('businessBankstatement',false)">{{
-                                    getDocumentName('businessBankstatement') }}</p>
-                                <div class="icons">
-                                    <span class="view" (click)="viewImage(getDocumentUrl('businessBankstatement'))"><img
-                                            src="/assets/images/icons/eyered.svg" alt="view"></span>
-                                    <span class="download"
-                                        (click)="downloadImage(getDocumentUrl('businessBankstatement'), getDocumentName('businessBankstatement'))"><img
-                                            src="/assets/images/icons/import-red.svg" alt="Download"></span>
-                                    <span class="delete" (click)="deleteImage('businessBankstatement')"><img
-                                            src="/assets/images/icons/close.svg" alt="Download"></span>
+                                @if( hasDocument('businessBankstatement')){
+                                <div class="text-label">1 Year bank statement<span class="text-danger">*</span></div>
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                    <p class="text-label file-name"
+                                        [title]="getDocumentName('businessBankstatement',false)">{{
+                                        getDocumentName('businessBankstatement') }}</p>
+                                    <div class="icons">
+                                        <span class="view"
+                                            (click)="viewImage(getDocumentUrl('businessBankstatement'))"><img
+                                                src="/assets/images/icons/eyered.svg" alt="view"></span>
+                                        <span class="download"
+                                            (click)="downloadImage(getDocumentUrl('businessBankstatement'), getDocumentName('businessBankstatement'))"><img
+                                                src="/assets/images/icons/import-red.svg" alt="Download"></span>
+                                        <span class="delete" (click)="deleteImage('businessBankstatement')"><img
+                                                src="/assets/images/icons/close.svg" alt="Download"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            } @else{
-                            <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
-                                (uploadStarted)="onUploadStarted($event,  'businessBankstatement' ,'BUSINESS','BUSINESS_BANK_STATEMENT_1_YEAR','BUSINESS_BANK_STATEMENT')"
-                                [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
-                                label="1 Year bank statement">
-                            </app-uploadbtn>}
+                                } @else{
+                                <app-uploadbtn [config]="basicConfig" [disabled]="isViewMode"
+                                    (uploadStarted)="onUploadStarted($event,  'businessBankstatement' ,'BUSINESS','BUSINESS_BANK_STATEMENT_1_YEAR','BUSINESS_BANK_STATEMENT')"
+                                    [uploadViaApi]="true" [fileuploadresponse]="handleresponse" [required]="true"
+                                    label="1 Year bank statement">
+                                </app-uploadbtn>}
                             </ng-container>
                         </div>
 
@@ -1048,56 +1052,57 @@
 
 
                                 <div class="col-lg-4 col-sm-12 ">
- <div class="text-label" *ngIf="isDocUploading(slot.key)">
-                                Upload Document<span class="text-danger">*</span>
-                            </div>
-                            <div *ngIf="isDocUploading(slot.key)"
-                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
-
-                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
-                                </div>
-
-                                <span>Uploading...</span>
-                            </div>
-
-                            <!-- File Upload / Preview -->
-                            <ng-container *ngIf="!isDocUploading(slot.key)">
-                                    @if ( getDocumentByKey(slot.key)) {
-                                    <div class="text-label mt-0"> Upload Document <span class="text-danger">*</span>
+                                    <div class="text-label" *ngIf="isDocUploading(slot.key)">
+                                        Upload Document<span class="text-danger">*</span>
                                     </div>
+                                    <div *ngIf="isDocUploading(slot.key)"
+                                        class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
 
-                                    <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
-                                        <p class="text-label file-name" [title]="getDocumentName(slot.key,false)">
-                                            {{ getDocumentName(slot.key) }}
-                                        </p>
-
-                                        <div class="icons">
-                                            <span class="view" (click)="viewImage(getDocumentUrl(slot.key))">
-                                                <img src="/assets/images/icons/eyered.svg">
-                                            </span>
-                                            <span class="download"
-                                                (click)="downloadImage(getDocumentUrl(slot.key),getDocumentName(slot.key))">
-                                                <img src="/assets/images/icons/import-red.svg">
-                                            </span>
-                                            <span class="delete"
-                                                (click)="deleteImage(slot.key, 'otherbusiness', slot.id)">
-                                                <img src="/assets/images/icons/close.svg">
-                                            </span>
+                                        <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                         </div>
+
+                                        
                                     </div>
 
-                                    }
-                                    @else {
+                                    <!-- File Upload / Preview -->
+                                    <ng-container *ngIf="!isDocUploading(slot.key)">
+                                        @if ( getDocumentByKey(slot.key)) {
+                                        <div class="text-label mt-0"> Upload Document <span class="text-danger">*</span>
+                                        </div>
+
+                                        <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
+                                            <p class="text-label file-name" [title]="getDocumentName(slot.key,false)">
+                                                {{ getDocumentName(slot.key) }}
+                                            </p>
+
+                                            <div class="icons">
+                                                <span class="view" (click)="viewImage(getDocumentUrl(slot.key))">
+                                                    <img src="/assets/images/icons/eyered.svg">
+                                                </span>
+                                                <span class="download"
+                                                    (click)="downloadImage(getDocumentUrl(slot.key),getDocumentName(slot.key))">
+                                                    <img src="/assets/images/icons/import-red.svg">
+                                                </span>
+                                                <span class="delete"
+                                                    (click)="deleteImage(slot.key, 'otherbusiness', slot.id)">
+                                                    <img src="/assets/images/icons/close.svg">
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        }
+                                        @else {
 
 
-                                    <app-uploadbtn label="Other Documents" [config]="basicConfig" [required]="true"
-                                        [disabled]="!slot.title && slot.title.trim().length === 0" [uploadViaApi]="true"
-                                        [fileuploadresponse]="handleresponse" [disabled]="isViewMode"
-                                        (uploadStarted)="onUploadStarted($event, slot.key,'BUSINESS', 'OTHER_BUSSINESS_INCOME', 'OTHER', slot.title)">
-                                    </app-uploadbtn>
+                                        <app-uploadbtn label="Other Documents" [config]="basicConfig" [required]="true"
+                                            [disabled]="!slot.title && slot.title.trim().length === 0"
+                                            [uploadViaApi]="true" [fileuploadresponse]="handleresponse"
+                                            [disabled]="isViewMode"
+                                            (uploadStarted)="onUploadStarted($event, slot.key,'BUSINESS', 'OTHER_BUSSINESS_INCOME', 'OTHER', slot.title)">
+                                        </app-uploadbtn>
 
-                                    }
-</ng-container>
+                                        }
+                                    </ng-container>
                                 </div>
 
 

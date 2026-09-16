@@ -992,7 +992,6 @@ export class Incomeinfo {
     fd.append(`files[${index}].type`, type);
     fd.append(`files[${index}].file`, result.file);
 
-    this.startDocUpload(key);
     
     this.loanformservice.uploadIncome(fd, this.applicationId, this.isEditMode).subscribe({
       next: (res) => {
@@ -1049,7 +1048,8 @@ export class Incomeinfo {
           stepData
         );
         this.stepperService.setStepData1(this.getStepRoute(), stepData);
-        this.uploadingFiles[key] = false;
+       // Stop loader for the current document
+this.uploadingFiles[key] = false;
 
         this.isDocumentUploading =
           Object.values(this.uploadingFiles)
@@ -1059,6 +1059,7 @@ export class Incomeinfo {
         this.cd.detectChanges();
       },
       error: (err) => {
+        // Stop loader even when API fails
         this.uploadingFiles[key] = false;
 
         this.isDocumentUploading =
@@ -2494,16 +2495,9 @@ export class Incomeinfo {
   }
 
 isDocUploading(docKey: string): boolean {
-  return this.uploadingDocs[docKey] === true;
+  return this.uploadingFiles[docKey] === true;
 }
 
-startDocUpload(docKey: string): void {
-  this.uploadingDocs[docKey] = true;
-}
-
-finishDocUpload(docKey: string): void {
-  this.uploadingDocs[docKey] = false;
-}
   isCurrentStepUploading(): boolean {
     return Object.values(this.uploadingFiles).some(
       uploading => uploading
