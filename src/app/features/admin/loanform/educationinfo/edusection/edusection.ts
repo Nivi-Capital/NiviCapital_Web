@@ -183,8 +183,8 @@ export class Edusection {
   ngOnInit(): void {
 
 this.group.patchValue({
-  passingyear: this.group.get('passingyear')?.value || 'Year of Passing',
-  per_cgpa: this.group.get('per_cgpa')?.value || 'Percentage / CGPA '
+  passingyear: this.group.get('passingyear')?.value ,
+  per_cgpa: this.group.get('per_cgpa')?.value 
 }, { emitEvent: false });
 
 
