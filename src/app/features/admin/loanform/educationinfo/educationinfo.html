@@ -136,6 +136,19 @@
             </div>
 
             <div class="col-lg-6 col-sm-12">
+                  <!-- 1. SHOW LOADER WHILE UPLOADING -->
+                        <div class="text-label" *ngIf="isDocUploading('ielts')">
+                            Marksheet<span class="text-danger">*</span>
+                        </div>
+                        <div *ngIf="isDocUploading('ielts')"
+                            class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+                            <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                            </div>
+
+                        </div>
+
+                        <!-- 2. SHOW COMPLETED CARD WHEN UPLOADED -->
+                        <ng-container *ngIf="!isDocUploading('ielts')">
                 @if (hasLocalFile(activeEducation,'ielts')) {
                 <div class="text-label">Upload Certificate<span class="text-danger">*</span></div>
                 <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -157,6 +170,7 @@
                     label="Upload Certificate " (fileChange)="onFileChange('ielts', 'ielts', $event)">
                 </app-uploadbtn>
                 }
+                </ng-container>
             </div>
         </div>
     </div>
@@ -191,6 +205,19 @@
         </div>
         <div class="row d-flex align-items-start flex-column education-box">
             <div class="col-lg-4 col-sm-12">
+                  <!-- 1. SHOW LOADER WHILE UPLOADING -->
+                        <div class="text-label" *ngIf="isDocUploading('offerletter')">
+                            Marksheet<span class="text-danger">*</span>
+                        </div>
+                        <div *ngIf="isDocUploading('offerletter')"
+                            class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+                            <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
+                            </div>
+
+                        </div>
+
+                        <!-- 2. SHOW COMPLETED CARD WHEN UPLOADED -->
+                        <ng-container *ngIf="!isDocUploading('offerletter')">
                 @if (hasLocalFile(activeEducation,'offerletter')) {
                 <div class="text-label">Offer Letter <span class="text-danger">*</span></div>
                 <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewMode}">
@@ -213,7 +240,7 @@
                 </app-uploadbtn>
                 }
 
-
+</ng-container>
             </div>
         </div>
     </div>

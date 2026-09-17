@@ -444,38 +444,50 @@
                             </div>
 
                             <div class=" other-doc-upload" [ngClass]="slot.file ? 'mt-0' : 'mt-0'">
-
-                                @if (slot.file) {
-                                <div class="text-label">
-                                    Upload Document <span class="text-danger">*</span>
+                                <!-- 1. SHOW LOADER WHILE UPLOADING -->
+                                <div class="text-label" *ngIf="isOtherDocUploading(slot)">
+                                    Marksheet<span class="text-danger">*</span>
                                 </div>
-
-                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
-                                    <!-- <p class="text-label">{{getOtherFileName(slot.file.name)  }}</p> -->
-                                    <p class="text-label " [title]="getOtherFileName(slot, false)">
-                                        {{ getOtherFileName(slot,true) }}
-                                    </p>
-                                    <div class="icons">
-                                        <span class="view" (click)="viewOther(slot)">
-                                            <img src="/assets/images/icons/eyered.svg">
-                                        </span>
-
-                                        <span class="download" (click)="downloadOther(slot)">
-                                            <img src="/assets/images/icons/import-red.svg">
-                                        </span>
-
-                                        <span class="delete" (click)="removeOther(slot)">
-                                            <img src="/assets/images/icons/close.svg">
-                                        </span>
+                                <div *ngIf="isOtherDocUploading(slot)"
+                                    class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+                                    <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                     </div>
+
                                 </div>
-                                } @else {
-                                <app-uploadbtn [config]="basicConfig" [required]="educationType !== 'POSTGRADUATE'"
-                                    [disabled]="isViewModeon" label="Upload Document"
-                                    (uploadingChange)="onUploadProgressChange($event)"
-                                    (fileChange)="onOtherFileChange($event, slot)">
-                                </app-uploadbtn>
-                                }
+                                <!-- 2. SHOW COMPLETED CARD WHEN UPLOADED -->
+                                <ng-container *ngIf="!isOtherDocUploading(slot)">
+                                    @if (slot.file) {
+                                    <div class="text-label">
+                                        Upload Document <span class="text-danger">*</span>
+                                    </div>
+
+                                    <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
+                                        <!-- <p class="text-label">{{getOtherFileName(slot.file.name)  }}</p> -->
+                                        <p class="text-label " [title]="getOtherFileName(slot, false)">
+                                            {{ getOtherFileName(slot,true) }}
+                                        </p>
+                                        <div class="icons">
+                                            <span class="view" (click)="viewOther(slot)">
+                                                <img src="/assets/images/icons/eyered.svg">
+                                            </span>
+
+                                            <span class="download" (click)="downloadOther(slot)">
+                                                <img src="/assets/images/icons/import-red.svg">
+                                            </span>
+
+                                            <span class="delete" (click)="removeOther(slot)">
+                                                <img src="/assets/images/icons/close.svg">
+                                            </span>
+                                        </div>
+                                    </div>
+                                    } @else {
+                                    <app-uploadbtn [config]="basicConfig" [required]="educationType !== 'POSTGRADUATE'"
+                                        [disabled]="isViewModeon" label="Upload Document"
+                                        (uploadingChange)="onUploadProgressChange($event)"
+                                        (fileChange)="onOtherFileChange($event, slot)">
+                                    </app-uploadbtn>
+                                    }
+                                </ng-container>
                             </div>
 
                             <div class="other-doc-delete delete-icon-mt">

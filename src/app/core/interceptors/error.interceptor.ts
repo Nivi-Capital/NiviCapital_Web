@@ -85,6 +85,13 @@ export class ErrorInterceptor implements HttpInterceptor {
         'The request timed out. Please try again.';
       break;
 
+         case 409:
+      errorMessage =
+        error.error?.message ??
+        'The request timed out. Please try again.';
+      break;
+
+
     case 500:
       errorMessage =
         error.error?.message ??
@@ -100,7 +107,7 @@ export class ErrorInterceptor implements HttpInterceptor {
 
   if (showPopup) {
     this.msgBox.open({
-      title: 'Error',
+      title: '',
       message: errorMessage,
       showCancel: false,
       onOk: () => {}

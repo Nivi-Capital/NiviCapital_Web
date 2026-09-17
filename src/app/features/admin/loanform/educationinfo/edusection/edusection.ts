@@ -134,7 +134,7 @@ export class Edusection {
 
   otherbusinessdoc: boolean = false;
   otherdoc: boolean = false;
-  private slotCounter = 0;
+  private slotCounter = -1;
 
   seleactInstitute: OptionItem[] = []
   filteredInstitutes: any[] = [];
@@ -1000,14 +1000,26 @@ SelectedInstitute(values: string | string[]) {
     return;
   }
     const id = ++this.slotCounter;
-    this.otherDocuments.push({
+    // this.otherDocuments.push({
 
-      id,
-      title: '',
-      file: null
+    //   id,
+    //   title: '',
+    //   file: null
 
 
-    });
+    // });
+    this.otherDocuments = [
+
+...this.otherDocuments,
+{
+id,
+title: '',
+file: null,
+key: `${this.stepKey}_other_${id}`
+}
+
+];
+
     this.otherDocAdded.emit(id);
 
   }
@@ -1046,25 +1058,32 @@ SelectedInstitute(values: string | string[]) {
 
 
         // const key = `others_${doc.id}`;
-        const key = `${this.stepKey}_other_${doc.id}`;
+        // const key = `${this.stepKey}_other_${doc.id}`;
 
-        const deleteDoc: any = this.uploadedFiles[key];
+        // const deleteDoc: any = this.uploadedFiles[key];
 
-        if(deleteDoc?.documentId){
-          this.deleteItemArr([deleteDoc?.documentId]);
-        }
+        // if(deleteDoc?.documentId){
+        //   this.deleteItemArr([deleteDoc?.documentId]);
+        // }
 
-        this.uploadedFiles[key] = null;
-        this.uploadedFiles = { ...this.uploadedFiles };
+        // this.uploadedFiles[key] = null;
+        // this.uploadedFiles = { ...this.uploadedFiles };
 
         const docToUpdate = this.otherDocuments.find(d => d.id === doc.id);
 
         if (docToUpdate) {
           docToUpdate.file = null;
-          this.otherDocuments = [...this.otherDocuments];
+         
         }
+ this.otherDocuments = [...this.otherDocuments];
+this.fileRemoved.emit({
+step: this.stepKey,
+control: 'other',
+index: doc.id
 
-
+});
+this.group.markAsDirty();
+this.cd.detectChanges();
       },
     })
   }
@@ -1246,9 +1265,13 @@ getOtherFileName(slot: any, truncate = true): string {
     };
   });
 
-  this.slotCounter = this.otherDocuments.length
-    ? Math.max(...this.otherDocuments.map(x => x.id))+1
-    : 0;
+  // this.slotCounter = this.otherDocuments.length
+  //   ? Math.max(...this.otherDocuments.map(x => x.id))+1
+  //   : 0;
+
+    this.slotCounter = this.otherDocuments.length
+  ? Math.max(...this.otherDocuments.map(x => x.id))
+  : -1;
 
   this.otherDocuments = [...this.otherDocuments];
 
@@ -1365,5 +1388,8 @@ onUploadProgressChange(isUploading: boolean): void {
 isDocUploading(doc: DocType, index?: number): boolean {
   const key = this.buildKey(doc, index);
   return !!this.uploadingFiles?.[key];
+}
+isOtherDocUploading(doc: any): any {
+  return this.uploadingFiles[doc.key];
 }
 }

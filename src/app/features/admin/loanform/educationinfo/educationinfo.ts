@@ -156,6 +156,7 @@ export class Educationinfo implements OnInit {
   uploadedFiles1: Record<string, File | Record<string, any> | null> = {};
   private educationFormState: Record<string, any> = {};
   uploadingEducationFiles: Record<string, boolean> = {};
+@Input() uploadingFiles: Record<string, boolean> = {};
 
   uploadeddata: any;
 
@@ -816,7 +817,7 @@ export class Educationinfo implements OnInit {
     // this.saveEducationStateToLocalStorage();
     this.cd.detectChanges();
   }
-
+ 
   onFileSelectedFromSection(e: {
     step: StepKey;
     control: 'marksheet' | 'lc' | 'other';
@@ -865,9 +866,9 @@ export class Educationinfo implements OnInit {
 
       this.uploadedFiles[key] = e.file;
 
-      this.otherDocMap = {
+    this.otherDocMap = {
         ...this.otherDocMap
-      };
+    };
 
       this.uploadedFiles = {
         ...this.uploadedFiles
@@ -1127,7 +1128,12 @@ export class Educationinfo implements OnInit {
     let key = '';
 
     if (e.control === 'other') {
-      key = `${e.step}_other_${e.index}`;
+      // key = `${e.step}_other_${e.index}`;
+      key = this.buildKey(
+      e.step,
+      'other',
+      e.index ?? 0
+    );
     } else {
 
       const normalizedDoc = this.normalizeDocType(e.control);
@@ -1135,13 +1141,53 @@ export class Educationinfo implements OnInit {
       key = this.buildKey(e.step, normalizedDoc, idx);
     }
     // remove from both stores
+  
+const deleteDoc =
+    this.savedFileMeta?.[key] ||
+    this.uploadedFiles?.[key] ||
+    null;
+    if (deleteDoc?.documentId) {
+    this.deleteItemArr([
+      deleteDoc.documentId
+    ]);
+  }
+
     delete this.uploadedFiles[key];
     delete this.savedFileMeta[key];
+    delete this.uploadingEducationFiles[key];
 
     // if other doc, also clear title map
-    if (e.control === 'other') {
-      delete this.otherDocMap[key];
-    }
+    // if (e.control === 'other') {
+    //   delete this.otherDocMap[key];
+    // }
+
+    
+    if (e.control !== 'other') {
+    const fg =
+      this.educationForms[e.step] as FormGroup;
+
+    const control =
+      fg?.get(e.control);
+
+    control?.setValue(
+      null,
+      {
+        emitEvent: false
+      }
+    );
+
+    control?.markAsDirty();
+    control?.updateValueAndValidity({
+      emitEvent: false
+    });
+
+  }
+
+  /*
+   * Remove old persisted metadata before saveEducationStateToLocalStorage()
+   * gets a chance to merge it back.
+   */
+  this.removeEducationDocumentFromStorage(key);
 
     this.uploadedFiles = { ...this.uploadedFiles };
     this.savedFileMeta = { ...this.savedFileMeta };
@@ -1251,13 +1297,30 @@ export class Educationinfo implements OnInit {
     const keyWithIndex = this.buildKey(step, normalizedDoc, index);
     const keyWithoutIndex = this.buildKey(step, normalizedDoc);
 
+    // return (
+    //   this.uploadedFiles[keyWithIndex] ||
+    //   this.savedFileMeta[keyWithIndex] ||
+    //   this.uploadedFiles[keyWithoutIndex] ||
+    //   this.savedFileMeta[keyWithoutIndex] ||
+    //   null
+    // );
+
+      if (
+    normalizedDoc === 'other' ||
+    normalizedDoc === 'marksheet'
+  ) {
     return (
       this.uploadedFiles[keyWithIndex] ||
       this.savedFileMeta[keyWithIndex] ||
-      this.uploadedFiles[keyWithoutIndex] ||
-      this.savedFileMeta[keyWithoutIndex] ||
       null
     );
+  }
+
+  return (
+    this.uploadedFiles[keyWithoutIndex] ||
+    this.savedFileMeta[keyWithoutIndex] ||
+    null
+  );
   }
 
   downloadLocal(level: any, docType: DocType, index?: number): void {
@@ -1828,20 +1891,20 @@ export class Educationinfo implements OnInit {
       ...(this.savedFileMeta || {})
     };
 
-    Object.keys(this.uploadedFiles || {}).forEach(key => {
-      const file: any = this.uploadedFiles[key];
+    // Object.keys(this.uploadedFiles || {}).forEach(key => {
+    //   const file: any = this.uploadedFiles[key];
 
-      // important: only real File should update metadata
-      if (file instanceof File) {
-        uploadedFileMeta[key] = {
-          ...(uploadedFileMeta[key] || {}),
-          key,
-          fileName: file.name,
-          name: file.name,
-          uploaded: true
-        };
-      }
-    });
+    //   // important: only real File should update metadata
+    //   if (file instanceof File) {
+    //     uploadedFileMeta[key] = {
+    //       ...(uploadedFileMeta[key] || {}),
+    //       key,
+    //       fileName: file.name,
+    //       name: file.name,
+    //       uploaded: true
+    //     };
+    //   }
+    // });
 
     const payload = {
       activeEducation: activeStep || oldParsed.activeEducation,
@@ -1865,6 +1928,43 @@ export class Educationinfo implements OnInit {
 
     localStorage.setItem(storageKey, JSON.stringify(payload));
   }
+  private removeEducationDocumentFromStorage(
+  key: string
+): void {
+  if (!this.applicantId) {
+    return;
+  }
+  const storageKey =
+    this.getEducationStateKey();
+  const saved =
+    localStorage.getItem(storageKey);
+
+  if (!saved) {
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(saved);
+
+    if (parsed.uploadedFileMeta) {
+      delete parsed.uploadedFileMeta[key];
+    }
+
+    if (parsed.otherDocMap) {
+      delete parsed.otherDocMap[key];
+    }
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify(parsed)
+    );
+  } catch (error) {
+    console.error(
+      'Failed to remove deleted education document from storage:',
+      error
+    );
+  }
+}
+
   private hasMeaningfulEducationValue(raw: any): boolean {
     if (!raw) return false;
 
@@ -4677,10 +4777,6 @@ export class Educationinfo implements OnInit {
     title?: string
   ): void {
     const normalizedDoc = this.normalizeDocType(doc);
- 
-    
-  
-
     const fd = new FormData();
 
     fd.append('category', 'EDUCATION');
@@ -4688,75 +4784,12 @@ export class Educationinfo implements OnInit {
     fd.append('applicantId', this.applicantId);
 
 
-    // const multiDocSteps: StepKey[] = [
-    //   'ug',
-    //   'pg',
-    //   'diploma10',
-    //   'diploma12',
-    //   'others12',
-    //   'othersdiploma'
-    // ];
 
     let othersArr = [];
     let requestIndex = index ?? 0;
      let marksheetArr: any[] = [];
-
-// A. Looping for OTHER documents (max 5 docs)
-    if (doc === 'other' || normalizedDoc === 'other') {
-      if (this.uploadedFiles) {
-        for (let [keyName, value] of Object.entries(this.uploadedFiles)) {
-          const lastUnderscore = keyName.lastIndexOf('_');
-          const fileName = keyName.substring(0, lastUnderscore);
-          const secondLastUnderscore = fileName.lastIndexOf('_');
-          const doctype = fileName.substring(0, secondLastUnderscore);
-          const fileType = fileName.substring(secondLastUnderscore + 1);
-
-          // Only count valid file entries (ignores null/undefined placeholders)
-          if (fileType === 'other' && step === doctype && value) {
-            othersArr.push(value);
-          }
-        }
-
-        if (othersArr.length > 0) {
-          requestIndex = othersArr.length - 1;
-        }
-      }
-    }
-    // B. Looping for MARKSHEETS (same logic as other)
-    // else if (multiDocSteps.includes(step) && (doc === 'marksheet' || normalizedDoc === 'marksheet')) {
-    //   if (this.uploadedFiles) {
-    //     for (let [keyName, value] of Object.entries(this.uploadedFiles)) {
-    //       const lastUnderscore = keyName.lastIndexOf('_');
-    //       const fileName = keyName.substring(0, lastUnderscore);
-    //       const secondLastUnderscore = fileName.lastIndexOf('_');
-    //       const doctype = fileName.substring(0, secondLastUnderscore);
-    //       const fileType = fileName.substring(secondLastUnderscore + 1);
-
-    //       // Only count valid file entries for this step's marksheets
-    //       if (fileType === 'marksheet' && step === doctype && value) {
-    //         marksheetArr.push(value);
-    //       }
-    //     }
-
-    //     if (marksheetArr.length > 0) {
-    //       requestIndex = marksheetArr.length - 1;
-    //     }
-    //   }
-    // }
-    // // C. Explicit index for any other multi-doc step if passed
-    // else if (multiDocSteps.includes(step) && index !== undefined && index !== null) {
-    //   requestIndex = Number(index);
-    // }
-    // // D. Single documents (10th, 12th, LC, etc.): always files[0]
-    // else {
-    //   requestIndex = 0;
-    // }
-
-    // Ensure key uses the proper index (e.g. ug_marksheet_0, ug_marksheet_1, ug_marksheet_2)
-    const actualIndex = (index !== undefined && index !== null) ? index : requestIndex;
   const key = this.buildKey(step, normalizedDoc, index);
-
-    fd.append(
+   fd.append(
       `files[${requestIndex}].type`,
       this.getEducationDocumentType(key)
     );
@@ -4765,8 +4798,8 @@ export class Educationinfo implements OnInit {
       fd.append(
         `files[${requestIndex}].title`,
         title?.trim() || 'Other Document'
-      );
-    }
+  );
+  }
 
     fd.append(
       `files[${requestIndex}].file`,
@@ -4811,7 +4844,6 @@ export class Educationinfo implements OnInit {
           this.uploadingEducationFiles = {
             ...this.uploadingEducationFiles
           };
- this.uploadingEducationFiles[key] = false;
           this.cd.detectChanges();
           return;
         }
@@ -5083,4 +5115,20 @@ export class Educationinfo implements OnInit {
       }
     });
   }
+
+  private stopEducationUpload(key: string): void {
+  delete this.uploadingEducationFiles[key];
+
+  this.uploadingEducationFiles = {
+    ...this.uploadingEducationFiles
+  };
+
+  this.cd.detectChanges();
+}
+
+isDocUploading(docName: DocType): any{
+    return this.uploadingEducationFiles[`${docName}_${docName}`];
+  }
+
+
 }
