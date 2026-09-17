@@ -3376,7 +3376,7 @@ const deleteDoc =
           },
           error: (err: any) => {
             console.error('Education save and exit failed:', err);
-            alert('Failed to save education details.');
+            // alert('Failed to save education details.');
           }
         });
 
@@ -3763,7 +3763,7 @@ const deleteDoc =
 
 
       if (!score || !this.hasFileOrSavedMeta(step, 'ielts')) {
-        alert('Please enter score and upload IELTS certificate.');
+        // alert('Please enter score and upload IELTS certificate.');
         return;
       }
 
@@ -3801,7 +3801,7 @@ const deleteDoc =
       const file = this.uploadedFiles[key];
 
       if (!this.hasFileOrSavedMeta(step, 'offerletter')) {
-        alert('Please upload offer letter.');
+        // alert('Please upload offer letter.');
         return;
       }
 
@@ -3835,7 +3835,7 @@ const deleteDoc =
       if (step !== 'pg') {
         const missingFiles = reqDocs.filter(r => !this.getFile(step, r.doc, r.index));
         if (missingFiles.length > 0) {
-          alert('Please upload all required documents.');
+          // alert('Please upload all required documents.');
           return;
         }
       }
@@ -4053,7 +4053,7 @@ const deleteDoc =
       },
       error: (err) => {
         console.error("Upload Failed", err);
-        alert("Failed to upload documents.");
+        // alert("Failed to upload documents.");
       }
     });
   }
@@ -5108,10 +5108,10 @@ const deleteDoc =
           err
         );
 
-        alert(
-          err?.error?.message ||
-          'Failed to save education details.'
-        );
+        // alert(
+        //   err?.error?.message ||
+        //   'Failed to save education details.'
+        // );
       }
     });
   }
