@@ -52,7 +52,7 @@
         <div class="col-lg-6 col-sm-12">
 
           <app-inputfield type="text" name="aadharnum" ngModel [required]="true" #aadharnum="ngModel"
-            label="Aadhaar Number" placeholder="Enter your 12 digit Aadhar number" helpText="Help text"
+            label="Aadhaar Number" placeholder="Enter 12 digit Aadhar number" helpText="Help text"
             (ngModelChange)="checkSequential($event, aadharnum)" pattern="^(?!([0-9])\1{11}$)[0-9]{12}$"
             [minlength]="12" [maxlength]="12" (input)="main.restrictInput($event, 'number')">
           </app-inputfield>
@@ -142,7 +142,7 @@
 
 
           <app-inputfield type="text" name="pan" ngModel [required]="true" #pan="ngModel" label="PAN Number"
-            placeholder="Enter your 10 digit Pan number" helpText="Help text" pattern="^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$"
+            placeholder="Enter 10 digit Pan number" helpText="Help text" pattern="^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$"
             [maxlength]="10" [uppercase]="true">
           </app-inputfield>
 
@@ -198,8 +198,8 @@
 
 
           <app-inputfield type="text" name="Passport" ngModel [required]="isPassportRequired()" #Passport="ngModel"
-            label="Passport" placeholder="Enter your 8 digit passport number" helpText="Help text"
-            pattern="^[A-Z][0-9]{7}$" [maxlength]="8" [uppercase]="true">
+            label="Passport" placeholder="Enter 8 digit passport number" helpText="Help text"
+            pattern="^(?:[A-Z][0-9]{7}|[A-Z]{2}[0-9]{6})$" [maxlength]="8" [uppercase]="true">
           </app-inputfield>
 
           <div class="text-danger mt-1" *ngIf="Passport.invalid && Passport.touched">

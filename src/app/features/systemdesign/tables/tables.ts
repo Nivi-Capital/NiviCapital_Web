@@ -234,7 +234,10 @@ export class Tables implements OnChanges {
     this.main.setState({
       phone: row.mobile,
       userId: row.userId,
-      currentStep: 0
+      currentStep: 0,
+       custId: row.custId,
+       fname: row.firstName,
+            lname: row.lastName
     });
 
     if (row.custId == "-" || row.custId == null) {
@@ -244,8 +247,8 @@ export class Tables implements OnChanges {
           queryParams: {
             step: 0,
             edit: true,
-            phone: row.mobile,
-            id: row.userId
+            // phone: row.mobile,
+            // id: row.userId
 
 
           }
@@ -259,9 +262,9 @@ export class Tables implements OnChanges {
           queryParams: {
             step: 2,
             edit: true,
-            custId: row.custId,
-            fname: row.firstName,
-            lname: row.lastName
+            // custId: row.custId,
+            // fname: row.firstName,
+            // lname: row.lastName
           }
         }
       );

@@ -750,11 +750,13 @@ export class Basicinfo {
       );
     const coApplicantApplicantId = this.getCoApplicantApplicantId();
 
-    const draftData = coApplicantApplicantId
+  
+    const summaryApplicant = await this.getSummaryApplicantForCurrentCoapp();
+ this.prefillPhone = summaryApplicant?.phoneNumber || summaryApplicant?.phone || summaryApplicant?.mobileNumber || this.prefillPhone || '';
+
+   const draftData = coApplicantApplicantId
       ? await this.getSavedbasicInfo(coApplicantApplicantId)
       : null;
-
-    const summaryApplicant = await this.getSummaryApplicantForCurrentCoapp();
 
     let finalData = null;
 

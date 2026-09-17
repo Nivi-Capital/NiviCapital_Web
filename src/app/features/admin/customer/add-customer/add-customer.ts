@@ -71,7 +71,7 @@ export class AddCustomer implements OnInit {
     },
     {
       title: 'KYC',
-      desc: 'Verify the customer’s identity with documents.'
+      desc: "Verify the customer's identity with documents."
     },
     {
       title: 'Create NC ID',
@@ -93,31 +93,31 @@ export class AddCustomer implements OnInit {
     private cd: ChangeDetectorRef, private router: Router, private msgBox: Msgboxservice) { }
 
   ngOnInit() {
-     const flowState = this.main.getState();
-   
+    const flowState = this.main.getState();
 
-  if (!flowState) {
- 
-    return;
-  }
 
-  this.prefillPhone = flowState.phone;
-  this.sendotpId = flowState.userId;
+    if (!flowState) {
 
-  const restoredStep = Number(flowState.currentStep);
+      return;
+    }
 
-  if (
-    Number.isInteger(restoredStep) &&
-    restoredStep >= 0 &&
-    restoredStep < this.steps.length
-  ) {
-    this.currentStep = restoredStep;
-    this.maxAllowedStep = restoredStep;
-  } else {
-    this.currentStep = 0;
-    this.maxAllowedStep = 0;
-  }
- this.restoreCustomerDetails();
+    this.prefillPhone = flowState.phone;
+    this.sendotpId = flowState.userId;
+    
+    const restoredStep = Number(flowState.currentStep);
+
+    if (
+      Number.isInteger(restoredStep) &&
+      restoredStep >= 0 &&
+      restoredStep < this.steps.length
+    ) {
+      this.currentStep = restoredStep;
+      this.maxAllowedStep = restoredStep;
+    } else {
+      this.currentStep = 0;
+      this.maxAllowedStep = 0;
+    }
+    this.restoreCustomerDetails();
 
     this.route.queryParams.subscribe(params => {
       // if (params['phone']) {
@@ -133,12 +133,12 @@ export class AddCustomer implements OnInit {
         if (params['edit'] === 'true') {
           this.maxAllowedStep = this.currentStep;
         }
-        if (params['custId'] && params['edit'] == 'true') {
-          this.custname = params['fname'] + ' ' + params['lname'];
+        if ( params['edit'] == 'true') {
+          this.custname = flowState.fname + ' ' + flowState.lname;
           sessionStorage.setItem('editUser', JSON.stringify({
-            custId: params['custId'],
-            fname: params['fname'],
-            lname: params['lname']
+            custId: flowState.custId,
+            fname: flowState.fname,
+            lname: flowState.lname
           }));
 
         }
@@ -162,22 +162,22 @@ export class AddCustomer implements OnInit {
     this.router.navigate(['/admin/customer']);
   }
 
-private restoreCustomerDetails(): void {
-  const cifDetails = sessionStorage.getItem('cifdetails');
+  private restoreCustomerDetails(): void {
+    const cifDetails = sessionStorage.getItem('cifdetails');
 
-  if (!cifDetails) {
-    return;
+    if (!cifDetails) {
+      return;
+    }
+
+    try {
+      const parsedCifDetails = JSON.parse(cifDetails);
+
+      this.custid = parsedCifDetails.cifId;
+      this.custname = parsedCifDetails.fullName;
+    } catch {
+      sessionStorage.removeItem('cifdetails');
+    }
   }
-
-  try {
-    const parsedCifDetails = JSON.parse(cifDetails);
-
-    this.custid = parsedCifDetails.cifId;
-    this.custname = parsedCifDetails.fullName;
-  } catch {
-    sessionStorage.removeItem('cifdetails');
-  }
-}
 
   createcustId(data: NgForm) {
 
@@ -232,8 +232,8 @@ private restoreCustomerDetails(): void {
         //  this.cd.detectChanges();
 
         // setTimeout(() => {
-          this.goToStep(1);
-          this.cd.detectChanges();
+        this.goToStep(1);
+        this.cd.detectChanges();
         // });
       },
       error: (err) => {
@@ -387,32 +387,33 @@ private restoreCustomerDetails(): void {
 
 
 
-goToStep(step: number): void {
-  if (step < 0 || step >= this.steps.length) {
-    return;
+  goToStep(step: number): void {
+    if (step < 0 || step >= this.steps.length) {
+      return;
+    }
+
+    this.currentStep = step;
+    this.maxAllowedStep = Math.max(this.maxAllowedStep, step);
+
+    const existingState = this.main.getState();
+
+    this.main.setState({
+      phone: existingState?.phone || this.prefillPhone,
+      userId: existingState?.userId || this.sendotpId,
+      currentStep: step,
+      custId: existingState?.userId || this.sendotpId,
+    });
   }
-
-  this.currentStep = step;
-  this.maxAllowedStep = Math.max(this.maxAllowedStep, step);
-
-  const existingState = this.main.getState();
-
-  this.main.setState({
-    phone: existingState?.phone || this.prefillPhone,
-    userId: existingState?.userId || this.sendotpId,
-    currentStep: step
-  });
-}
   prevStep1() {
     if (this.currentStep > 0) {
       this.currentStep--;
     }
   }
-prevStep(): void {
-  if (this.currentStep > 0) {
-    this.goToStep(this.currentStep - 1);
+  prevStep(): void {
+    if (this.currentStep > 0) {
+      this.goToStep(this.currentStep - 1);
+    }
   }
-}
   handleSuccessAction(action: string) {
     if (action === 'proceedToKYC') {
 
@@ -477,11 +478,12 @@ prevStep(): void {
     );
   }
   goTocontact() {
-      this.main.setState({
-    phone: this.prefillPhone,
-    userId: '',
-    currentStep: 0
-  });
+    this.main.setState({
+      phone: this.prefillPhone,
+      userId: '',
+      currentStep: 0,
+      custId: '',
+    });
 
     this.router.navigate(['/admin/customer/checkcontact'],
       // { queryParams: { phone: this.prefillPhone } }
@@ -489,9 +491,9 @@ prevStep(): void {
 
   }
   private clearCustomerFlow(): void {
-  this.main.clearState();
-  sessionStorage.removeItem('cifdetails');
-  sessionStorage.removeItem('userdetails');
-  sessionStorage.removeItem('editUser');
-}
+    this.main.clearState();
+    sessionStorage.removeItem('cifdetails');
+    sessionStorage.removeItem('userdetails');
+    sessionStorage.removeItem('editUser');
+  }
 }

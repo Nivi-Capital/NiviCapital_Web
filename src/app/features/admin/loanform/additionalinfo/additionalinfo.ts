@@ -415,7 +415,7 @@ try {
     const normalizedDraft = this.normalizeAdditionalInfo(draftData);
     const normalizedLocal = this.normalizeAdditionalInfo(parsedLocal);
 
-     this.loadedFromSaveExit = !!normalizedDraft?.items?.length;
+     this.loadedFromSaveExit = !!normalizedDraft;
 
     let finalData: any = null;
 
@@ -1009,9 +1009,6 @@ this.ismothermiddlename = noMotherMiddleName;
     // this.gendercheck(genderValue);
 
 
-    this.isfathermiddlename = !!data.fatherNoMiddleName;
-    this.ismothermiddlename = !!data.motherNoMiddleName;
-    this.isspousemiddlename = !!data.spouseNoMiddleName;
 
     this.restoreMiddleNameState();
 

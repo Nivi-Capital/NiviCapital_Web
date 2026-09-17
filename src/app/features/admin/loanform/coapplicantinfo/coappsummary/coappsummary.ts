@@ -307,18 +307,7 @@ export class Coappsummary {
           this.isSelfEmployed = occupation === 'self employed';
           this.showIncome = this.isEmployed || this.isSelfEmployed;
 
-          // const isExcludedOccupation = occupation === 'housewife' || occupation === 'housewife / homemaker' || occupation === 'unemployed';
-
-          // this.showAssets =
-          //   this.isasset === true &&
-          //   occupation !== 'housewife' &&
-          //   occupation !== 'housewife / homemaker';
-
-
-
-          // this.showAssets =
-          //   this.isasset &&
-          //   !isExcludedOccupation;
+       
 
           this.showAssets = this.isasset === true
 

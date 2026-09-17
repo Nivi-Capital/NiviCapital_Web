@@ -161,11 +161,20 @@ export class Newloan implements OnInit {
   }
 
   toProductscreen() {
+     this.service.setState({
+      phone: this.selectedRows[0].mobile ?? '',
+      userId: this.selectedRows[0].userId ?? '',
+      currentStep: 0,
+       custId: this.selectedRows[0].custId,
+       fname: this.selectedRows[0].firstName,
+            lname: this.selectedRows[0].lastName
+    });
+
     this.router.navigate(["/admin/losoperation/selectproduct"],
       {
         queryParams: {
-          custId: this.selectedRows[0].custId,
-          custName: this.selectedRows[0].firstName + " "+this.selectedRows[0].lastName
+          // custId: this.selectedRows[0].custId,
+          // custName: this.selectedRows[0].firstName + " "+this.selectedRows[0].lastName
 
         }
       }

@@ -6,7 +6,7 @@
         [class.otp-error]="otpStatus === 'error'"
          [class.otp-success]="otpStatus === 'success'">
             <input *ngFor="let _ of otp; let i = index" [id]="'otp-' + i" class="otp-input" type="text"
-                inputmode="numeric" autocomplete="one-time-code" maxlength="1" [value]="otp[i]"
+                inputmode="numeric" autocomplete="one-time-code" maxlength="1" [value]="otp[i]" 
                 (keydown)="onKeyDown($event, i)" [class.otp-filled]="otp[i] !== ''" />
         </div>
 

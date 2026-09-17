@@ -54,6 +54,8 @@ registerOnValidatorChange(fn: () => void): void {
   
   @Output() dateChanged = new EventEmitter<any>();
 
+  @Input() allowPastYears: number | null = null;
+
   onChange = (_: any) => { };
   onTouched = () => { };
 
@@ -70,10 +72,24 @@ registerOnValidatorChange(fn: () => void): void {
 
 
     if (this.disablePastDates) {
+       if (this.allowPastYears) {
+      const minAllowedDate = new Date();
+      minAllowedDate.setFullYear(
+        minAllowedDate.getFullYear() - this.allowPastYears
+      );
+      minAllowedDate.setHours(0, 0, 0, 0);
+
+      this.minDate =
+        minAllowedDate > minYearDate
+          ? minAllowedDate
+          : minYearDate;
+
+    } else {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       this.minDate = today > minYearDate ? today : minYearDate;
     } 
+  }
     if (this.disablefutureDates) {
       this.maxDate = yesterday;
     } 
@@ -98,6 +114,14 @@ writeValue(value: any): void {
     this.validatorChange();
   });
 }
+writeValue2(value: any): void {
+  this.selectedDate = value;
+
+  this.rawDateValue =
+    value && moment(value).isValid()
+      ? moment(value).format('DD/MM/YYYY')
+      : '';
+}
 
   registerOnChange(fn: any): void {
     this.onChange = fn;
@@ -111,13 +135,30 @@ writeValue(value: any): void {
     this.disabled = isDisabled;
   }
 
-  allowOnlyDate(event: KeyboardEvent) {
-    const allowedKeys = /[0-9\/]/;
 
-    if (!allowedKeys.test(event.key)) {
-      event.preventDefault();
-    }
+  allowOnlyDate(event: KeyboardEvent): void {
+  const navigationKeys = [
+    'Backspace',
+    'Delete',
+    'Tab',
+    'ArrowLeft',
+    'ArrowRight',
+    'Home',
+    'End'
+  ];
+
+  if (
+    navigationKeys.includes(event.key) ||
+    event.ctrlKey ||
+    event.metaKey
+  ) {
+    return;
   }
+
+  if (!/[0-9/]/.test(event.key)) {
+    event.preventDefault();
+  }
+}
  validate(control: AbstractControl): ValidationErrors | null {
   const value = this.rawDateValue;
 
@@ -156,7 +197,7 @@ writeValue(value: any): void {
 
   return null;
 }
-onManualInput(event: any) {
+onManualInput1(event: any) {
   
   
 const input = event.target as HTMLInputElement;
@@ -220,19 +261,149 @@ const isDelete =
   }
 }
 
-  onDateChange1(val: Date | null) {
-    if (!val) {
-      this.selectedDate = null;
-      this.onChange(null);
-      return;
+onManualInput(event: Event): void {
+  const inputEvent = event as InputEvent;
+  const input = inputEvent.target as HTMLInputElement;
+
+  const isDeleting =
+    inputEvent.inputType === 'deleteContentBackward' ||
+    inputEvent.inputType === 'deleteContentForward' ||
+    inputEvent.inputType === 'deleteByCut';
+
+  let value = input.value;
+
+  if (!isDeleting) {
+    const cursorPosition =
+      input.selectionStart ?? value.length;
+
+    const digitsBeforeCursor = value
+      .substring(0, cursorPosition)
+      .replace(/\D/g, '')
+      .length;
+
+    const digits = value
+      .replace(/\D/g, '')
+      .substring(0, 8);
+
+    value = digits;
+
+    if (digits.length > 4) {
+      value =
+        digits.substring(0, 2) +
+        '/' +
+        digits.substring(2, 4) +
+        '/' +
+        digits.substring(4);
+    } else if (digits.length > 2) {
+      value =
+        digits.substring(0, 2) +
+        '/' +
+        digits.substring(2);
     }
-    const stringVal = val.toString();
-    if (stringVal.length > 10) { return; }
-    this.selectedDate = val;
-    this.onChange(val);
-    this.onTouched();
+
+    input.value = value;
+
+    let newCursorPosition = digitsBeforeCursor;
+
+    if (digitsBeforeCursor > 2) {
+      newCursorPosition++;
+    }
+
+    if (digitsBeforeCursor > 4) {
+      newCursorPosition++;
+    }
+
+    setTimeout(() => {
+      input.setSelectionRange(
+        newCursorPosition,
+        newCursorPosition
+      );
+    });
   }
-onDateChange(val: any) {
+
+  this.rawDateValue = input.value;
+
+  // Completely empty input
+  if (!this.rawDateValue) {
+    this.selectedDate = null;
+    this.onChange(null);
+    this.dateChanged.emit(null);
+    this.onTouched();
+    this.validatorChange();
+    return;
+  }
+
+  // Incomplete date: keep exactly what the user typed.
+  if (this.rawDateValue.length !== 10) {
+    this.onTouched();
+    this.validatorChange();
+    return;
+  }
+
+  const parsedDate = moment(
+    this.rawDateValue,
+    'DD/MM/YYYY',
+    true
+  );
+
+  // Keep invalid text visible for correction.
+  if (!parsedDate.isValid()) {
+    this.onTouched();
+    this.validatorChange();
+    return;
+  }
+
+  if (parsedDate.isValid()) {
+  const date = parsedDate.toDate();
+  date.setHours(0, 0, 0, 0);
+
+  this.selectedDate = date;
+
+  this.onChange(date);
+  this.dateChanged.emit(date);
+
+  this.onTouched();
+  this.validatorChange();
+}
+
+  const date = parsedDate.toDate();
+  date.setHours(0, 0, 0, 0);
+
+  this.selectedDate = date;
+
+  // Update parent only for a complete valid date.
+  this.onChange(date);
+  this.dateChanged.emit(date);
+  this.onTouched();
+  this.validatorChange();
+}
+
+onDateChange(value: Date | null): void {
+  if (!value || !moment(value).isValid()) {
+    this.selectedDate = null;
+    this.rawDateValue = '';
+
+    this.onChange(null);
+    this.dateChanged.emit(null);
+    this.onTouched();
+    this.validatorChange();
+    return;
+  }
+
+  const date = moment(value).toDate();
+  date.setHours(0, 0, 0, 0);
+
+  this.selectedDate = date;
+  this.rawDateValue =
+    moment(date).format('DD/MM/YYYY');
+
+  this.onChange(date);
+  this.dateChanged.emit(date);
+  this.onTouched();
+  this.validatorChange();
+}
+
+onDateChange2(val: any) {
   this.selectedDate = val;
 
   if (val) {

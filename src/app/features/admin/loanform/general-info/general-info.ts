@@ -16,6 +16,7 @@ import { Msgboxservice } from '../../../../core/service/msgboxservice';
 import { Storage } from '../../../../core/service/storage';
 import { Successbox } from '../../customer/successbox/successbox';
 import { Messagebox } from "../../../systemdesign/messagebox/messagebox";
+import moment from 'moment';
 interface OptionItem {
   label: string;
   value: string;
@@ -144,7 +145,7 @@ export class GeneralInfo implements OnInit {
   lastSavedPayload: any = null;
   isSummaryEditMode = false;
   viewOnly = false;
-minEndCourseDate: any = null;
+  minEndCourseDate: any = null;
 
   //edit from summary
   isFromSummary = false;
@@ -155,205 +156,206 @@ minEndCourseDate: any = null;
   editSuccess: any = false;
   description1 = `Great ! Your General Info Details\n Uploaded Successfully.`;
 
-   isDataLoading = true;
-loadError = '';
-loadedFromSaveExit = false;
+  isDataLoading = true;
+  loadError = '';
+  loadedFromSaveExit = false;
 
-  constructor(private fb: FormBuilder, private formSvc: Loanformservice, private router: Router, private cd: ChangeDetectorRef,private storageservice: Storage, private stepperService: Loanstepperservice, private msgBox: Msgboxservice, private route: ActivatedRoute, public mainservice: Main) { }
+  constructor(private fb: FormBuilder, private formSvc: Loanformservice, private router: Router, private cd: ChangeDetectorRef, private storageservice: Storage, private stepperService: Loanstepperservice, private msgBox: Msgboxservice, private route: ActivatedRoute, public mainservice: Main) { }
   async ngOnInit() {
- this.isDataLoading = true;
-  this.loadError = '';
-try {
-    this.isCoApplicant = this.router.url.includes('co-applicant');
-
-    this.stepperService.setStepperType(
-      this.isCoApplicant ? 'CO_APPLICANT' : 'MAIN'
-    );
-
-    if (this.isCoApplicant) {
-      this.stepperService.restoreCoAppIdFromSession();
-      // this.getRealtionShipwith()
-    }
-    this.stepperService.restoreLoanEditContext();
-    this.stepperService.restoreLoanIdFromSession();
-
-    let storedCoAppData: any = {};
-
+    this.isDataLoading = true;
+    this.loadError = '';
     try {
-      storedCoAppData = JSON.parse(sessionStorage.getItem('coAppIds') || '{}');
-    } catch {
-      storedCoAppData = {};
-    }
+      this.isCoApplicant = this.router.url.includes('co-applicant');
 
-    const index = Number(this.route.snapshot.queryParams['coApplicantIndex']) ||  storedCoAppData?.coApplicantIndex || 1;
+      this.stepperService.setStepperType(
+        this.isCoApplicant ? 'CO_APPLICANT' : 'MAIN'
+      );
 
-    this.stepperService.setCurrentCoApplicantIndex(index);
+      if (this.isCoApplicant) {
+        this.stepperService.restoreCoAppIdFromSession();
+        // this.getRealtionShipwith()
+      }
+      this.stepperService.restoreLoanEditContext();
+      this.stepperService.restoreLoanIdFromSession();
+
+      let storedCoAppData: any = {};
+
+      try {
+        storedCoAppData = JSON.parse(sessionStorage.getItem('coAppIds') || '{}');
+      } catch {
+        storedCoAppData = {};
+      }
+
+      const index = Number(this.route.snapshot.queryParams['coApplicantIndex']) || storedCoAppData?.coApplicantIndex || 1;
+
+      this.stepperService.setCurrentCoApplicantIndex(index);
 
 
-    let Allids = this.stepperService.getLoanId();
+      let Allids = this.stepperService.getLoanId();
 
-    this.applicantId = Allids[0];
-    this.applicationId = Allids[1];
-    this.custName = Allids[2];
-    this.custARN = Allids[3];
+      this.applicantId = Allids[0];
+      this.applicationId = Allids[1];
+      this.custName = Allids[2];
+      this.custARN = Allids[3];
 
-    let AllCoapp_ids = this.stepperService.getCo_appId();
+      let AllCoapp_ids = this.stepperService.getCo_appId();
 
 
-    const queryParams = this.route.snapshot.queryParams;
+      const queryParams = this.route.snapshot.queryParams;
 
-    if (
-      this.isCoApplicant &&
-      (!AllCoapp_ids || !AllCoapp_ids[0] || !AllCoapp_ids[1])
-    ) {
+      if (
+        this.isCoApplicant &&
+        (!AllCoapp_ids || !AllCoapp_ids[0] || !AllCoapp_ids[1])
+      ) {
 
-      const storedCoApp = sessionStorage.getItem('coAppIds');
-      if (storedCoApp) {
-        const parsed = JSON.parse(storedCoApp);
-        if (parsed?.applicantId && parsed?.applicationId) {
-          AllCoapp_ids = [
-            parsed.applicantId,
-            parsed.applicationId,
-            parsed.fullName, parsed.custARN
-          ];
+        const storedCoApp = sessionStorage.getItem('coAppIds');
+        if (storedCoApp) {
+          const parsed = JSON.parse(storedCoApp);
+          if (parsed?.applicantId && parsed?.applicationId) {
+            AllCoapp_ids = [
+              parsed.applicantId,
+              parsed.applicationId,
+              parsed.fullName, parsed.custARN
+            ];
 
-          // restore back into service
-          this.stepperService.setCurrentCoApplicantIndex(parsed.coApplicantIndex || 1);
-          this.stepperService.setCo_appId(
-            parsed.applicantId,
-            parsed.applicationId,
-            parsed.fullName, parsed.custARN,
-            parsed.coApplicantIndex || 1);
+            // restore back into service
+            this.stepperService.setCurrentCoApplicantIndex(parsed.coApplicantIndex || 1);
+            this.stepperService.setCo_appId(
+              parsed.applicantId,
+              parsed.applicationId,
+              parsed.fullName, parsed.custARN,
+              parsed.coApplicantIndex || 1);
 
+          } else {
+            console.error('Invalid coAppIds in sessionStorage:', parsed);
+          }
+
+        }
+      }
+
+
+
+      // this.applicantId = this.isCoApplicant ? AllCoapp_ids[0] : Allids[0];
+
+      if (this.isCoApplicant) {
+        this.applicantId = AllCoapp_ids?.[0];
+        this.applicationId = AllCoapp_ids?.[1];
+        this.custName = AllCoapp_ids?.[2];
+        this.custARN = AllCoapp_ids?.[3] || this.custARN;
+      } else {
+        this.applicantId = Allids?.[0];
+        this.applicationId = Allids?.[1];
+        this.custName = Allids?.[2];
+        this.custARN = Allids?.[3];
+      }
+
+      this.registerForm = this.fb.group({
+
+        occupation: ['', Validators.required],
+        // qualification: ['', Validators.required],
+        // institutionName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+        state: ['', Validators.required],
+        otherstatetitle: [''],
+        university: ['', Validators.required],
+        otherunititle: [''],
+        coursetype: ['', Validators.required],
+        othercoursetypetitle: [''],
+        coursename: ['', Validators.required],
+        othercoursenametitle: [''],
+        // courseduration: [''],
+        // coursestartdate: ['', [Validators.required, this.dateMinValidator(() => new Date())]],
+        coursestartdate: ['', [Validators.required, this.dateMinValidator(() => this.getCourseStartMinDate())]],
+        courseenddate: ['', [Validators.required, this.endDateValidator()]],
+        checkedasset: [null, Validators.required],
+        lendingpartner: ['', Validators.required],
+
+
+      });
+
+
+      this.coapp_registerForm = this.fb.group({
+
+        occupation: ['', Validators.required],
+        annualincome: ['', Validators.required],
+        relationship: ['', Validators.required],
+        OtherRelationship: [''],
+        co_checkedasset: [null, Validators.required],
+      });
+
+
+      this.applyApplicantViewMode(queryParams)
+      // Reset localStorage if applicant changed
+
+      const currentUserKey = this.isCoApplicant
+        ? 'currentCoApplicantId'
+        : 'currentApplicantId';
+
+      const previousId = localStorage.getItem(currentUserKey);
+
+      if (previousId && previousId !== this.applicantId) {
+
+        if (this.isCoApplicant) {
+          localStorage.removeItem(`generalInfo_coapp_${previousId}`);
         } else {
-          console.error('Invalid coAppIds in sessionStorage:', parsed);
+          localStorage.removeItem(`generalInfo_main_${previousId}`);
         }
 
       }
-    }
 
+      localStorage.setItem(currentUserKey, this.applicantId);
+      // this.stepperService.rebuildSteps();
 
-
-    // this.applicantId = this.isCoApplicant ? AllCoapp_ids[0] : Allids[0];
-
-    if (this.isCoApplicant) {
-      this.applicantId = AllCoapp_ids?.[0];
-      this.applicationId = AllCoapp_ids?.[1];
-      this.custName = AllCoapp_ids?.[2];
-      this.custARN = AllCoapp_ids?.[3] || this.custARN;
-    } else {
-      this.applicantId = Allids?.[0];
-      this.applicationId = Allids?.[1];
-      this.custName = Allids?.[2];
-      this.custARN = Allids?.[3];
-    }
-
-    this.registerForm = this.fb.group({
-
-      occupation: ['', Validators.required],
-      // qualification: ['', Validators.required],
-      // institutionName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      state: ['', Validators.required],
-      otherstatetitle: [''],
-      university: ['', Validators.required],
-      otherunititle: [''],
-      coursetype: ['', Validators.required],
-      othercoursetypetitle: [''],
-      coursename: ['', Validators.required],
-      othercoursenametitle: [''],
-      // courseduration: [''],
-      coursestartdate: ['', [Validators.required,  this.dateMinValidator(() => new Date())]],
-      courseenddate: ['', [Validators.required,  this.endDateValidator()]],
-      checkedasset: [null, Validators.required],
-      lendingpartner: ['', Validators.required],
-
-
-    });
-
-
-    this.coapp_registerForm = this.fb.group({
-
-      occupation: ['', Validators.required],
-      annualincome: ['', Validators.required],
-      relationship: ['', Validators.required],
-      OtherRelationship: [''],
-      co_checkedasset: [null, Validators.required],
-    });
-
-
-    this.applyApplicantViewMode(queryParams)
-    // Reset localStorage if applicant changed
-
-    const currentUserKey = this.isCoApplicant
-      ? 'currentCoApplicantId'
-      : 'currentApplicantId';
-
-    const previousId = localStorage.getItem(currentUserKey);
-
-    if (previousId && previousId !== this.applicantId) {
-
+      // this.getOccupationdetails();
+      await this.getOccupationdetailsAsync();
       if (this.isCoApplicant) {
-        localStorage.removeItem(`generalInfo_coapp_${previousId}`);
-      } else {
-        localStorage.removeItem(`generalInfo_main_${previousId}`);
+        await this.getRealtionShipwithAsync();
       }
+      else {
+        this.states();
+        this.getEducationdetails();
+        this.getlendingpartnersdetails();
+      }
+      this.listenToChanges();
+      await this.loadGeneralInfoForBothFlows()
+      this.stepperService.rebuildSteps();
 
+    } catch (error) {
+      console.error(
+        'Failed to initialize general page',
+        error
+      );
+
+      this.loadError =
+        'Unable to load general details. Please try again.';
+    } finally {
+      this.isDataLoading = false;
+
+      /*
+       * Apply the current mode only after data has been patched.
+       */
+      this.applyCurrentFormMode();
+
+      this.cd.detectChanges();
     }
-
-    localStorage.setItem(currentUserKey, this.applicantId);
-    // this.stepperService.rebuildSteps();
-
-    // this.getOccupationdetails();
-    await this.getOccupationdetailsAsync();
-    if (this.isCoApplicant) {
-      await this.getRealtionShipwithAsync();
-    }
-    else {
-      this.states();
-      this.getEducationdetails();
-      this.getlendingpartnersdetails();
-    }
-    this.listenToChanges();
-    await this.loadGeneralInfoForBothFlows()
-this.stepperService.rebuildSteps();
-    
-} catch (error) {
-    console.error(
-      'Failed to initialize general page',
-      error
-    );
-
-    this.loadError =
-      'Unable to load general details. Please try again.';
-  } finally {
-    this.isDataLoading = false;
-
-    /*
-     * Apply the current mode only after data has been patched.
-     */
-    this.applyCurrentFormMode();
-
-    this.cd.detectChanges();
-  }
 
   }
 
   //loading data
   private applyCurrentFormMode(): void {
-  if (!this.activeForm) {
-    return;
-  }
+    if (!this.activeForm) {
+      return;
+    }
 
-  if (this.isViewMode && !this.isEditMode) {
-    this.activeForm.disable({
-      emitEvent: false
-    });
-  } else {
-    this.activeForm.enable({
-      emitEvent: false
-    });
+    if (this.isViewMode && !this.isEditMode) {
+      this.activeForm.disable({
+        emitEvent: false
+      });
+    } else {
+      this.activeForm.enable({
+        emitEvent: false
+      });
+    }
   }
-}
   applyApplicantViewMode(queryParams: any) {
     const isFromSummaryRoute =
       queryParams['fromSummary'] === true ||
@@ -523,7 +525,7 @@ this.stepperService.rebuildSteps();
         (parsedLocal ? this.mapLocalToApiFormat(parsedLocal) : null);
     }
 
-     this.loadedFromSaveExit = !!draftData?.items?.length;
+    this.loadedFromSaveExit = !!draftData;
     if (!finalData) {
       this.lastSavedPayload = null;
       return;
@@ -533,11 +535,11 @@ this.stepperService.rebuildSteps();
       this.patchCoApplicantInfo(finalData);
 
       // this.co_checkassetOnChange(finalData.hasAssets ? 'Yes' : 'No');
-const hasAssets = this.toBoolean(finalData.hasAssets);
+      const hasAssets = this.toBoolean(finalData.hasAssets);
 
-this.co_checkassetOnChange(
-  hasAssets ? 'Yes' : 'No'
-);
+      this.co_checkassetOnChange(
+        hasAssets ? 'Yes' : 'No'
+      );
 
       this.handleCoApplicantOccupationChange(
         finalData.currentOccupationId ||
@@ -658,7 +660,7 @@ this.co_checkassetOnChange(
         });
     }
   }
- 
+
   buildCoApplicantPayload(formdata: any) {
     return {
       applicationId: this.applicationId,
@@ -749,7 +751,7 @@ this.co_checkassetOnChange(
     console.log(this.registerForm.value);
   }
   //main applicant radiobutton for assets
- 
+
   checkassetOnChange(value: any) {
     const isAsset = value === 'Yes';
 
@@ -758,7 +760,7 @@ this.co_checkassetOnChange(
     this.registerForm.get('checkedasset')?.setValue(value, {
       emitEvent: false
     });
-   
+
     this.stepperService.setApplicantValues('main', {
       isasset: isAsset,
       isincome: this.formSvc.applicantState.isincome,
@@ -775,13 +777,13 @@ this.co_checkassetOnChange(
     // const isAsset = value === 'Yes';
 
     // this.checkboxasset = value;
-const isAsset = this.toBoolean(value);
- this.checkboxasset = isAsset ? 'Yes' : 'No';
+    const isAsset = this.toBoolean(value);
+    this.checkboxasset = isAsset ? 'Yes' : 'No';
 
     this.coapp_registerForm.get('co_checkedasset')?.setValue(value, {
       emitEvent: false
     });
-   
+
     this.stepperService.setApplicantValues('coapp', {
       isasset: isAsset,
       isincome: this.formSvc.coApplicantState.isincome,
@@ -851,69 +853,69 @@ const isAsset = this.toBoolean(value);
 
   }
   handleCoApplicantOccupationChange(value: any): void {
-  const selected = this.selectoccupation.find(
-    option => String(option.value) === String(value)
-  );
-
-  const occupation = (selected?.label || '')
-    .trim()
-    .toLowerCase();
-
-  const isIncome =
-    occupation === 'employed' ||
-    occupation === 'self-employed' ||
-    occupation === 'self employed';
-
-  const isSalaried = occupation === 'employed';
-
-  const assetFormValue = this.coapp_registerForm
-    .get('co_checkedasset')
-    ?.value;
-
-  const isAsset = this.toBoolean(assetFormValue);
-
-  const currentState = {
-    isincome: isIncome,
-    issalaried: isSalaried,
-    isasset: isAsset
-  };
-
-  this.formSvc.coApplicantState = {
-    ...this.formSvc.coApplicantState,
-    ...currentState
-  };
-
-  const stateKey = this.stepperService.getCoApplicantStateKey(
-    // this.applicationId,
-    // this.applicantId
-  );
-
-  localStorage.setItem(
-    stateKey,
-    JSON.stringify(currentState)
-  );
-
-  this.stepperService.setApplicantValues(
-    'coapp',
-    currentState
-  );
-
-  // this.stepperService.rebuildSteps();
-}
-
-private toBoolean(value: unknown): boolean {
-  if (value === true || value === 1) {
-    return true;
-  }
-
-  if (typeof value === 'string') {
-    return ['true', 'yes', '1'].includes(
-      value.trim().toLowerCase()
+    const selected = this.selectoccupation.find(
+      option => String(option.value) === String(value)
     );
+
+    const occupation = (selected?.label || '')
+      .trim()
+      .toLowerCase();
+
+    const isIncome =
+      occupation === 'employed' ||
+      occupation === 'self-employed' ||
+      occupation === 'self employed';
+
+    const isSalaried = occupation === 'employed';
+
+    const assetFormValue = this.coapp_registerForm
+      .get('co_checkedasset')
+      ?.value;
+
+    const isAsset = this.toBoolean(assetFormValue);
+
+    const currentState = {
+      isincome: isIncome,
+      issalaried: isSalaried,
+      isasset: isAsset
+    };
+
+    this.formSvc.coApplicantState = {
+      ...this.formSvc.coApplicantState,
+      ...currentState
+    };
+
+    const stateKey = this.stepperService.getCoApplicantStateKey(
+      // this.applicationId,
+      // this.applicantId
+    );
+
+    localStorage.setItem(
+      stateKey,
+      JSON.stringify(currentState)
+    );
+
+    this.stepperService.setApplicantValues(
+      'coapp',
+      currentState
+    );
+
+    // this.stepperService.rebuildSteps();
   }
 
-  return false;
-}
+  private toBoolean(value: unknown): boolean {
+    if (value === true || value === 1) {
+      return true;
+    }
+
+    if (typeof value === 'string') {
+      return ['true', 'yes', '1'].includes(
+        value.trim().toLowerCase()
+      );
+    }
+
+    return false;
+  }
 
   get f() {
     return this.registerForm.controls;
@@ -1257,53 +1259,69 @@ private toBoolean(value: unknown): boolean {
 
   }
 
-  dateMinValidator= (getMinDate: () => Date) => {
-    return (control: any) => {
-      const value = control.value;
-      const minDate = getMinDate();
+//today- 3 years allowed for start date
+private getCourseStartMinDate(): Date {
+  const minDate = new Date();
 
-      if (!value || !minDate) {
-        return { zeroDateError: true };
+  minDate.setFullYear(minDate.getFullYear() - 3);
+  minDate.setHours(0, 0, 0, 0);
+
+  return minDate;
+}
+
+
+  dateMinValidator = (getMinDate: () => Date): ValidatorFn => {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value) {
+        return null;
       }
 
-      const selected = new Date(value);
-      const min = new Date(getMinDate());
-      this.minEndCourseDate = selected;
+      const selected = this.parseStrictDate(control.value);
+      const min = getMinDate();
 
+      if (!selected || Number.isNaN(min.getTime())) {
+        return { invalidDate: true };
+      }
 
       selected.setHours(0, 0, 0, 0);
       min.setHours(0, 0, 0, 0);
 
-      return selected < min ? { minDateError: true, zeroDateError: false } : null;
-      // if (selected < min) {
-      //   return { minDateError: true };
-      // }
-
-      // return null;
+      return selected < min
+        ? { minDateError: true }
+        : null;
     };
   };
+  endDateValidator = (): ValidatorFn => {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (!control.value) {
+        return null;
+      }
+      const endValue = control.value;
+      const startValue = control.parent?.get('coursestartdate')?.value;
 
-  endDateValidator = () => {
-    return (control: any) => {
-      const endDate = control.value;
-      const minDate = this.minEndCourseDate;
+      if (!endValue) {
+        return null;
+      }
+      if (!startValue) {
+        return null;
+      }
 
 
-      if (!endDate || !minDate) {
-        return { zeroDateError: true };
-      };
+      const start = this.parseStrictDate(startValue);
+      const end = this.parseStrictDate(control.value);
 
-      const end = new Date(endDate);
-      const min = new Date(minDate);
+      if (!start || !end) {
+        return { invalidDate: true };
+      }
 
-
+      start.setHours(0, 0, 0, 0);
       end.setHours(0, 0, 0, 0);
-      min.setHours(0, 0, 0, 0);
-      return end <= min ? { invalidEndDate: true, zeroDateError: false } : null;
-
+      return end <= start
+        ? { invalidEndDate: true }
+        : null;
     };
   };
- 
+
   private parseStrictDate(value: unknown): Date | null {
     if (!value) {
       return null;
@@ -1617,7 +1635,7 @@ private toBoolean(value: unknown): boolean {
     const hasAssets1 =
       data.hasAssets === true ||
       data.hasAssets === 'true';
-const hasAssets = this.toBoolean(data.hasAssets);
+    const hasAssets = this.toBoolean(data.hasAssets);
 
     this.coapp_registerForm.patchValue({
       occupation: occupation,
@@ -1832,14 +1850,15 @@ const hasAssets = this.toBoolean(data.hasAssets);
 
 
   next() {
-      this.formSubmitted = true;
+    this.formSubmitted = true;
     const form = this.activeForm;
 
-      form.updateValueAndValidity();
+
+  form.markAllAsTouched();
 
   if (!this.isCoApplicant) {
     this.registerForm
-     .get('coursestartdate')
+      .get('coursestartdate')
       ?.updateValueAndValidity({
         emitEvent: false
       });
@@ -1848,8 +1867,12 @@ const hasAssets = this.toBoolean(data.hasAssets);
       .get('courseenddate')
       ?.updateValueAndValidity({
         emitEvent: false
-     });
+      });
   }
+  form.updateValueAndValidity({
+    emitEvent: false
+  });
+    // form.updateValueAndValidity();
 
     if (!form.valid) {
       console.log("form invalid");
@@ -1907,25 +1930,25 @@ const hasAssets = this.toBoolean(data.hasAssets);
 
   //edit from summary enable and disbale
 
- 
-   enableForm(): void {
-  if (this.isDataLoading) {
-    return;
+
+  enableForm(): void {
+    if (this.isDataLoading) {
+      return;
+    }
+
+    this.originalFormValue =
+      this.activeForm.getRawValue();
+
+    this.isViewMode = false;
+    this.isEditMode = true;
+    this.viewOnly = false;
+
+    this.activeForm.enable({
+      emitEvent: false
+    });
+
+    this.cd.detectChanges();
   }
-
-  this.originalFormValue =
-    this.activeForm.getRawValue();
-
-  this.isViewMode = false;
-  this.isEditMode = true;
-  this.viewOnly = false;
-
-  this.activeForm.enable({
-    emitEvent: false
-  });
-
-  this.cd.detectChanges();
-}
 
   cancelSummaryEdit() {
     if (this.isEditMode && this.originalFormValue) {
@@ -1939,7 +1962,7 @@ const hasAssets = this.toBoolean(data.hasAssets);
   }
   saveSummaryEdit() {
     const form = this.activeForm;
- form.updateValueAndValidity();
+    form.updateValueAndValidity();
     if (!form.valid) {
       console.log("form invalid");
       return;
@@ -2029,22 +2052,34 @@ const hasAssets = this.toBoolean(data.hasAssets);
       courseenddate: ''
     }, { emitEvent: false });
   }
-  onDateChanged(event: unknown): void {
-  const startDateControl =
+
+onStartDateChanged(event: unknown): void {
+  const startControl =
     this.registerForm.get('coursestartdate');
 
-  const endDateControl =
+  const endControl =
     this.registerForm.get('courseenddate');
 
-  startDateControl?.updateValueAndValidity({
+  startControl?.updateValueAndValidity({
     emitEvent: false
   });
 
-  endDateControl?.reset('', {
+  endControl?.updateValueAndValidity({
     emitEvent: false
   });
 
-  endDateControl?.updateValueAndValidity({
+  if (endControl?.value && endControl.invalid) {
+endControl.markAsTouched();
+}
+}
+
+onEndDateChanged(event: unknown): void {
+  const endControl =
+    this.registerForm.get('courseenddate');
+
+  endControl?.markAsTouched();
+
+  endControl?.updateValueAndValidity({
     emitEvent: false
   });
 }

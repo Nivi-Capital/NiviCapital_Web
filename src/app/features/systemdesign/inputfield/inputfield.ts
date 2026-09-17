@@ -75,7 +75,7 @@ set valueslot(val: any) {
 
   private onChange: (value: string) => void = () => { };
   private onTouched: () => void = () => { };
-
+@Input() autocomplete: string = 'off';
   ngOnInit() {
     // Initialize currentType based on the type input
     this.currentType = this.type;
@@ -101,7 +101,13 @@ get valueslot(): any {
   }
 
   onInputChange(value: string): void {
+ if (this.type !== 'password') {
+    value = value.replace(/[<>]/g, '');
 
+    if (this.uppercase) {
+      value = value.toUpperCase();
+    }
+  }
     
 
   if (this.type === 'number' && value !== '') {

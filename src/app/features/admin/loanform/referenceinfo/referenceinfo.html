@@ -41,7 +41,7 @@
 
 
 
-            <!-- Button to open popup (you can place this where your Reference fields were) -->
+            <!-- Button to open popup  -->
             <div class="d-flex flex-column gap-3">
                 <button class="btn referencetitle" (click)="openModal(0)"[disabled]="isViewMode" >
                     <span class="text-common fw-bold blue-text">Reference 1<span class="text-danger">*</span></span>
@@ -261,7 +261,7 @@
 
                                         </div>
                                         <app-checkbox [checked]="ismiddlename[currentRefIndex]" [indeterminate]="false"
-                                            label="I don’t have middle name" (checkedChange)="onmiddlename($event)">
+                                            label="Don't have middle name" (checkedChange)="onmiddlename($event)">
                                         </app-checkbox>
                                         <div class="text-danger mt-1"
                                             *ngIf=" submitAttempted && !ismiddlename[currentRefIndex] && !getRefControl('reference1', i, 'mname')?.value">
@@ -539,7 +539,7 @@
 
                                         </div>
                                         <app-checkbox [checked]="ismiddlename[currentRefIndex]" [indeterminate]="false"
-                                            label="I don’t have middle name" (checkedChange)="onmiddlename($event)">
+                                            label="Don't have middle name" (checkedChange)="onmiddlename($event)">
                                         </app-checkbox>
                                         <div class="text-danger mt-1"
                                             *ngIf=" submitAttempted && !ismiddlename[currentRefIndex] && !getRefControl('reference2', i, 'mname')?.value">

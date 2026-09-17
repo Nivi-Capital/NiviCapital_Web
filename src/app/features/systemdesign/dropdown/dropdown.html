@@ -23,7 +23,11 @@
     </div>
     } @else {
     <div class="label-container">
-      <div class="label text-common Showtext">
+      <div class="label text-common Showtext"
+    [class.has-value]="
+    selectedLabeldata?.trim() &&
+    selectedLabeldata?.trim() !== placeholder?.trim()
+  ">
         {{ selectedLabeldata || placeholder }}
       </div>
     </div>

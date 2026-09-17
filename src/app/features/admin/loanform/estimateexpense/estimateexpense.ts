@@ -435,7 +435,7 @@ try {
       cleanAmount(data.tuitionFeeInr) ||
       cleanAmount(data.educationFeesInr) ||
 
-      //    Your current summary response key
+      //     current summary response key
       cleanAmount(educationFees.tuitionInr) ||
 
       // other possible keys

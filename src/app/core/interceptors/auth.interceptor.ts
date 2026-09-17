@@ -27,48 +27,76 @@ export class AuthInterceptor implements HttpInterceptor {
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
         console.log(error)
-        // if (error.status === 401 && !this.isRefreshing) {
+       
 
         if (error.status !== 401) {
           return throwError(() => error);
         }
+        
+        const msg = error.error?.message;
 
-
-        if (this.isRefreshing) {
-          return this.refreshTokenSubject.pipe(
-            filter(result => result != null),
-            take(1),
-            switchMap(() => next.handle(request))
-          );
+        // Only refresh when access token has expired ot token missing
+        if (error.error?.code === 401 && (msg === 'ACCESS_TOKEN_EXPIRED' || msg === 'TOKEN_MISSING')) {
+          return this.handleRefreshToken(request, next);
         }
-        this.isRefreshing = true;
-        this.refreshTokenSubject.next(null);
-        let url = `${this.baseUrl}/auth/refresh`;
-        return this.http.post(url,
-          {}, { withCredentials: true }).pipe(
-            switchMap((res: any) => {
-              console.log('Refresh Success');
-              this.isRefreshing = false;
-              this.refreshTokenSubject.next(true);
 
-              return next.handle(request);
-            }),
-            catchError(err => {
-              this.isRefreshing = false;
-              console.log('Refresh Failed', err);
-              this.router.navigate(['/login']);
-              return throwError(() => err);
-            })
-          );
-        // }
+        // force Logout scenarios
+        if (
+          msg === 'SESSION_REVOKED' ||
+          msg === 'TOKEN_INVALID' ||
+          msg === 'ACCOUNT_DISABLED' ||
+          msg === 'REFRESH_TOKEN_EXPIRED'
+        ) {
+          this.router.navigate(['/login']);
+        }
 
-        // return throwError(() => error);
+        return throwError(() => error);
       })
     );
   }
 
 
+private handleRefreshToken(
+    request: HttpRequest<any>,
+    next: HttpHandler
+  ) {
 
+    if (this.isRefreshing) {
+      return this.refreshTokenSubject.pipe(
+        filter(token => token !== null),
+        take(1),
+        switchMap(() => next.handle(request))
+      );
+    }
+
+    this.isRefreshing = true;
+    this.refreshTokenSubject.next(null);
+
+    return this.http
+      .post(
+        `${this.baseUrl}/auth/refresh`,
+        {},
+        { withCredentials: true }
+      )
+      .pipe(
+        switchMap(() => {
+          this.isRefreshing = false;
+          this.refreshTokenSubject.next(true);
+
+          // Retry original request
+          return next.handle(request);
+        }),
+        catchError((err) => {
+          this.isRefreshing = false;
+          this.router.navigate(['/login'])
+
+          return throwError(() => err);
+        })
+      );
+  }
+
+
+ 
 }
 
 

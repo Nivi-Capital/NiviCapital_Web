@@ -241,8 +241,8 @@ this.isNewFlow = params['mode'] === 'new';
 ngAfterViewInit(): void {
   this.viewReady = true;
 
-   if (this.isPageRefresh && this.isNewFlow) {  setTimeout(() => {    
-      this.clearKycFormOnRefresh();    });   return;  }
+  //  if (this.isPageRefresh && this.isNewFlow) {  setTimeout(() => {    
+  //     this.clearKycFormOnRefresh();    });   return;  }
 
   this.tryLoadKyc();
 }
@@ -251,7 +251,7 @@ ngAfterViewInit(): void {
   private tryLoadKyc(): void {
     const shouldClearFreshForm = this.isPageRefresh && this.isNewFlow;
   if (
-    shouldClearFreshForm ||
+    
     !this.initReady ||
     !this.viewReady ||
     this.kycLoaded ||
@@ -269,14 +269,12 @@ ngAfterViewInit(): void {
 }
 
   private async loadKycForBothFlows() {
-    const key1 = this.isCoApplicant
-      ? this.getStorageKey()
-      : `kycinfo_main_${this.stepperService.getLoanId()?.[0]}`;
+   
 
     const key = this.getStorageKey();
   
      const apiApplicantId = this.getApiApplicantId();
-    if (!apiApplicantId) { console.error('Applicant ID is missing'); return; }
+    if (!apiApplicantId) {  return; }
 
 
 
@@ -292,11 +290,7 @@ try {
     parsedLocal?.applicantId &&
     String(parsedLocal.applicantId) !== String(apiApplicantId)
   ) {
-    console.warn('Removing KYC cache of previous applicant', {
-      cachedApplicantId: parsedLocal.applicantId,
-      currentApplicantId: apiApplicantId,
-      key
-    });
+   
 
     localStorage.removeItem(key);
     parsedLocal = null;
@@ -306,44 +300,21 @@ try {
   parsedLocal = null;
 }
 
-
+ const summaryApplicant = await this.getCurrentApplicantFromSummary();
    
-    const storedCoApp = this.isCoApplicant
-  ? this.getCurrentCoApplicantFromList()
-  : null;
-
-const custid_data = this.isCoApplicant
-  ? (
-      storedCoApp?.custId ||
-      storedCoApp?.cifId ||
-      storedCoApp?.customerId ||
-      parsedLocal?.custId ||
-      this.co_userid?.custId ||
-      this.co_userid?.cifId ||
-      this.co_userid?.customerId ||
-      ''
-    )
-  : (
-      parsedLocal?.custId ||
-      this.userid?.custId ||
-      this.userid?.cifId ||
-      this.userid?.customerId ||
-      this.custId ||
-      ''
-    );
-
+   
     if (!apiApplicantId) {
       return;
     }
 
-
-
-  
-    const summaryApplicant = await this.getCurrentApplicantFromSummary();
     this.custId =
       summaryApplicant?.customerId ||
       summaryApplicant?.custId ||
       summaryApplicant?.cifId ||
+      parsedLocal?.custId ||
+this.co_userid?.custId ||
+this.co_userid?.cifId ||
+this.co_userid?.customerId ||
       this.custId ||
       '';
 
@@ -352,7 +323,6 @@ const custid_data = this.isCoApplicant
     this.lastName = summaryApplicant?.lastName ||
       '';
 
-    const draftData1 = await this.getSavedKycInfo(apiApplicantId, this.custId);
 const draftData = this.custId
   ? await this.getSavedKycInfo(
       apiApplicantId,
@@ -368,31 +338,68 @@ const draftData = this.custId
 
 
     const normalizedSummary = this.normalizeSummaryKyc(summarySection);
-
+    const hasSubmittedSummary =this.hasAnyKycData(normalizedSummary);
+    const hasSavedDraft =this.hasAnyKycData(draftData);
     let finalData: any = null;
 
-      // finalData = this.mergeKycData(  normalizedSummary, draftData,parsedLocal  );
+      /*
+   * Rule 1:
+   * Submitted KYC always wins, including:
+   * - browser refresh
+   * - mode=new remaining in the URL
+   * - returning from Income to KYC
+   */
 
-    // 1) Full submitted summary should always win
-    if (this.isKycComplete(normalizedSummary)) {
-      finalData = normalizedSummary;
-    }
-    // 2) Else draft data (partial save-exit)
-    else if (this.hasAnyKycData(draftData)) {
-      finalData = draftData;
-    }
-    // // 3) Else local fallback
-    // else if (this.hasAnyKycData(parsedLocal)) {
-    //   // finalData = parsedLocal;
+   if (hasSubmittedSummary) {
+  finalData = normalizedSummary;
+  }
+
+    /*
+   * Rule 2:
+   * Partial KYC saved using Save and Exit.
+   */
+ else if (hasSavedDraft) {
+  finalData = draftData;
+}
+
+    /*
+   * Rule 3:
+   * Browser refresh with no Summary and no Save and Exit draft.
+   */
+ 
+  else if (this.isPageRefresh) {
+  localStorage.removeItem(key);
+  this.clearKycFormOnRefresh();
+  return;
+}
+    /*
+   * Rule 3:
+    Restore local values so switching between tabs does not lose
+    */
+else if (this.hasAnyKycData(parsedLocal)) {
+  finalData = parsedLocal;
+}
+
+  // flow change 12-08-2026
+    // // 1) Full submitted summary should always win
+    // if (this.isKycComplete(normalizedSummary)) {
+    //   finalData = normalizedSummary;
     // }
-    // 4) Else partial summary fallback
-    else if (this.hasAnyKycData(normalizedSummary)) {
-      finalData = normalizedSummary;
-    }
+    // // 2) Else draft data (partial save-exit)
+    // else if (this.hasAnyKycData(draftData)) {
+    //   finalData = draftData;
+    // }
+    // // // 3) Else local fallback
+    // // else if (this.hasAnyKycData(parsedLocal)) {
+    // //   // finalData = parsedLocal;
+    // // }
+    // // 4) Else partial summary fallback
+    // else if (this.hasAnyKycData(normalizedSummary)) {
+    //   finalData = normalizedSummary;
+    // }
 
     if (!finalData) {
       this.lastSavedPayload = null;
-      localStorage.removeItem(key);
       return; // fresh form remains empty
     }
 
@@ -406,6 +413,7 @@ const draftData = this.custId
     if (this.isKycComplete(finalData)) {
       this.stepperService.markStepCompleted(stepRoute);
     }
+    this.cd.detectChanges();
   }
 
 
@@ -425,8 +433,8 @@ const draftData = this.custId
  
 
   isPassportRequired(): boolean {
-    // Main applicant + fresh flow only
-    return !this.isCoApplicant && !this.editMode;
+    // return !this.isCoApplicant && !this.editMode;
+     return !this.isCoApplicant;
   }
   getCurrentCoApplicantFromList1() {
     const mainApplicantId = this.stepperService.getLoanId()?.[0];
@@ -664,7 +672,9 @@ const draftData = this.custId
         this.kycid.emit(res.kycId);
         this.loanservice.setKycId(res.kycId);
         this.lastSavedPayload = this.normalizeKycPayload(kycPayload);
-        // this.nextStep.emit();
+       localStorage.setItem(
+this.getStorageKey(),JSON.stringify(kycPayload)
+)
         if (this.isCoApplicant) {
           this.custName = res.name
           this.NCId = res.ncId
@@ -1162,7 +1172,8 @@ const draftData = this.custId
       : null;
 
     const custId = this.editMode
-  ? this.editUserData.custId
+  ? this.editUserData.custId :
+  this.userid? this.userid.cifId
   : this.isCoApplicant
     ? (
       storedCoApp?.custId ||

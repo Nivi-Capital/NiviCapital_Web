@@ -14,6 +14,7 @@ import { firstValueFrom } from 'rxjs';
 import { Storage } from '../../../../core/service/storage';
 import { Successbox } from '../../customer/successbox/successbox';
 import { Messagebox } from "../../../systemdesign/messagebox/messagebox";
+import moment from 'moment';
 interface BankOption {
   value: string;
   label: string;
@@ -1550,7 +1551,7 @@ try {
     switch (type) {
       case 'property':
         array = this.properties;
-        accKey = 'Property/ Land Assets';  // Match your acc.key
+        accKey = 'Property/ Land Assets';  // Match  acc.key
         break;
       case 'fd':
         array = this.fixedDeposits;
@@ -1611,7 +1612,7 @@ try {
   }
 
 
-  // Add this getter to your component
+ 
   get isNextDisabled(): boolean {
     const form = this.assetsForm.value;
 
@@ -1769,6 +1770,68 @@ validDateValidator(control: any) {
     return new Date(+year, +month - 1, +day);
   }
 
+private toDateValue(value: unknown): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) {
+      return null;
+    }
+
+    const date = new Date(
+      value.getFullYear(),
+      value.getMonth(),
+      value.getDate()
+    );
+
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    '_isAMomentObject' in value
+  ) {
+    const momentValue = value as any;
+
+    if (!momentValue.isValid()) {
+      return null;
+    }
+
+    const date = momentValue.toDate();
+    date.setHours(0, 0, 0, 0);
+
+    return date;
+  }
+
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const text = value.trim();
+
+  const parsed = moment(
+    text,
+    [
+      'DD/MM/YYYY',
+      'YYYY-MM-DD',
+      moment.ISO_8601
+    ],
+    true
+  );
+
+  if (!parsed.isValid()) {
+    return null;
+  }
+
+  const date = parsed.toDate();
+  date.setHours(0, 0, 0, 0);
+
+  return date;
+}
   patchAssetsData(inputData?: any,fromSummary: boolean = false) {
 
     const data = inputData || (
@@ -1855,7 +1918,8 @@ validDateValidator(control: any) {
           bankname: item.bankId || this.getBankIdByName(item.bankName),
           description: item.description || '',
           bankamt: this.formatIndian(item.valueInr?.toString() || '0'),
-          maturitydate: fromSummary ?this.parseDate(item.maturityDate):item.maturityDate
+          // maturitydate: fromSummary ?this.toDateValue(item.maturityDate):item.maturityDate,
+          maturitydate: this.toDateValue(item.maturityDate)
         });
 
         this.fixedDeposits.push(group);

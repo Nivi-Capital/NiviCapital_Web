@@ -41,7 +41,7 @@
           <div class="col-lg-4 col-sm-12 ">
 
             <app-inputfield type="text" name="fname" ngModel [required]="true" #fname="ngModel" label="First Name"
-              placeholder="Your First Name" helpText="Help text" pattern="^[A-Za-z ]+$" minlength="2" [maxlength]="25"
+              placeholder="Enter First Name" helpText="Help text" pattern="^[A-Za-z ]+$" minlength="2" [maxlength]="25"
               (input)="main.restrictInput($event, 'text')">
             </app-inputfield>
 
@@ -61,7 +61,7 @@
           <div class="col-lg-4 col-sm-12 ">
 
             <app-inputfield type="text" name="mname" ngModel [required]="false" #mname="ngModel" label="Middle Name"
-              placeholder="Your Middle Name" helpText="Help text" pattern="^[A-Za-z ]+$" minlength="2" [maxlength]="25"
+              placeholder="Enter Middle Name" helpText="Help text" pattern="^[A-Za-z ]+$" minlength="2" [maxlength]="25"
               (input)="main.restrictInput($event, 'text')" [disabled]="ismiddlename">
             </app-inputfield>
 
@@ -78,7 +78,7 @@
             </div>
             <div class="form-check p-0 ">
               <app-checkbox [checked]="ismiddlename" [disabled]="false" [indeterminate]="false"
-                label="I don’t have middle name" (checkedChange)="onCheckboxChange($event)">
+                label="Don't have middle name" (checkedChange)="onCheckboxChange($event)">
               </app-checkbox>
 
 
@@ -93,7 +93,7 @@
           <div class="col-lg-4 col-sm-12  ">
 
             <app-inputfield type="text" name="lname" ngModel [required]="true" #lname="ngModel" label="Last Name"
-              placeholder="Your Last Name" helpText="Help text" pattern="^[A-Za-z ]+$" minlength="2" [maxlength]="25"
+              placeholder="Enter Last Name" helpText="Help text" pattern="^[A-Za-z ]+$" minlength="2" [maxlength]="25"
               (input)="main.restrictInput($event, 'text')">
             </app-inputfield>
 
@@ -179,7 +179,7 @@
 
 
             <app-inputfield type="text" name="email" ngModel [required]="false" #email="ngModel" label="Email ID"
-              placeholder="Enter Your Email ID " helpText="Help text"
+              placeholder="Enter Email ID " helpText="Help text"
               pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" minlength="10" [maxlength]="40">
             </app-inputfield>
 

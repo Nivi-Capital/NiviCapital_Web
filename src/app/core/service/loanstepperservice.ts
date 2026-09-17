@@ -482,14 +482,15 @@ hydrateMainProgressFromSummary(summary: any): void {
         key = 'othersdiploma';
 
       }
-      else if (name.includes('undergraduate')) {
-        key = 'ug';
-
-      }
       else if (name.includes('postgraduate')) {
         key = 'pg';
 
       }
+      else if (name.includes('undergraduate')) {
+        key = 'ug';
+
+      }
+      
       else if (name.includes('10th')) {
         key = '10th';
       } else if (name.includes('12th')) {
@@ -527,7 +528,7 @@ hydrateMainProgressFromSummary(summary: any): void {
     }
 
   }
-  private restoreEducationProgress() {
+  private restoreEducationProgress1() {
     if (!this.applicantId) return;
 
     const saved = localStorage.getItem(this.getEducationProgressKey());
@@ -538,7 +539,35 @@ hydrateMainProgressFromSummary(summary: any): void {
       this.completedEducationSections = new Set();
     }
   }
+private restoreEducationProgress(): void {
+  if (!this.applicantId) {
+   
+    return;
+  }
 
+  const key = this.getEducationProgressKey();
+  const saved = localStorage.getItem(key);
+
+
+  if (!saved) {
+    this.completedEducationSections =
+      new Set<string>();
+
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(saved);
+
+    this.completedEducationSections =
+      Array.isArray(parsed)
+        ? new Set<string>(parsed)
+        : new Set<string>();
+  } catch {
+    this.completedEducationSections =
+      new Set<string>();
+  }
+}
 
   getCompletedEducationSections(): Set<string> {
     return this.completedEducationSections;
@@ -622,6 +651,16 @@ hydrateMainProgressFromSummary(summary: any): void {
 
   //for main applicant
   setLoanId(id1: string, id2: string, name: string, arn: string) {
+
+    if (
+this.applicantId &&
+this.applicantId !== id1
+) {
+sessionStorage.removeItem(
+'educationFlowQualificationId'
+);
+}
+
     this.applicantId = id1;
     this.applicationId = id2;
     this.custName = name;

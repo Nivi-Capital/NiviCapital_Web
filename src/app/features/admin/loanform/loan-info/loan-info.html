@@ -9,7 +9,7 @@
         <div class="">
           <app-dropdown [options]="selectIncome" [placeholder]="'Enter annual income'" [required]="true"
             [(ngModel)]="annual_Income" [avatarUrl]="avatarUrl" [hasAvatar]="hasAvatar"
-            [label]="'What’s your Annual Income?'" name="annual_Income">
+            [label]="`What's your Annual Income?`" name="annual_Income">
           </app-dropdown>
         </div>
 
@@ -19,7 +19,7 @@
             <span class="value-box text-dp-1-medium ">{{ rateOfInterest }}%</span>
           </div>
           <input type="range" class="custom-range mt-20" min="9.5" max="15" step="0.1" [(ngModel)]="rateOfInterest"
-            name="rate" (input)="updateSliderBackground($event)">
+            name="rate" (input)="updateSliderBackground($event)" autocomplete="off">
 
         </div>
 
@@ -32,11 +32,11 @@
               <span class="prefix text-dp-1-medium">₹</span>
               <input type="text" class="value-box text-dp-1-medium value-box-input" [(ngModel)]="loanAmount"
                 min="100000" [value]="'₹' + loanAmount" max="4500000" step="10000" name="loanamt" [required]="true"
-                (input)="limitLoanAmount($event ,rangeSlider)" [maxlength]="7">
+                (input)="limitLoanAmount($event ,rangeSlider)" [maxlength]="7" autocomplete="off">
             </div>
           </div>
 
-          <input type="range" class="custom-range mt-20" min="100000" max="4500000" step="10000"
+          <input type="range" class="custom-range mt-20" min="100000" max="4500000" step="10000" autocomplete="off"
             [(ngModel)]="loanAmount" (input)="updateSliderBackground($event)" #rangeSlider name="loanamt">
           <div class="text-danger">
 
@@ -58,12 +58,12 @@
 
               <input type="text" class="value-box text-dp-1-medium value-box-input" [(ngModel)]="tenure" min="1" max="7"
                 [required]="true" step="1" name="tenureInput" (input)="limitTenureAmount($event ,rangeSlider1)"
-                [maxlength]="1">
+                [maxlength]="1" autocomplete="off">
               <span class="suffix text-dp-1-medium">yr</span>
             </div>
           </div>
           <input type="range" class="custom-range mt-20" min="1" max="7" step="1" [(ngModel)]="tenure"
-            name="tenureInput" (input)="updateSliderBackground($event)" #rangeSlider1>
+            name="tenureInput" (input)="updateSliderBackground($event)" #rangeSlider1 autocomplete="off">
 
           <div class="text-danger">
 

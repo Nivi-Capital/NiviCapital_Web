@@ -29,12 +29,12 @@
 
 
 
-        <div *ngIf="s.children?.length" class="sub-stepper">
+        <div *ngIf="s.children?.length" class="sub-stepper" (click)="$event.stopPropagation()">
           <div *ngFor="let sub of s.children; let subIndex = index" class="sub-step title text-body-1" [ngClass]="{
     active: activeQualificationId === sub.key,
     completed: stepservice.isEducationStepCompleted(sub.key),
     disabled: isSubStepperDisabled(i, subIndex) && sub.key !== activeQualificationId
-  }" (click)="!isSubStepperDisabled(i, subIndex) && openEducationSubStep(sub, $event)">
+  }" (click)=" openEducationSubStep(sub, $event,i,subIndex)">
             {{ sub.label }}
           </div>
         </div>

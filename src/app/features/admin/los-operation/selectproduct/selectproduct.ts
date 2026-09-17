@@ -10,6 +10,7 @@ import { Successbox } from '../../customer/successbox/successbox';
 import { Addcustomerservice } from '../../../../core/service/addcustomerservice';
 import { LocationStrategy } from '@angular/common';
 import { Loanstepperservice } from '../../../../core/service/loanstepperservice';
+import { Main } from '../../../../core/service/main';
 
 @Component({
   selector: 'app-selectproduct',
@@ -73,15 +74,26 @@ export class Selectproduct implements OnInit {
   issuccess: boolean = false;
 
 
-  constructor(private router: Router, private apiService: Addcustomerservice, private route: ActivatedRoute,private stepperService: Loanstepperservice, private cd: ChangeDetectorRef, private locationStrategy: LocationStrategy) { }
+  constructor(private router: Router,private main: Main, private apiService: Addcustomerservice, private route: ActivatedRoute,private stepperService: Loanstepperservice, private cd: ChangeDetectorRef, private locationStrategy: LocationStrategy) { }
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      if (params['custId']) {
-        this.custId = params['custId'];
-        this.custName = params['custName'];
-        localStorage.setItem('custId', this.custId)
-      }
-    });
+
+    const flowState = this.main.getState();
+    if (!flowState) {
+
+      return;
+    }
+       this.custId = flowState.custId ?? '';
+        this.custName = flowState.fname +''+flowState.lname;
+          localStorage.setItem('custId', this.custId)
+     
+    
+    // this.route.queryParams.subscribe(params => {
+    //   if (params['custId']) {
+    //     this.custId = params['custId'];
+    //     this.custName = params['custName'];
+    //     localStorage.setItem('custId', this.custId)
+    //   }
+    // });
   }
 
   onSelectionChange(selectedkey: string, value: any) {

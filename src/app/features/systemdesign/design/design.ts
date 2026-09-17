@@ -262,7 +262,6 @@ basicConfig: UploadConfig = {
       console.log(`Upload ${uploadId} success:`, result.file.name);
       this.uploadedFiles[uploadId] = result;
       
-      // You can now send the file to your backend
       // this.uploadService.uploadFile(result.file).subscribe(...);
     }
   }

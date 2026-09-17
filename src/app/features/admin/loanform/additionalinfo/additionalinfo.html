@@ -208,8 +208,8 @@
 
                     </div>
 
-                    <app-checkbox [checked]="isspousemiddlename" [indeterminate]="false" 
-                        label="I don’t have middle name" (checkedChange)="onmiddlename($event)" [ngClass]="{'disabled-div' : isViewMode}">
+                    <app-checkbox [checked]="isspousemiddlename" [indeterminate]="false" formControlName="spouseNoMiddleName"
+                        label="Don't have middle name" (checkedChange)="onmiddlename($event)" [ngClass]="{'disabled-div' : isViewMode}">
                     </app-checkbox>
                     <div class="text-danger mt-1" *ngIf="
        additionalinfoForm.get('maritalstatus')?.value === 'Married' &&
@@ -291,8 +291,8 @@
 
                     </div>
 
-                    <app-checkbox [checked]="isfathermiddlename" [indeterminate]="false"
-                        label="I don’t have middle name" (checkedChange)="onfathermiddlename($event)" [ngClass]="{'disabled-div' : isViewMode}">
+                    <app-checkbox [checked]="isfathermiddlename" [indeterminate]="false" formControlName="fatherNoMiddleName"
+                        label="Don't have middle name" (checkedChange)="onfathermiddlename($event)" [ngClass]="{'disabled-div' : isViewMode}">
                     </app-checkbox>
                     <div class="text-danger mt-1" *ngIf="!isfathermiddlename && submitAttempted && !f['f_mname'].value">
                         Please enter Middle Name or select the checkbox.
@@ -371,8 +371,8 @@
                         </div>
 
                     </div>
-                    <app-checkbox [checked]="ismothermiddlename" [indeterminate]="false"
-                        label="I don’t have middle name" (checkedChange)="onmothermiddlename($event)" [ngClass]="{'disabled-div' : isViewMode}">
+                    <app-checkbox [checked]="ismothermiddlename" [indeterminate]="false" formControlName="motherNoMiddleName"
+                        label="Don't have middle name" (checkedChange)="onmothermiddlename($event)" [ngClass]="{'disabled-div' : isViewMode}">
                     </app-checkbox>
                     <div class="text-danger mt-1" *ngIf="!ismothermiddlename && submitAttempted && !f['m_mname'].value">
                         Please enter Middle Name or select the checkbox.

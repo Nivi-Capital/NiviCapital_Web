@@ -124,7 +124,7 @@
     </div>
 
     <input [attr.maxlength]="maxlength" [attr.type]="currentType" [placeholder]="placeholder" [value]=" value"
-      (input)="onInputChange($any($event.target).value)" (blur)="onBlur()" [disabled]="disabled" 
+      (input)="onInputChange($any($event.target).value)" (blur)="onBlur()" [disabled]="disabled" [attr.autocomplete]="autocomplete"
       class="input-field percent-input text-label" [readonly]="readonly" [attr.min]="min" [attr.max]="max" [attr.step]="step"
       [ngClass]="{
         'has-left-icon': showSearch,
@@ -163,7 +163,7 @@
 
       <img *ngIf="type === 'password'" class="icon-right clickable"
         [src]="!passwordVisible ? 'assets/images/icons/eye-slash.webp' : 'assets/images/icons/eye.png'"
-        alt="Toggle Password" width="20" height="20" />
+        alt="Toggle Password" width="20" height="20" (click)="togglePassword()" />
 
 
       <!-- Success Icon -->

@@ -264,11 +264,11 @@ restoreCoApplicantState() {
     cleanUrl.includes(route)
   );
 
-  console.log('Coapp route check:', {
-    cleanUrl,
-    mode,
-    isChildStepperRoute
-  });
+  // console.log('Coapp route check:', {
+  //   cleanUrl,
+  //   mode,
+  //   isChildStepperRoute
+  // });
 
   /**
    * Parent page + mode=new means show mobile number page
@@ -283,7 +283,7 @@ restoreCoApplicantState() {
     this.prefillPhone = '';
     this.loanform.coapppmobile = '';
 
-    // Your code uses 1 for mobile screen, 2 for stepper screen
+    // step 1 for mobile screen, 2 for stepper screen
     this.loanform.coappStep = 1;
 
     this.cd.detectChanges();

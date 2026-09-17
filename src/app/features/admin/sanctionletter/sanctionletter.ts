@@ -338,10 +338,10 @@ export class Sanctionletter implements OnInit {
 
   addLogo(doc: jsPDF, pageWidth: number) {
 
-    const logoUrl = 'assets/images/login/sidemenulogo.webp'; // path inside your Angular project
+    const logoUrl = 'assets/images/login/sidemenulogo.webp'; 
 
     // x, y = top-right corner with padding
-    const logoWidth = 45; // adjust to your image size
+    const logoWidth = 45; // adjust to image size
     const logoHeight = 20;
     const xPos = pageWidth - logoWidth - 10; // 10mm right margin
     const yPos = 5; // top margin

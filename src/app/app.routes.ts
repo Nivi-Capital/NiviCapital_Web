@@ -32,6 +32,8 @@ export const routes: Routes = [
   },
 {
   path:'loanform',
+  canActivate: [authguardGuard],
+canActivateChild: [authguardChildGuard],
   loadChildren: () => import('./features/admin/loanform/loanform-module').then(m => m.LoanformModule)
 
 },

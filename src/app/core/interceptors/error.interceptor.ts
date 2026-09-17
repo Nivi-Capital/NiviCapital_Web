@@ -8,6 +8,7 @@ import {
 } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, retry, timeout } from 'rxjs/operators';
+import { Msgboxservice } from '../service/msgboxservice';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
@@ -16,7 +17,7 @@ export class ErrorInterceptor implements HttpInterceptor {
   // Number of retries for failed requests
   private readonly RETRY_ATTEMPTS = 1;
 
-  constructor() {}
+  constructor(private msgBox: Msgboxservice) { }
 
   intercept(
     request: HttpRequest<any>,
@@ -42,57 +43,73 @@ export class ErrorInterceptor implements HttpInterceptor {
         },
       }),
       // Handle errors
-      catchError((error: HttpErrorResponse) => {
-        let errorMessage = 'An error occurred';
 
-        if (error.error instanceof ErrorEvent) {
-          // Client-side error
-          errorMessage = `Error: ${error.error.message}`;
-          console.error('Client-side error:', error.error);
-        } else {
-          // Server-side error
-          errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
-          console.error('Server-side error:', error);
+     catchError((error: HttpErrorResponse) => {
+  let errorMessage = 'An unexpected error occurred.';
+  let showPopup = true;
 
-          // Handle specific error codes
-          switch (error.status) {
-            case 0:
-              errorMessage = 'Network error. Please check your internet connection.';
-              break;
-            case 400:
-              errorMessage = error.error?.message || 'Bad Request';
-              break;
-            case 401:
-              errorMessage = 'Unauthorized. Please login again.';
-              // Clear auth tokens on 401
-              sessionStorage.removeItem('authToken');
-              localStorage.removeItem('authToken');
-              // Redirect to login if needed
-              window.location.href = '/login';
-              break;
-            case 403:
-              errorMessage = 'Forbidden. You do not have access to this resource.';
-              break;
-            case 404:
-              errorMessage = 'Resource not found.';
-              break;
-            case 408:
-              errorMessage = 'Request timeout. Please try again.';
-              break;
-            case 500:
-              errorMessage = 'Internal server error. Please try again later.';
-              break;
-            case 503:
-              errorMessage = 'Service unavailable. Please try again later.';
-              break;
-          }
-        }
+  switch (error.status) {
+    case 0:
+      errorMessage =
+        error.error?.message ??
+        'Unable to connect to the server. Please check your network connection.';
+      break;
 
-        // Log the error (you can integrate with a logging service)
-        console.error(errorMessage);
+    case 400:
+      errorMessage =
+        error.error?.message ??
+        'Bad request. Please verify your input.';
+      break;
 
-        return throwError(() => new Error(errorMessage));
-      })
+    case 401:
+      showPopup = false; // AuthInterceptor handles this
+      return throwError(() => error);
+
+    case 403:
+      errorMessage =
+        error.error?.message ??
+        'You do not have permission to perform this action.';
+      break;
+
+    case 404:
+      errorMessage =
+        error.error?.message ??
+        'The requested resource could not be found.';
+      break;
+
+    case 408:
+      errorMessage =
+        error.error?.message ??
+        'The request timed out. Please try again.';
+      break;
+
+    case 500:
+      errorMessage =
+        error.error?.message ??
+        'Internal server error. Please try again later.';
+      break;
+
+    case 503:
+      errorMessage =
+        error.error?.message ??
+        'Service unavailable. Please try again later.';
+      break;
+  }
+
+  if (showPopup) {
+    this.msgBox.open({
+      title: 'Error',
+      message: errorMessage,
+      showCancel: false,
+      onOk: () => {}
+    });
+  }
+
+  return throwError(() => ({
+    status: error.status,
+    message: errorMessage
+  }));
+})     
     );
   }
 }

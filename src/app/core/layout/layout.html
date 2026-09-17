@@ -77,8 +77,8 @@
         </button>
         <div class="header-divider"></div>
         <div class="user-profile">
-          <app-dropdown class="profile-dropdown" [options]="myOptions" placeholder="Harry John"
-            [(selectedValue)]="selectedOption" [showSubtext]="true" subtext="NCID-2424"
+          <app-dropdown class="profile-dropdown" [options]="myOptions" placeholder="{{ service.CustomerFullname() }}"
+            [(selectedValue)]="selectedOption" [showSubtext]="true" subtext=""
             (selectedValueChange)="onSelectionChange($event)" [avatarUrl]="avatarUrl" [hasAvatar]="hasAvatar">
           </app-dropdown> <!-- [(selectedValue)]="selectedOption" -->
         </div>

@@ -2531,7 +2531,7 @@ try {
       };
 
       this.msgBox.open({
-        title: 'Are your sure you don’t  want to add any Liabilities?',
+        title: "Are you sure you don't  want to add any Liabilities?",
         message: ``,
         showCancel: true,
         okText: 'Yes, Update',
@@ -2701,7 +2701,7 @@ try {
 
     if (this.hasNoLiabilitiesSelected) {
       this.msgBox.open({
-        title: 'Are your sure you don’t  want to add any Liabilities?',
+        title: "Are you sure you don't  want to add any Liabilities?",
         message: ``,
         showCancel: true,
         okText: 'Yes, Update',

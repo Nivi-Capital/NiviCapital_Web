@@ -255,7 +255,13 @@
   letter-spacing: 0.16px;
 
 }
+.label.Showtext {
+  color: $neutral-text-secondary;
 
+  &.has-value {
+    color: $neutral-900;
+  }
+}
 .profilelabel {
   color: $neutral_text-primary;
   font-size: $font-size-h3;

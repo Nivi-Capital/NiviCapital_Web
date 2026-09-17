@@ -19,6 +19,6 @@ export const appConfig: ApplicationConfig = {
     // { provide: HTTP_INTERCEPTORS, useClass: CachingInterceptor, multi: true },
     // { provide: HTTP_INTERCEPTORS, useClass: LoggingInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-    // { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
   ]
 };

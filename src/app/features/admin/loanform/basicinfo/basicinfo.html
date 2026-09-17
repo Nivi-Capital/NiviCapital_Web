@@ -104,7 +104,7 @@
 
                     </div>
 
-                    <app-checkbox [checked]="ismiddlename" [indeterminate]="false" label="I don’t have middle name"
+                    <app-checkbox [checked]="ismiddlename" [indeterminate]="false" label="Don't have middle name"
                         (checkedChange)="onCheckboxChange($event)">
                     </app-checkbox>
                     <!-- <div class="text-danger mt-1" *ngIf="!ismiddlename && submitAttempted && !f['mname'].value">
@@ -159,7 +159,7 @@
                                     (input)="main.restrictInput($event, 'number')" [showPhonePrefix]="true"
                                     [showPhonePrefixnumber]="true"
                                     [rightButtonText]="!otpsent && !otpVerifiedOk ? 'Send OTP' : ''"
-                                    (rightButtonClick)="sendOtp()" [state]="otpState" [ngClass]="{'disabled-div': !otpVerifiedOk}"></app-inputfield>
+                                    (rightButtonClick)="sendOtp()" [state]="otpState" [ngClass]="{'disabled-div': true}"></app-inputfield>
 
                             </div>
                             <div *ngIf="!hasExistingCif && !otpsent" class="d-flex">

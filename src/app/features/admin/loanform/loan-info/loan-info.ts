@@ -66,7 +66,7 @@ export class LoanInfo implements OnInit {
   tenure = 1;
   modeOfPayment = '';
 
-  // Calculated values (demo values from your screenshot)
+
   totalInterestPayable = 173969;
   totalPrincipalAmount = 1000000;
   totalEmiAmount = 19566;

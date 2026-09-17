@@ -36,8 +36,8 @@ export interface UserData {
 }
 
 interface CustomerFlowState {  phone: string;
-   userId: string;  currentStep: number;
-  }
+   userId: string;  currentStep: number; custId?: string;  fname?: string;  lname?: string; }
+  
 
 @Injectable({
   providedIn: 'root'
@@ -58,6 +58,10 @@ export class Main {
   private _lastLogin = signal<string | null>(null);
   lastLogin = computed(() => this._lastLogin());
   
+     private _fullName = signal<string | null>(localStorage.getItem('fullname'));
+  CustomerFullname = computed(() => this._fullName());
+
+
     private readonly storageKey = 'customerFlowState';
   constructor(private http: HttpClient) { }
 
@@ -70,6 +74,10 @@ export class Main {
    setLastLogin(value: string) {
     this._lastLogin.set(value);
     localStorage.setItem('lastLogin', value); 
+  }
+  setFullName(value: string) {
+    this._fullName.set(value);
+    localStorage.setItem('fullname', value); 
   }
 
   loadLastLoginFromStorage() {

@@ -315,7 +315,7 @@ export class Referenceinfo implements OnInit {
       peraddressline3: r.addressLine3 || r.peraddressline3 || '',
       percountry: r.country || 'India',
 
-      // If your dropdown expects ID, map state/city name to ID separately.
+      // If dropdown expects ID, map state/city name to ID separately.
       perstate: r.state || r.perstate || '',
       percity: r.city || r.percity || '',
 

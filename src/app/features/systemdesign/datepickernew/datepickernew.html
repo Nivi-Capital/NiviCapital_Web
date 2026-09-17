@@ -15,13 +15,14 @@
         (blur)="onTouched()"
       [matDatepicker]="picker"
       [(ngModel)]="selectedDate"
-      (ngModelChange)="onDateChange($event)"
+     
       placeholder="DD/MM/YYYY"
       [min]="minDate"
       [max]="maxDate"
       maxlength="10"
       (keypress)="allowOnlyDate($event)"
-      (input)="onManualInput($event); onValueChange($event)"
+      (input)="onManualInput($event); "
+      (dateChange)="onDateChange($event.value)"
     />
 
     <!-- <mat-datepicker-toggle matSuffix [for]="picker">

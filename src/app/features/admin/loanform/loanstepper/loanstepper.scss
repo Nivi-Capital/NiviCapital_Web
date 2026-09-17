@@ -201,18 +201,21 @@
   color: $secondary-900;
   font-weight: 700;
 }
-
-
 .sub-step.disabled {
-  pointer-events: none;
   cursor: not-allowed;
   opacity: 0.4;
 }
 
-.sub-step.disabled,
-.sub-step.disabled * {
-  pointer-events: none !important;
-}
+// .sub-step.disabled {
+//   pointer-events: none;
+//   cursor: not-allowed;
+//   opacity: 0.4;
+// }
+
+// .sub-step.disabled,
+// .sub-step.disabled * {
+//   pointer-events: none !important;
+// }
 
 
 
