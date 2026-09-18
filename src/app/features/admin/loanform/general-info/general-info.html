@@ -216,34 +216,7 @@
 
 
 
-                    <!-- Course Start Date* -->
-                    <!-- <div class="col-lg-6 col-sm-12 mt-20">
-                        <app-datepickernew formControlName="coursestartdate" label="Course Start Date"
-                            placeholder="DD/MM/YYYY" [disablePastDates]="true"  [ngClass]="{'disabled-div' : isViewMode}" (dateChanged)="onDateChanged($event)">
-                        </app-datepickernew>
-                        <div class="text-danger"
-                            *ngIf="f['coursestartdate'].touched && f['coursestartdate'].errors?.['minDateError']">
-                            Start date cannot be in the past
-                        </div>
-                        <div class="text-danger"
-                            *ngIf="f['coursestartdate'].touched && f['coursestartdate'].errors?.['zeroDateError']">
-                            Please enter a valid course start date
-                        </div>
-                    </div> -->
-                    <!-- Course End Date* -->
-                    <!-- <div class="col-lg-6 col-sm-12 mt-20">
-                        <app-datepickernew formControlName="courseenddate" label="Course End Date"  [ngClass]="{'disabled-div' : isViewMode}"
-                            placeholder="DD/MM/YYYY" [disabled]="!f['coursestartdate'].value" [disablePastDates]="true">
-                        </app-datepickernew>
-                        <div class="text-danger"
-                            *ngIf="f['courseenddate'].touched && f['courseenddate'].errors?.['invalidEndDate']"> End
-                            date must be after start date
-                        </div>
-                        <div class="text-danger"
-                            *ngIf="f['courseenddate'].touched && f['courseenddate'].errors?.['zeroDateError']">
-                            Please enter a valid course end date
-                        </div>
-                    </div> -->
+                
 <!-- Course Start Date -->
 <div class="col-lg-6 col-sm-12 mt-20">
   <app-datepickernew
@@ -251,7 +224,7 @@
     label="Course Start Date"
     placeholder="DD/MM/YYYY"
     [required]="true"
-    [disablePastDates]="true"
+    [disablePastDates]="true" [allowPastYears]="3"
     [ngClass]="{'disabled-div': isViewMode}"
     (dateChanged)="onStartDateChanged($event)">
   </app-datepickernew>
@@ -266,7 +239,7 @@
     </div>
   } @else if (f['coursestartdate'].errors?.['minDateError']) {
     <div class="text-danger">
-      Start date cannot be in the past
+      Start date cannot be more than 3 years in the past
     </div>
   }
    @else if (f['coursestartdate'].errors?.['invalidDate']) {
@@ -285,7 +258,7 @@
     placeholder="DD/MM/YYYY"
     [required]="true"
     [disabled]="!f['coursestartdate'].value"
-    [disablePastDates]="true"
+    [disablePastDates]="true" [allowPastYears]="3"
     [ngClass]="{'disabled-div': isViewMode}"
     (dateChanged)="onEndDateChanged($event)">
   </app-datepickernew>

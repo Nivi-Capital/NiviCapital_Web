@@ -54,6 +54,8 @@ registerOnValidatorChange(fn: () => void): void {
   
   @Output() dateChanged = new EventEmitter<any>();
 
+  @Input() allowPastYears: number | null = null;
+
   onChange = (_: any) => { };
   onTouched = () => { };
 
@@ -70,10 +72,24 @@ registerOnValidatorChange(fn: () => void): void {
 
 
     if (this.disablePastDates) {
+       if (this.allowPastYears) {
+      const minAllowedDate = new Date();
+      minAllowedDate.setFullYear(
+        minAllowedDate.getFullYear() - this.allowPastYears
+      );
+      minAllowedDate.setHours(0, 0, 0, 0);
+
+      this.minDate =
+        minAllowedDate > minYearDate
+          ? minAllowedDate
+          : minYearDate;
+
+    } else {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       this.minDate = today > minYearDate ? today : minYearDate;
     } 
+  }
     if (this.disablefutureDates) {
       this.maxDate = yesterday;
     } 
