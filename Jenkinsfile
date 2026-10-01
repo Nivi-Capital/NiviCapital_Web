@@ -2,21 +2,20 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "nivicap-prod-ui"
-        IMAGE_TAG = "latest"
+        IMAGE_NAME     = "nivicap-prod-ui"
+        IMAGE_TAG      = "latest"
 
-        REMOTE_HOST = "172.0.1.130"
-        REMOTE_USER = "opc"
-
-        NETWORK_NAME = "nivi-prod-app-network"
-
-        CONTAINER_NAME = "nivi-prod-ui"
-        HOST_PORT = "8081"
-        CONTAINER_PORT = "80"
+        REMOTE_HOST    = "172.0.1.130"
+        REMOTE_USER    = "opc"
 
         SSH_CREDENTIAL = "Prod-deployment"
 
-        PATH = "/usr/bin:/usr/local/bin:${env.PATH}"
+        NETWORK_NAME   = "nivi-prod-app-network"
+
+        HOST_PORT      = "8081"
+        CONTAINER_PORT = "80"
+
+        PATH           = "/usr/bin:/usr/local/bin:/bin:${env.PATH}"
     }
 
     stages {
@@ -37,7 +36,8 @@ pipeline {
                     echo "===== Node Validation ====="
 
                     whoami
-                    echo $PATH
+
+                    echo "PATH=$PATH"
 
                     which node
                     which npm
@@ -48,28 +48,43 @@ pipeline {
             }
         }
 
+        stage('Generate Container Name') {
+            steps {
+                script {
+                    env.TIMESTAMP = sh(
+                        script: "date +%Y%m%d%H%M%S",
+                        returnStdout: true
+                    ).trim()
+
+                    env.CONTAINER_NAME = "nivi-prod-ui-${env.TIMESTAMP}"
+
+                    echo "Container Name: ${env.CONTAINER_NAME}"
+                }
+            }
+        }
+
         stage('Verify Remote Connectivity') {
             steps {
-                sshagent(credentials: ["${SSH_CREDENTIAL}"]) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                sshagent(credentials: [SSH_CREDENTIAL]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
                             hostname
                             whoami
-                        "
-                    '''
+                        '
+                    """
                 }
             }
         }
 
         stage('Verify Docker Network') {
             steps {
-                sshagent(credentials: ["${SSH_CREDENTIAL}"]) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                sshagent(credentials: [SSH_CREDENTIAL]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
                             docker network inspect ${NETWORK_NAME} >/dev/null 2>&1 || \
                             docker network create ${NETWORK_NAME}
-                        "
-                    '''
+                        '
+                    """
                 }
             }
         }
@@ -77,11 +92,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                    export PATH=/usr/bin:$PATH
-
-                    node -v
-                    npm -v
-
+                    npm cache clean --force || true
                     npm install
                 '''
             }
@@ -90,8 +101,6 @@ pipeline {
         stage('Angular Production Build') {
             steps {
                 sh '''
-                    export PATH=/usr/bin:$PATH
-
                     npm run build
                 '''
             }
@@ -101,7 +110,7 @@ pipeline {
             steps {
                 sh '''
                     docker build \
-                    -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                      -t ${IMAGE_NAME}:${IMAGE_TAG} .
                 '''
             }
         }
@@ -109,9 +118,11 @@ pipeline {
         stage('Export Docker Image') {
             steps {
                 sh '''
+                    rm -f ${IMAGE_NAME}.tar
+
                     docker save \
-                    -o ${IMAGE_NAME}.tar \
-                    ${IMAGE_NAME}:${IMAGE_TAG}
+                      -o ${IMAGE_NAME}.tar \
+                      ${IMAGE_NAME}:${IMAGE_TAG}
 
                     ls -lh ${IMAGE_NAME}.tar
                 '''
@@ -120,62 +131,75 @@ pipeline {
 
         stage('Transfer Image') {
             steps {
-                sshagent(credentials: ["${SSH_CREDENTIAL}"]) {
-                    sh '''
+                sshagent(credentials: [SSH_CREDENTIAL]) {
+                    sh """
                         scp -o StrictHostKeyChecking=no \
                         ${IMAGE_NAME}.tar \
                         ${REMOTE_USER}@${REMOTE_HOST}:/tmp/
-                    '''
+                    """
                 }
             }
         }
 
         stage('Deploy Container') {
             steps {
-                sshagent(credentials: ["${SSH_CREDENTIAL}"]) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                sshagent(credentials: [SSH_CREDENTIAL]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
 
+                            echo "===== Loading Image ====="
                             docker load -i /tmp/${IMAGE_NAME}.tar
 
-                            docker rm -f ${CONTAINER_NAME} || true
+                            echo "===== Removing Old UI Containers ====="
+                            docker ps -aq \
+                              --filter "name=nivi-prod-ui" | \
+                              xargs -r docker rm -f
+
+                            echo "===== Starting New Container ====="
 
                             docker run -d \
-                                --name ${CONTAINER_NAME} \
-                                --restart unless-stopped \
-                                --network ${NETWORK_NAME} \
-                                -p ${HOST_PORT}:${CONTAINER_PORT} \
-                                ${IMAGE_NAME}:${IMAGE_TAG}
+                              --name ${CONTAINER_NAME} \
+                              --restart unless-stopped \
+                              --network ${NETWORK_NAME} \
+                              -p ${HOST_PORT}:${CONTAINER_PORT} \
+                              ${IMAGE_NAME}:${IMAGE_TAG}
 
                             sleep 10
 
                             docker ps | grep ${CONTAINER_NAME}
-                        "
-                    '''
+                        '
+                    """
                 }
             }
         }
 
-        stage('Container Status') {
+        stage('Container Validation') {
             steps {
-                sshagent(credentials: ["${SSH_CREDENTIAL}"]) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                sshagent(credentials: [SSH_CREDENTIAL]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+
+                            echo "===== Running Containers ====="
                             docker ps
-                        "
-                    '''
+
+                            echo ""
+                            echo "===== Docker Network ====="
+                            docker network inspect ${NETWORK_NAME} | grep Name
+                        '
+                    """
                 }
             }
         }
     }
 
     post {
+
         success {
-            echo 'UI deployment completed successfully.'
+            echo 'SUCCESS: UI deployment completed.'
         }
 
         failure {
-            echo 'UI deployment failed.'
+            echo 'FAILED: UI deployment failed.'
         }
 
         always {
