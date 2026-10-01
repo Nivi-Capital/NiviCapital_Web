@@ -3,8 +3,8 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME     = "nivicap-sit-ui"
-        NETWORK_NAME   = "nivi-sit-app-ui-network"
+        IMAGE_NAME     = "nivicap-prod-ui"
+        NETWORK_NAME   = "nivi-prod-app-network"
         HOST_PORT      = "8081"
         CONTAINER_PORT = "80"
     }
@@ -77,7 +77,7 @@ pipeline {
                 echo "===== Stop Existing UI Containers ====="
 
                 docker ps \
-                  --filter "name=nivicap-sit-ui" \
+                  --filter "name=nivicap-prod-ui" \
                   -q | xargs -r docker stop
 
                 sleep 5
@@ -90,7 +90,7 @@ pipeline {
                 sh '''
                 TIMESTAMP=$(date +%Y%m%d%H%M%S)
 
-                CONTAINER_NAME="nivicap-sit-ui-${TIMESTAMP}"
+                CONTAINER_NAME="nivicap-prod-ui-${TIMESTAMP}"
 
                 echo "Deploying: ${CONTAINER_NAME}"
 
@@ -99,7 +99,7 @@ pipeline {
                   --network "${NETWORK_NAME}" \
                   --restart unless-stopped \
                   -p ${HOST_PORT}:${CONTAINER_PORT} \
-                  --label app=nivicap-sit-ui \
+                  --label app=nivicap-prod-ui \
                   ${IMAGE_NAME}:latest
 
                 echo "${CONTAINER_NAME}" > container_name.txt
@@ -191,7 +191,7 @@ pipeline {
                 echo "===== Cleanup Old Containers ====="
 
                 docker ps -a \
-                  --filter "name=nivicap-sit-ui-" \
+                  --filter "name=nivicap-prod-ui-" \
                   --format "{{.Names}}" \
                   | sort -r \
                   | tail -n +6 \
@@ -205,7 +205,7 @@ pipeline {
                 sh '''
                 echo "===== Running UI Containers ====="
 
-                docker ps | grep nivicap-sit-ui || true
+                docker ps | grep nivicap-prod-ui || true
 
                 echo "===== Docker Network ====="
 
@@ -228,7 +228,7 @@ pipeline {
             echo "UI Deployment Successful"
             echo "================================"
 
-            docker ps | grep nivicap-sit-ui || true
+            docker ps | grep nivicap-prod-ui || true
             '''
         }
 
