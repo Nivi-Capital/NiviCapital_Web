@@ -15,6 +15,8 @@ pipeline {
         CONTAINER_PORT = "80"
 
         SSH_CREDENTIAL = "Prod-deployment"
+
+        PATH = "/usr/bin:/usr/local/bin:${env.PATH}"
     }
 
     stages {
@@ -25,6 +27,23 @@ pipeline {
                     echo "===== Workspace ====="
                     pwd
                     ls -ltr
+                '''
+            }
+        }
+
+        stage('Node Validation') {
+            steps {
+                sh '''
+                    echo "===== Node Validation ====="
+
+                    whoami
+                    echo $PATH
+
+                    which node
+                    which npm
+
+                    node -v
+                    npm -v
                 '''
             }
         }
@@ -58,6 +77,11 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
+                    export PATH=/usr/bin:$PATH
+
+                    node -v
+                    npm -v
+
                     npm install
                 '''
             }
@@ -66,6 +90,8 @@ pipeline {
         stage('Angular Production Build') {
             steps {
                 sh '''
+                    export PATH=/usr/bin:$PATH
+
                     npm run build
                 '''
             }
@@ -75,7 +101,7 @@ pipeline {
             steps {
                 sh '''
                     docker build \
-                        -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                    -t ${IMAGE_NAME}:${IMAGE_TAG} .
                 '''
             }
         }
@@ -109,7 +135,7 @@ pipeline {
                 sshagent(credentials: ["${SSH_CREDENTIAL}"]) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
-                            
+
                             docker load -i /tmp/${IMAGE_NAME}.tar
 
                             docker rm -f ${CONTAINER_NAME} || true
@@ -130,12 +156,12 @@ pipeline {
             }
         }
 
-        stage('Health Check') {
+        stage('Container Status') {
             steps {
                 sshagent(credentials: ["${SSH_CREDENTIAL}"]) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
-                            docker ps | grep ${CONTAINER_NAME}
+                            docker ps
                         "
                     '''
                 }
