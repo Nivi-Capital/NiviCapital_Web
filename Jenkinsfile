@@ -1,12 +1,20 @@
 pipeline {
-
     agent any
 
     environment {
-        IMAGE_NAME     = "nivicap-prod-ui"
-        NETWORK_NAME   = "nivi-prod-app-network"
-        HOST_PORT      = "8081"
+        IMAGE_NAME = "nivicap-prod-ui"
+        IMAGE_TAG = "latest"
+
+        REMOTE_HOST = "172.0.1.130"
+        REMOTE_USER = "opc"
+
+        NETWORK_NAME = "nivi-prod-app-network"
+
+        CONTAINER_NAME = "nivi-prod-ui"
+        HOST_PORT = "8081"
         CONTAINER_PORT = "80"
+
+        SSH_CREDENTIAL = "Prod-deployment"
     }
 
     stages {
@@ -14,47 +22,51 @@ pipeline {
         stage('Workspace Validation') {
             steps {
                 sh '''
-                echo "===== Workspace ====="
-                pwd
-                ls -ltr
+                    echo "===== Workspace ====="
+                    pwd
+                    ls -ltr
                 '''
+            }
+        }
+
+        stage('Verify Remote Connectivity') {
+            steps {
+                sshagent(credentials: ["${SSH_CREDENTIAL}"]) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                            hostname
+                            whoami
+                        "
+                    '''
+                }
             }
         }
 
         stage('Verify Docker Network') {
             steps {
-                sh '''
-                echo "===== Verify Network ====="
-
-                docker network inspect ${NETWORK_NAME} >/dev/null 2>&1 || {
-                    echo "Network ${NETWORK_NAME} not found"
-                    exit 1
+                sshagent(credentials: ["${SSH_CREDENTIAL}"]) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                            docker network inspect ${NETWORK_NAME} >/dev/null 2>&1 || \
+                            docker network create ${NETWORK_NAME}
+                        "
+                    '''
                 }
+            }
+        }
 
-                echo "Network ${NETWORK_NAME} exists"
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    npm install
                 '''
             }
         }
 
-        stage('Angular SIT Build Validation') {
+        stage('Angular Production Build') {
             steps {
                 sh '''
-                echo "===== Install Dependencies ====="
-                npm ci
-
-                echo "===== Angular SIT Build ====="
-                npx ng build --configuration=sit
-
-                echo "===== Verify SIT API URL ====="
-                grep -R "nivicapsit/api" dist/ || true
-
-                echo "===== Verify PROD URL Not Present ====="
-                if grep -R "prod-sp1.nivicap.com" dist/ ; then
-                    echo "ERROR: Production URL found in SIT build"
-                    exit 1
-                fi
-
-                echo "SIT Build Validation Successful"
+                    npm run build
                 '''
             }
         }
@@ -62,206 +74,86 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                echo "===== Building Docker Image ====="
-
-                docker build --no-cache -t ${IMAGE_NAME}:latest .
-
-                docker images | grep ${IMAGE_NAME}
+                    docker build \
+                        -t ${IMAGE_NAME}:${IMAGE_TAG} .
                 '''
             }
         }
 
-        stage('Stop Existing UI Containers') {
+        stage('Export Docker Image') {
             steps {
                 sh '''
-                echo "===== Stop Existing UI Containers ====="
+                    docker save \
+                    -o ${IMAGE_NAME}.tar \
+                    ${IMAGE_NAME}:${IMAGE_TAG}
 
-                docker ps \
-                  --filter "name=nivicap-prod-ui" \
-                  -q | xargs -r docker stop
-
-                sleep 5
+                    ls -lh ${IMAGE_NAME}.tar
                 '''
             }
         }
 
-        stage('Deploy UI Container') {
+        stage('Transfer Image') {
             steps {
-                sh '''
-                TIMESTAMP=$(date +%Y%m%d%H%M%S)
-
-                CONTAINER_NAME="nivicap-prod-ui-${TIMESTAMP}"
-
-                echo "Deploying: ${CONTAINER_NAME}"
-
-                docker run -d \
-                  --name "${CONTAINER_NAME}" \
-                  --network "${NETWORK_NAME}" \
-                  --restart unless-stopped \
-                  -p ${HOST_PORT}:${CONTAINER_PORT} \
-                  --label app=nivicap-prod-ui \
-                  ${IMAGE_NAME}:latest
-
-                echo "${CONTAINER_NAME}" > container_name.txt
-
-                sleep 10
-
-                docker ps -a | grep "${CONTAINER_NAME}"
-                '''
+                sshagent(credentials: ["${SSH_CREDENTIAL}"]) {
+                    sh '''
+                        scp -o StrictHostKeyChecking=no \
+                        ${IMAGE_NAME}.tar \
+                        ${REMOTE_USER}@${REMOTE_HOST}:/tmp/
+                    '''
+                }
             }
         }
 
-        stage('Container Verification') {
+        stage('Deploy Container') {
             steps {
-                sh '''
-                CONTAINER_NAME=$(cat container_name.txt)
+                sshagent(credentials: ["${SSH_CREDENTIAL}"]) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                            
+                            docker load -i /tmp/${IMAGE_NAME}.tar
 
-                echo "===== Container Status ====="
+                            docker rm -f ${CONTAINER_NAME} || true
 
-                docker ps -a | grep "${CONTAINER_NAME}"
+                            docker run -d \
+                                --name ${CONTAINER_NAME} \
+                                --restart unless-stopped \
+                                --network ${NETWORK_NAME} \
+                                -p ${HOST_PORT}:${CONTAINER_PORT} \
+                                ${IMAGE_NAME}:${IMAGE_TAG}
 
-                echo "===== Network Details ====="
+                            sleep 10
 
-                docker inspect ${CONTAINER_NAME} \
-                --format '{{range $name,$net := .NetworkSettings.Networks}}{{$name}} -> {{$net.IPAddress}}{{println}}{{end}}'
-                '''
+                            docker ps | grep ${CONTAINER_NAME}
+                        "
+                    '''
+                }
             }
         }
 
-        stage('UI Health Check') {
+        stage('Health Check') {
             steps {
-                sh '''
-                echo "===== UI Health Check ====="
-
-                SUCCESS=0
-
-                for i in $(seq 1 20)
-                do
-                    echo "Attempt $i/20"
-
-                    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:${HOST_PORT} || true)
-
-                    echo "HTTP_CODE=${HTTP_CODE}"
-
-                    if [ "${HTTP_CODE}" = "200" ]; then
-                        echo "UI Application is Healthy"
-                        SUCCESS=1
-                        break
-                    fi
-
-                    sleep 5
-                done
-
-                if [ $SUCCESS -ne 1 ]; then
-
-                    CONTAINER_NAME=$(cat container_name.txt)
-
-                    echo "===== Container Logs ====="
-                    docker logs ${CONTAINER_NAME}
-
-                    exit 1
-                fi
-                '''
-            }
-        }
-
-        stage('Verify Deployed UI Build') {
-            steps {
-                sh '''
-                CONTAINER_NAME=$(cat container_name.txt)
-
-                echo "===== Verify SIT UI Build ====="
-
-                docker exec ${CONTAINER_NAME} sh -c "
-                grep -R 'nivicapsit/api' /usr/share/nginx/html || true
-                "
-
-                echo "===== Verify NO Production URL ====="
-
-                docker exec ${CONTAINER_NAME} sh -c "
-                grep -R 'prod-sp1.nivicap.com' /usr/share/nginx/html && exit 1 || true
-                "
-                '''
-            }
-        }
-
-        stage('Keep Latest 5 UI Containers') {
-            steps {
-                sh '''
-                echo "===== Cleanup Old Containers ====="
-
-                docker ps -a \
-                  --filter "name=nivicap-prod-ui-" \
-                  --format "{{.Names}}" \
-                  | sort -r \
-                  | tail -n +6 \
-                  | xargs -r docker rm -f
-                '''
-            }
-        }
-
-        stage('Deployment Summary') {
-            steps {
-                sh '''
-                echo "===== Running UI Containers ====="
-
-                docker ps | grep nivicap-prod-ui || true
-
-                echo "===== Docker Network ====="
-
-                docker network inspect ${NETWORK_NAME}
-
-                echo "===== UI Response ====="
-
-                curl -I http://localhost:${HOST_PORT}
-                '''
+                sshagent(credentials: ["${SSH_CREDENTIAL}"]) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                            docker ps | grep ${CONTAINER_NAME}
+                        "
+                    '''
+                }
             }
         }
     }
 
     post {
-
         success {
-
-            sh '''
-            echo "================================"
-            echo "UI Deployment Successful"
-            echo "================================"
-
-            docker ps | grep nivicap-prod-ui || true
-            '''
+            echo 'UI deployment completed successfully.'
         }
 
         failure {
-
-            sh '''
-            echo "================================"
-            echo "UI Deployment Failed"
-            echo "================================"
-
-            if [ -f container_name.txt ]; then
-
-                CONTAINER_NAME=$(cat container_name.txt)
-
-                echo "===== Container Status ====="
-                docker ps -a | grep "${CONTAINER_NAME}" || true
-
-                echo "===== Container Logs ====="
-                docker logs "${CONTAINER_NAME}" || true
-
-                echo "===== Container Inspect ====="
-                docker inspect "${CONTAINER_NAME}" || true
-            fi
-
-            echo "===== Port Status ====="
-            ss -tulpn | grep ${HOST_PORT} || true
-            '''
+            echo 'UI deployment failed.'
         }
 
         always {
-            sh '''
-            rm -f container_name.txt || true
-            '''
+            cleanWs()
         }
     }
 }
