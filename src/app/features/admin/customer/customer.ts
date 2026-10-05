@@ -83,7 +83,7 @@ export class Customer implements OnInit, OnDestroy {
       label: 'CUSTID',
       class: 'cifstyle',
       clickable: true,
-      onClick: (row: { Id: any; }) => this.getpidata(row.Id),
+      // onClick: (row: { Id: any; }) => this.getpidata(row.Id),
       routerLink: '/admin/customerdetails',
       queryParams: "{ mode: 'view', id: row.id }"
     },

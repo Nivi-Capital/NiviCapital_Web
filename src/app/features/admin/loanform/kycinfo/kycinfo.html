@@ -131,8 +131,21 @@
         <div class="row mt-20">
           <div class="col-lg-6 col-sm-12 ">
             <app-inputfield type="text" formControlName="passportnumber" [required]="true" label="Passport"
-              placeholder="Passport" helpText="Help text" name="passportnumber">
+              [uppercase]="true" placeholder="Passport" helpText="Help text" name="passportnumber"
+              pattern="^(?:[A-Z][0-9]{7}|[A-Z]{2}[0-9]{6})$" [maxlength]="8">
             </app-inputfield>
+
+            <div class="text-danger mt-1">
+              <small class="text-danger" *ngIf="nextClicked && isPassportNumberMissing">
+                Passport number is mandatory</small>
+
+                 <small *ngIf="kycdocumentsForm.get('passportnumber')?.errors?.['pattern']">
+                           Please enter a valid Passport number
+                 </small>
+
+            </div>
+
+
           </div>
 
           <div class="col-lg-6 col-sm-12 ">

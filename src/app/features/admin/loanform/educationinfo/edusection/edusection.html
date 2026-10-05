@@ -34,9 +34,12 @@
             <div class="row mt-20">
 
 
-                <div [ngClass]="{'col-6': isOtherEducation, 'col-12': !isOtherEducation  }">
+                <!-- <div [ngClass]="{'col-6': isOtherEducation, 'col-12': !isOtherEducation  }"> -->
 
-
+                <div [ngClass]="{
+  'col-6': isOtherEducation || !!group.get('institutetitle')?.value,
+  'col-12': !(isOtherEducation || !!group.get('institutetitle')?.value)
+}">
 
                     <app-dropdown [options]="filteredInstitutes" [placeholder]="'Select Institute Name'"
                         [required]="!isPostGraduate" [searchable]="true" [label]="'Institution Name'"
@@ -55,7 +58,7 @@
                     </div>
                 </div>
 
-                <div class="col-6" *ngIf="isOtherEducation">
+                <div class="col-6" *ngIf="isOtherEducation || !!group.get('institutetitle')?.value">
                     <div class="form-group">
                         <app-inputfield formControlName="institutetitle" name="institutetitle"
                             label="Other Institution Name" placeholder="Enter Institution Name"
@@ -88,7 +91,12 @@
 
             </div>
             <div class="row mt-20">
-                <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }">
+                <!-- <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }"> -->
+                <div [ngClass]="{
+  'col-3': isOtherLocation || !!group.get('otherLocation')?.value,
+  'col-4': !(isOtherLocation || !!group.get('otherLocation')?.value)
+}">
+
                     <app-dropdown [options]="selectpassingyr" [placeholder]="'Select Year'" [required]="!isPostGraduate"
                         [avatarUrl]="avatarUrl" formControlName="passingyear" [hasAvatar]="hasAvatar"
                         [label]="passingyear">
@@ -103,7 +111,11 @@
 
                 </div>
 
-                <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }">
+                <!-- <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }"> -->
+                <div [ngClass]="{
+  'col-3': isOtherLocation || !!group.get('otherLocation')?.value,
+  'col-4': !(isOtherLocation || !!group.get('otherLocation')?.value)
+}">
                     <app-inputfield type="number" formControlName="per_cgpa" [required]="!isPostGraduate"
                         label="Percentage / CGPA" placeholder="Enter Percentage/CGPA" helpText="Help text"
                         name="per_cgpa" [min]="0" suffix="">
@@ -125,7 +137,11 @@
 
                 </div>
 
-                <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }">
+                <!-- <div [ngClass]="{'col-3': isOtherLocation, 'col-4': !isOtherLocation  }"> -->
+                <div [ngClass]="{
+  'col-3': isOtherLocation || !!group.get('otherLocation')?.value,
+  'col-4': !(isOtherLocation || !!group.get('otherLocation')?.value)
+}">
                     <app-dropdown [options]="filteredlocation" [placeholder]="'Select Location'"
                         (searchChange)="filtercities($event)" [required]="!isPostGraduate" [avatarUrl]="avatarUrl"
                         formControlName="location" [enableSearchEvent]="true" [searchable]="true"
@@ -138,7 +154,7 @@
                         </span>
                     </div>
                 </div>
-                <div class="col-3" *ngIf="isOtherLocation">
+                <div class="col-3" *ngIf="isOtherLocation || !!group.get('otherLocation')?.value">
                     <div class="form-group">
                         <app-inputfield formControlName="otherLocation" name="otherLocation" label="Other Location"
                             [maxlength]="100" placeholder="Enter Location Name" [required]="!isPostGraduate">
@@ -169,92 +185,24 @@
 
 
                     <div class=" col-sm-12 mt-20" *ngFor="let m of [].constructor(marksheetCount); let i = index">
-
-                        @if (hasLocal('marksheet' ,i)) {
-                        <div class="text-label">Marksheet <span class="text-danger">*</span></div>
-                        <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
-                            <p class="text-label file-name" [title]="getLocalName('marksheet', i, false)">{{ getLocalName('marksheet', i) }}</p>
-                            <div class="icons">
-
-                                <span class="view" (click)="viewLocalFile('marksheet', i)">
-                                    <img src="/assets/images/icons/eyered.svg" alt="view">
-                                </span>
-
-                                <span class="download" (click)="downloadLocalFile('marksheet', i)">
-                                    <img src="/assets/images/icons/import-red.svg" alt="Download">
-                                </span>
-
-                                <span class="remove" (click)="removeLocalFile('marksheet', i)">
-                                    <img src="/assets/images/icons/close.svg" alt="remove">
-                                </span>
-
+                        <!-- 1. SHOW LOADER WHILE UPLOADING -->
+                        <div class="text-label" *ngIf="isDocUploading('marksheet', i)">
+                            Marksheet<span class="text-danger">*</span>
+                        </div>
+                        <div *ngIf="isDocUploading('marksheet', i)"
+                            class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+                            <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                             </div>
+
                         </div>
 
-                        }
-                        @else{
-                        <app-uploadbtn [config]="basicConfig" [uploadViaApi]="false" [required]="true"
-                            [disabled]="isViewModeon" label="Marksheet "
-                            (fileChange)="onFileChange($event, educationType, 'marksheet')">
-                        </app-uploadbtn>
-                        }
-
-                    </div>
-                </div>
-
-                <div class="col-6">
-                    <div class="text-label fw-bold mt-20">Passing / Leaving Certificate</div>
-                    <div class=" col-sm-12 mt-20">
-                        @if (hasLocal('lc')) {
-                        <div class="text-label">Passing / Leaving Certificate <span
-                                class="text-danger">*</span></div>
-                        <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
-                            <p class="text-label file-name" [title]="getLocalName('lc', undefined, false)">{{ getLocalName('lc') }}</p>
-                            <div class="icons">
-
-                                <span class="view" (click)="viewLocalFile('lc')">
-                                    <img src="/assets/images/icons/eyered.svg" alt="view">
-                                </span>
-
-                                <span class="download" (click)="downloadLocalFile('lc')">
-                                    <img src="/assets/images/icons/import-red.svg" alt="Download">
-                                </span>
-
-                                <span class="remove" (click)="removeLocalFile('lc')">
-                                    <img src="/assets/images/icons/close.svg" alt="remove">
-                                </span>
-
-                            </div>
-                        </div>
-
-                        } @else{
-                        <app-uploadbtn [config]="basicConfig" [required]="true" label="Passing / Leaving Certificate "
-                            [disabled]="isViewModeon" (fileChange)="onFileChange($event, educationType,'lc')">
-                        </app-uploadbtn>
-                        }
-
-
-                    </div>
-                </div>
-            </div> }
-
-            <!-- diploma ug pg  -->
-            @if (isHigherEducation) {
-            <div class="row">
-                <div class="col-12">
-                    <div class="text-label fw-bold mt-20">Marksheet</div>
-
-                    <div class="row">
-                        <div class="col-md-4 col-sm-6 mt-20"
-                            *ngFor="let _ of [].constructor(marksheetCount); let i = index">
-                            <!-- Dynamic document key -->
+                        <!-- 2. SHOW COMPLETED CARD WHEN UPLOADED -->
+                        <ng-container *ngIf="!isDocUploading('marksheet', i)">
                             @if (hasLocal('marksheet' ,i)) {
-                            <div class="text-label">
-                                Marksheet Year {{ i + 1 }} <span class="text-danger">*</span>
-                            </div>
-
+                            <div class="text-label">Marksheet <span class="text-danger">*</span></div>
                             <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
-                                <p class="text-label file-name" [title]="getLocalName('marksheet', i, false)">{{ getLocalName('marksheet', i) }}</p>
+                                <p class="text-label file-name" [title]="getLocalName('marksheet', i, false)">{{
+                                    getLocalName('marksheet', i) }}</p>
                                 <div class="icons">
 
                                     <span class="view" (click)="viewLocalFile('marksheet', i)">
@@ -272,56 +220,193 @@
                                 </div>
                             </div>
 
-                            } @else {
-
-
-                            <app-uploadbtn [config]="basicConfig" [uploadViaApi]="false" [disabled]="isViewModeon"
-                                [required]="isMarksheetRequired(i)" label="Marksheet {{ i + 1 }}"
-                                (fileChange)="onFileChange($event, educationType, 'marksheet',i)">
+                            }
+                            @else{
+                            <app-uploadbtn [config]="basicConfig" [uploadViaApi]="false" [required]="true"
+                                [disabled]="isViewModeon" label="Marksheet "
+                                (fileChange)="onFileChange($event, educationType, 'marksheet')">
                             </app-uploadbtn>
+                            <div *ngIf="isMarksheetMissing(i)" class="text-danger mt-1">
+                                {{ marksheetlabel }} is required
+                            </div>
 
                             }
+                        </ng-container>
+
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <div class="text-label fw-bold mt-20">Passing / Leaving Certificate</div>
+                    <div class=" col-sm-12 mt-20">
+                        <div class="text-label" *ngIf="isDocUploading('lc' )">
+                            Passing / Leaving Certificate<span class="text-danger">*</span>
+                        </div>
+                        <!-- 1. SHOW LOADER WHILE UPLOADING -->
+                        <div *ngIf="isDocUploading('lc')"
+                            class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+                            <div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>
+
+                        </div>
+
+                        <!-- 2. SHOW COMPLETED CARD WHEN UPLOADED -->
+                        <ng-container *ngIf="!isDocUploading('lc')">
+                            @if (hasLocal('lc')) {
+                            <div class="text-label">Passing / Leaving Certificate <span class="text-danger">*</span>
+                            </div>
+                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
+                                <p class="text-label file-name" [title]="getLocalName('lc', undefined, false)">{{
+                                    getLocalName('lc') }}</p>
+                                <div class="icons">
+
+                                    <span class="view" (click)="viewLocalFile('lc')">
+                                        <img src="/assets/images/icons/eyered.svg" alt="view">
+                                    </span>
+
+                                    <span class="download" (click)="downloadLocalFile('lc')">
+                                        <img src="/assets/images/icons/import-red.svg" alt="Download">
+                                    </span>
+
+                                    <span class="remove" (click)="removeLocalFile('lc')">
+                                        <img src="/assets/images/icons/close.svg" alt="remove">
+                                    </span>
+
+                                </div>
+                            </div>
+
+                            } @else{
+                            <app-uploadbtn [config]="basicConfig" [required]="true"
+                                label="Passing / Leaving Certificate " [disabled]="isViewModeon"
+                                (fileChange)="onFileChange($event, educationType,'lc')">
+                            </app-uploadbtn>
+                            <div *ngIf="isLcMissing()" class="text-danger mt-1">
+                                Passing / Leaving Certificate is required
+                            </div>
+
+                            }
+                        </ng-container>
+
+                    </div>
+                </div>
+            </div> }
+
+            <!-- diploma ug pg  -->
+            @if (isHigherEducation) {
+            <div class="row">
+                <div class="col-12">
+                    <div class="text-label fw-bold mt-20">Marksheet</div>
+
+                    <div class="row">
+                        <div class="col-md-4 col-sm-6 mt-20"
+                            *ngFor="let _ of [].constructor(marksheetCount); let i = index">
+                            <div class="text-label" *ngIf="isDocUploading('marksheet', i)">
+                                Marksheet<span class="text-danger">*</span>
+                            </div>
+                            <!-- 1. SHOW LOADER WHILE UPLOADING -->
+                            <div *ngIf="isDocUploading('marksheet', i)"
+                                class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>
+
+                            </div>
+
+                            <!-- 2. SHOW COMPLETED CARD WHEN UPLOADED -->
+                            <ng-container *ngIf="!isDocUploading('marksheet', i)">
+                                <!-- Dynamic document key -->
+                                @if (hasLocal('marksheet' ,i)) {
+                                <div class="text-label">
+                                    Marksheet Year {{ i + 1 }} <span class="text-danger">*</span>
+                                </div>
+
+                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
+                                    <p class="text-label file-name" [title]="getLocalName('marksheet', i, false)">{{
+                                        getLocalName('marksheet', i) }}</p>
+                                    <div class="icons">
+
+                                        <span class="view" (click)="viewLocalFile('marksheet', i)">
+                                            <img src="/assets/images/icons/eyered.svg" alt="view">
+                                        </span>
+
+                                        <span class="download" (click)="downloadLocalFile('marksheet', i)">
+                                            <img src="/assets/images/icons/import-red.svg" alt="Download">
+                                        </span>
+
+                                        <span class="remove" (click)="removeLocalFile('marksheet', i)">
+                                            <img src="/assets/images/icons/close.svg" alt="remove">
+                                        </span>
+
+                                    </div>
+                                </div>
+
+                                } @else {
+
+
+                                <app-uploadbtn [config]="basicConfig" [uploadViaApi]="false" [disabled]="isViewModeon"
+                                    [required]="isMarksheetRequired(i)" label="Marksheet {{ i + 1 }}"
+                                    (fileChange)="onFileChange($event, educationType, 'marksheet',i)">
+                                </app-uploadbtn>
+                                <div *ngIf="isMarksheetMissing(i)" class="text-danger mt-1">
+                                    {{ marksheetlabel }} {{ i + 1 }} is required
+                                </div>
+                                }
+                            </ng-container>
                         </div>
                     </div>
                 </div>
                 <div class="col-4 mt-20">
                     <div class="text-label fw-bold">Passing / Leaving Certificate</div>
                     <div class=" col-sm-12 mt-20">
-                        @if (hasLocal('lc' )) {
+                        <div class="text-label" *ngIf="isDocUploading('lc' )">
+                            Passing / Leaving Certificate<span class="text-danger">*</span>
+                        </div>
+                        <!-- 1. SHOW LOADER WHILE UPLOADING -->
+                        <div *ngIf="isDocUploading('lc')"
+                            class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+                            <div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>
 
-                        <div class="text-label">
-                            Passing / Leaving Certificate <span class="text-danger">*</span>
                         </div>
 
-                        <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
-                            <p class="text-label file-name" [title]="getLocalName('lc', undefined, false)">{{ getLocalName('lc') }}</p>
-                            <div class="icons">
+                        <!-- 2. SHOW COMPLETED CARD WHEN UPLOADED -->
+                        <ng-container *ngIf="!isDocUploading('lc')">
+                            @if (hasLocal('lc' )) {
 
-                                <span class="view" (click)="viewLocalFile('lc')">
-                                    <img src="/assets/images/icons/eyered.svg" alt="view">
-                                </span>
-
-                                <span class="download" (click)="downloadLocalFile('lc')">
-                                    <img src="/assets/images/icons/import-red.svg" alt="Download">
-                                </span>
-
-                                <span class="remove" (click)="removeLocalFile('lc')">
-                                    <img src="/assets/images/icons/close.svg" alt="remove">
-                                </span>
-
+                            <div class="text-label">
+                                Passing / Leaving Certificate <span class="text-danger">*</span>
                             </div>
-                        </div>
 
-                        } @else {
+                            <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
+                                <p class="text-label file-name" [title]="getLocalName('lc', undefined, false)">{{
+                                    getLocalName('lc') }}</p>
+                                <div class="icons">
+
+                                    <span class="view" (click)="viewLocalFile('lc')">
+                                        <img src="/assets/images/icons/eyered.svg" alt="view">
+                                    </span>
+
+                                    <span class="download" (click)="downloadLocalFile('lc')">
+                                        <img src="/assets/images/icons/import-red.svg" alt="Download">
+                                    </span>
+
+                                    <span class="remove" (click)="removeLocalFile('lc')">
+                                        <img src="/assets/images/icons/close.svg" alt="remove">
+                                    </span>
+
+                                </div>
+                            </div>
+
+                            } @else {
 
 
 
-                        <app-uploadbtn [config]="basicConfig" [required]="!isPostGraduate" [disabled]="isViewModeon"
-                            label="Passing / Leaving Certificate "
-                            (fileChange)="onFileChange($event, educationType,'lc')">
-                        </app-uploadbtn>
+                            <app-uploadbtn [config]="basicConfig" [required]="!isPostGraduate" [disabled]="isViewModeon"
+                                label="Passing / Leaving Certificate "
+                                (fileChange)="onFileChange($event, educationType,'lc')">
+                            </app-uploadbtn>
+                            <div *ngIf="isLcMissing()" class="text-danger mt-1">
+                                Passing / Leaving Certificate is required
+                            </div>
 
-                        }
+                            }
+                        </ng-container>
                     </div>
                 </div>
             </div>
@@ -359,37 +444,50 @@
                             </div>
 
                             <div class=" other-doc-upload" [ngClass]="slot.file ? 'mt-0' : 'mt-0'">
-
-                                @if (slot.file) {
-                                <div class="text-label">
-                                    Upload Document <span class="text-danger">*</span>
+                                <!-- 1. SHOW LOADER WHILE UPLOADING -->
+                                <div class="text-label" *ngIf="isOtherDocUploading(slot)">
+                                    Marksheet<span class="text-danger">*</span>
                                 </div>
-
-                                <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
-                                    <!-- <p class="text-label">{{getOtherFileName(slot.file.name)  }}</p> -->
-                                    <p class="text-label " [title]="getOtherFileName(slot, false)">
-                                        {{ getOtherFileName(slot,true) }}
-                                    </p>
-                                    <div class="icons">
-                                        <span class="view" (click)="viewOther(slot)">
-                                            <img src="/assets/images/icons/eyered.svg">
-                                        </span>
-
-                                        <span class="download" (click)="downloadOther(slot)">
-                                            <img src="/assets/images/icons/import-red.svg">
-                                        </span>
-
-                                        <span class="delete" (click)="removeOther(slot)">
-                                            <img src="/assets/images/icons/close.svg">
-                                        </span>
+                                <div *ngIf="isOtherDocUploading(slot)"
+                                    class="addcust-img-box mt-2 d-flex align-items-center justify-content-center p-3">
+                                    <div class="spinner-border spinner-border-sm text-danger me-2" role="status">
                                     </div>
+
                                 </div>
-                                } @else {
-                                <app-uploadbtn [config]="basicConfig" [required]="educationType !== 'POSTGRADUATE'"
-                                    [disabled]="isViewModeon" label="Upload Document"
-                                    (fileChange)="onOtherFileChange($event, slot)">
-                                </app-uploadbtn>
-                                }
+                                <!-- 2. SHOW COMPLETED CARD WHEN UPLOADED -->
+                                <ng-container *ngIf="!isOtherDocUploading(slot)">
+                                    @if (slot.file) {
+                                    <div class="text-label">
+                                        Upload Document <span class="text-danger">*</span>
+                                    </div>
+
+                                    <div class="addcust-img-box mt-2" [ngClass]="{'disabled-div' : isViewModeon}">
+                                        <!-- <p class="text-label">{{getOtherFileName(slot.file.name)  }}</p> -->
+                                        <p class="text-label " [title]="getOtherFileName(slot, false)">
+                                            {{ getOtherFileName(slot,true) }}
+                                        </p>
+                                        <div class="icons">
+                                            <span class="view" (click)="viewOther(slot)">
+                                                <img src="/assets/images/icons/eyered.svg">
+                                            </span>
+
+                                            <span class="download" (click)="downloadOther(slot)">
+                                                <img src="/assets/images/icons/import-red.svg">
+                                            </span>
+
+                                            <span class="delete" (click)="removeOther(slot)">
+                                                <img src="/assets/images/icons/close.svg">
+                                            </span>
+                                        </div>
+                                    </div>
+                                    } @else {
+                                    <app-uploadbtn [config]="basicConfig" [required]="educationType !== 'POSTGRADUATE'"
+                                        [disabled]="isViewModeon" label="Upload Document"
+                                        (uploadingChange)="onUploadProgressChange($event)"
+                                        (fileChange)="onOtherFileChange($event, slot)">
+                                    </app-uploadbtn>
+                                    }
+                                </ng-container>
                             </div>
 
                             <div class="other-doc-delete delete-icon-mt">
@@ -424,7 +522,7 @@
                     <!-- Add button -->
                     <div class="col-lg-4 col-sm-12 mt-20 pt-2">
                         <app-buttons label="Add More Document" class="btn btn-icon Add btncustomClass" [outline]="true"
-                            (click)="addotherdocuments()" [disabled]="otherDocuments.length >= maxOtherDocuments">
+                            (click)="addotherdocuments()" [disabled]="isAddDocumentDisabled">
                             <img src="/assets/images/icons/addred.svg">
                         </app-buttons>
                     </div>
