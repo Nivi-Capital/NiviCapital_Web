@@ -1,6 +1,6 @@
 FROM nginx:alpine
 
-COPY dist/nivicapital/browser /usr/share/nginx/html
+COPY dist/Nivicapital/browser /usr/share/nginx/html
 
 EXPOSE 80
 
