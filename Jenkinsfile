@@ -7,7 +7,13 @@ pipeline {
 
     stages {
 
-        stage('Install') {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
             steps {
                 sh 'npm install'
             }
@@ -19,25 +25,45 @@ pipeline {
             }
         }
 
-        stage('Build Docker') {
+        stage('Verify Build') {
             steps {
-                sh 'docker build -t ${IMAGE_NAME}:latest .'
+                sh 'ls -lh dist/nivicapital/browser'
             }
         }
 
-        stage('Deploy') {
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                docker build -t ${IMAGE_NAME}:latest .
+                '''
+            }
+        }
+
+        stage('Stop Old Container') {
             steps {
                 sh '''
                 docker stop ${IMAGE_NAME} || true
                 docker rm ${IMAGE_NAME} || true
-
-                docker run -d \
-                  --name ${IMAGE_NAME} \
-                  --restart unless-stopped \
-                  -p 8081:80 \
-                  ${IMAGE_NAME}:latest
                 '''
             }
+        }
+
+        stage('Run New Container') {
+            steps {
+                sh '''
+                docker run -d \
+                    --name ${IMAGE_NAME} \
+                    --restart unless-stopped \
+                    -p 8081:80 \
+                    ${IMAGE_NAME}:latest
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker ps -a'
         }
     }
 }
