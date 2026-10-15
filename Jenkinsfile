@@ -25,11 +25,11 @@ pipeline {
             }
         }
 
-        stage('Verify Build') {
-            steps {
-                sh 'ls -lh dist/nivicapital/browser'
-            }
-        }
+            stage('Verify Build') {
+          steps {
+              sh 'ls -lh dist/Nivicapital/browser'
+          }
+      }
 
         stage('Build Docker Image') {
             steps {
