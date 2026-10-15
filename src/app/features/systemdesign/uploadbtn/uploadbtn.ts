@@ -56,6 +56,8 @@ export class Uploadbtn implements OnInit, ControlValueAccessor, OnChanges {
   @Input() uploadViaApi: boolean = false;
   @Output() uploadStarted = new EventEmitter<UploadResult>();
 
+  @Output() uploadingChange = new EventEmitter<boolean>();
+
   state: UploadState = 'idle';
   progress: number = 0;
   fileName: string = '';
@@ -170,7 +172,7 @@ ngOnChanges() {
     this.state = 'uploading';
     this.progress = 0;
     this.errorMessage = '';
-
+this.uploadingChange.emit(true);
     // Create preview for images
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
@@ -195,7 +197,7 @@ ngOnChanges() {
           clearInterval(interval);
           // console.log("Received in upload btn:", this.fileuploadresponse);
 
-          if (this.fileuploadresponse.status === 'success') {
+          if (this.fileuploadresponse?.status === 'success') {
             this.state = 'success';
             this.showHelperMessage = true;
            this.hideHelperMessageAfterDelay();
@@ -205,7 +207,7 @@ ngOnChanges() {
           //  this.hideHelperMessageAfterDelay();
           }
 
-        
+         this.uploadingChange.emit(false);
         }
 
       }, 200);
@@ -219,10 +221,12 @@ ngOnChanges() {
           clearInterval(interval);
           this.state = 'success';
           this.showHelperMessage = true;
+          this.uploadingChange.emit(false);
           this.fileChange.emit({
             file: file,
             preview: this.preview
           });
+          
           this.hideHelperMessageAfterDelay();
         }
 
@@ -239,10 +243,12 @@ ngOnChanges() {
     this.state = 'error';
     this.errorMessage = message;
     this.showHelperMessage = true;
+    this.uploadingChange.emit(false);
     this.fileChange.emit({
       file: null,
       error: message
     });
+  
     // this.hideHelperMessageAfterDelay();
   }
 
@@ -254,6 +260,7 @@ ngOnChanges() {
       file: file,
       preview: this.preview
     });
+    this.uploadingChange.emit(false);
     this.hideHelperMessageAfterDelay();
   }
 
@@ -266,6 +273,7 @@ ngOnChanges() {
       error: this.errorMessage
     });
     // this.hideHelperMessageAfterDelay();
+     this.uploadingChange.emit(false);
   }
   removeFile() {
     this.msgBox.open({
@@ -278,7 +286,7 @@ ngOnChanges() {
         this.preview = '';
         this.progress = 0;
         this.errorMessage = '';
-
+this.uploadingChange.emit(false);
         if (this.fileInput) {
           this.fileInput.value = '';
         }

@@ -134,7 +134,7 @@ export class Edusection {
 
   otherbusinessdoc: boolean = false;
   otherdoc: boolean = false;
-  private slotCounter = 0;
+  private slotCounter = -1;
 
   seleactInstitute: OptionItem[] = []
   filteredInstitutes: any[] = [];
@@ -173,6 +173,9 @@ export class Edusection {
   description1 = `Great ! Your Additional Info Details\n Uploaded Successfully.`;
 
   @Input() isDataLoading = false;
+  isUploadProgressRunning = false;
+  @Input() isApiUploadRunning = false;
+ @Input() isSubmitted = false;
   constructor(private fb: FormBuilder, private stepperService: Loanstepperservice, private cd: ChangeDetectorRef, private route: ActivatedRoute, private router: Router,
     public main: Main, private msgBox: Msgboxservice, public loanformservice: Loanformservice, private storageservice: Storage) { }
 
@@ -180,8 +183,8 @@ export class Edusection {
   ngOnInit(): void {
 
 this.group.patchValue({
-  passingyear: this.group.get('passingyear')?.value || 'Year of Passing',
-  per_cgpa: this.group.get('per_cgpa')?.value || 'Percentage / CGPA '
+  passingyear: this.group.get('passingyear')?.value ,
+  per_cgpa: this.group.get('per_cgpa')?.value 
 }, { emitEvent: false });
 
 
@@ -984,20 +987,39 @@ SelectedInstitute(values: string | string[]) {
     }, {} as { [key: string]: Document });
   }
 
+  get isAddDocumentDisabled(): boolean {
+  return (
+    this.otherDocuments.length >= this.maxOtherDocuments ||
+    this.isUploadProgressRunning ||
+    this.isApiUploadRunning
+  );
+}
   addotherdocuments() {
-
-    if (this.otherDocuments.length >= this.maxOtherDocuments) {
-      return;
-    }
+ 
+   if (this.isAddDocumentDisabled) {
+    return;
+  }
     const id = ++this.slotCounter;
-    this.otherDocuments.push({
+    // this.otherDocuments.push({
 
-      id,
-      title: '',
-      file: null
+    //   id,
+    //   title: '',
+    //   file: null
 
 
-    });
+    // });
+    this.otherDocuments = [
+
+...this.otherDocuments,
+{
+id,
+title: '',
+file: null,
+key: `${this.stepKey}_other_${id}`
+}
+
+];
+
     this.otherDocAdded.emit(id);
 
   }
@@ -1036,25 +1058,32 @@ SelectedInstitute(values: string | string[]) {
 
 
         // const key = `others_${doc.id}`;
-        const key = `${this.stepKey}_other_${doc.id}`;
+        // const key = `${this.stepKey}_other_${doc.id}`;
 
-        const deleteDoc: any = this.uploadedFiles[key];
+        // const deleteDoc: any = this.uploadedFiles[key];
 
-        if(deleteDoc?.documentId){
-          this.deleteItemArr([deleteDoc?.documentId]);
-        }
+        // if(deleteDoc?.documentId){
+        //   this.deleteItemArr([deleteDoc?.documentId]);
+        // }
 
-        this.uploadedFiles[key] = null;
-        this.uploadedFiles = { ...this.uploadedFiles };
+        // this.uploadedFiles[key] = null;
+        // this.uploadedFiles = { ...this.uploadedFiles };
 
         const docToUpdate = this.otherDocuments.find(d => d.id === doc.id);
 
         if (docToUpdate) {
           docToUpdate.file = null;
-          this.otherDocuments = [...this.otherDocuments];
+         
         }
+ this.otherDocuments = [...this.otherDocuments];
+this.fileRemoved.emit({
+step: this.stepKey,
+control: 'other',
+index: doc.id
 
-
+});
+this.group.markAsDirty();
+this.cd.detectChanges();
       },
     })
   }
@@ -1236,9 +1265,13 @@ getOtherFileName(slot: any, truncate = true): string {
     };
   });
 
-  this.slotCounter = this.otherDocuments.length
-    ? Math.max(...this.otherDocuments.map(x => x.id))+1
-    : 0;
+  // this.slotCounter = this.otherDocuments.length
+  //   ? Math.max(...this.otherDocuments.map(x => x.id))+1
+  //   : 0;
+
+    this.slotCounter = this.otherDocuments.length
+  ? Math.max(...this.otherDocuments.map(x => x.id))
+  : -1;
 
   this.otherDocuments = [...this.otherDocuments];
 
@@ -1322,5 +1355,41 @@ onEditClick(): void {
       queryParamsHandling: 'merge'
     });
   }
+  // 1. Marksheet check (already present)
+ isMarksheetMissing(index: number): boolean {
+    return this.isSubmitted && this.isMarksheetRequired(index) && !this.hasLocal('marksheet', index);
+  }
 
+// 2. Leaving Certificate check
+isLcRequired(): boolean {
+  return !this.isPostGraduate; // LC is required for all except Post Graduate
+}
+
+isLcMissing(): boolean {
+  return this.isSubmitted && this.isLcRequired() && !this.hasLocal('lc');
+}
+
+// 3. Other Documents check (if any other doc slot was added)
+isOtherTitleMissing(slot: any): boolean {
+  return this.isSubmitted && (!slot?.title || !slot.title.trim());
+}
+
+isOtherFileMissing(slot: any): boolean {
+  return this.isSubmitted && !slot?.file && !slot?.fileUrl;
+}
+
+  //check uploading bar
+onUploadProgressChange(isUploading: boolean): void {
+  this.isUploadProgressRunning = isUploading;
+}
+
+@Input() uploadingFiles: Record<string, boolean> = {};
+
+isDocUploading(doc: DocType, index?: number): boolean {
+  const key = this.buildKey(doc, index);
+  return !!this.uploadingFiles?.[key];
+}
+isOtherDocUploading(doc: any): any {
+  return this.uploadingFiles[doc.key];
+}
 }

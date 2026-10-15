@@ -412,10 +412,81 @@ export class SummaryHelper {
       return data[key] || '';
     };
 
+const buildEducationFields = (
+  sectionData: any,
+  sectionLabels: any[]
+): any[] => {
+  const documents = Array.isArray(sectionData)
+    ? sectionData
+    : sectionData
+      ? [sectionData]
+      : [];
 
+  const normalFields = sectionLabels
+    .filter(field =>
+      field.key !== 'title' &&
+      field.key !== 'otherDocumentUrl'
+    )
+    .map(field => ({
+      label: field.label,
+      key: field.key,
+      value: getValue(
+        documents,
+        field.key
+      )
+    }))
+    .filter(field =>
+      field.value !== null &&
+      field.value !== undefined &&
+      field.value !== '' &&
+      field.value !== '-'
+    );
+
+  const otherFields = documents
+    .filter((document: any) =>
+      String(document?.type || '')
+        .trim()
+        .toUpperCase() === 'OTHER'
+    )
+    .flatMap((document: any, index: number) => [
+      {
+        label: 'Other Document Name',
+        key: `otherDocumentTitle_${index}`,
+        value:
+          document?.title ||
+          `Other Document ${index + 1}`
+      },
+      {
+        label: 'Other Document',
+        key: `otherDocumentUrl`,
+        value:
+          document?.fileName ||
+          document?.marksheetUrl ||
+          document?.otherDocumentUrl ||
+          '',
+        viewUrl:
+          document?.viewUrl ||
+          document?.fileUrl ||
+          '',
+        documentId:
+          document?.documentId ||
+          ''
+      }
+    ])
+    .filter(field =>
+      field.value !== null &&
+      field.value !== undefined &&
+      field.value !== ''
+    );
+
+  return [
+    ...normalFields,
+    ...otherFields
+  ];
+};
 
     // Extract values for each section based on labels
-    const values = {
+    const values1 = {
 
       tenth: labels.tenth.map(field => ({
         label: field.label, key: field.key,
@@ -455,6 +526,69 @@ export class SummaryHelper {
       })),
 
     };
+    const values = {
+  tenth: buildEducationFields(
+    educationDetails?.tenth,
+    labels.tenth
+  ),
+
+  twelfth: buildEducationFields(
+    educationDetails?.twelfth,
+    labels.twelfth
+  ),
+
+  diploma: buildEducationFields(
+    educationDetails?.diploma,
+    labels.diploma
+  ),
+
+  bachelors: buildEducationFields(
+    educationDetails?.bachelors,
+    labels.bachelors
+  ),
+
+  postgraduate: buildEducationFields(
+    educationDetails?.postgraduate,
+    labels.postgraduate
+  ),
+
+  others: buildEducationFields(
+    educationDetails?.others,
+    labels.others
+  ),
+
+  ieltsPte: labels.ieltsPte
+    .map(field => ({
+      label: field.label,
+      key: field.key,
+      value: getValue(
+        educationDetails?.ieltsPte,
+        field.key
+      )
+    }))
+    .filter(field =>
+      field.value !== null &&
+      field.value !== undefined &&
+      field.value !== '' &&
+      field.value !== '-'
+    ),
+
+  offerLetter: labels.offerLetter
+    .map(field => ({
+      label: field.label,
+      key: field.key,
+      value: getValue(
+        educationDetails?.offerLetter,
+        field.key
+      )
+    }))
+    .filter(field =>
+      field.value !== null &&
+      field.value !== undefined &&
+      field.value !== '' &&
+      field.value !== '-'
+    )
+};
 
     return values;
 
