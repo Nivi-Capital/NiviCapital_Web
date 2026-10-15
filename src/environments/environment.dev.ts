@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  // apiBaseUrl: 'https://nivione-uat.nivicap.com/nivicapsit/api'
-  apiBaseUrl: '/nivicapsit/api'
+  apiBaseUrl: 'http://92.4.81.79:8088/nivicapdev/api'
+  // apiBaseUrl: '/nivicapsit/api'
 };

@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://prod-sp1.nivicap.com/nivicap/api'
+  apiBaseUrl: 'http://92.4.81.79:8088/nivicapdev/api'
 };
