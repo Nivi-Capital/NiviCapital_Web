@@ -59,6 +59,15 @@ pipeline {
                 '''
             }
         }
+
+        stage('Health Check') {
+            steps {
+                sh '''
+                sleep 10
+                curl -I http://localhost:8081
+                '''
+            }
+        }
     }
 
     post {
