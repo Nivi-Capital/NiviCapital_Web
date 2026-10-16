@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'http://92.4.81.79:8082/nivicapdev/api'
+  apiBaseUrl: 'https://nivione-uatv2.nivicap.com/nivicapdev/api'
 };
