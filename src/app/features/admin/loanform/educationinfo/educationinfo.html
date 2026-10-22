@@ -7,7 +7,7 @@
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" [isDataLoading]="isDataLoading"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [uploadedFiles]="uploadedFiles"
         [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (fileSelected)="onFileSelectedFromSection($event)"
-        (otherDocAdded)="onOtherDocAdded($event)" (instituteChanged)="onInstituteChanged($event)" [isSubmitted]="isSubmitted"
+        (otherDocAdded)="onOtherDocAdded($event)" (instituteChanged)="onInstituteChanged($event)" (instituteChanged)="onInstituteChanged($event)" [isSubmitted]="isSubmitted"
         [isApiUploadRunning]="isEducationStepUploading(activeEducation)" [uploadingFiles]="uploadingEducationFiles">
     </app-edusection>
     }
@@ -17,7 +17,7 @@
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" [isDataLoading]="isDataLoading"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [uploadedFiles]="uploadedFiles"
         [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (fileSelected)="onFileSelectedFromSection($event)"
-        (otherDocAdded)="onOtherDocAdded($event)" (instituteChanged)="onInstituteChanged($event)" [isSubmitted]="isSubmitted"
+        (otherDocAdded)="onOtherDocAdded($event)" (instituteChanged)="onInstituteChanged($event)" (instituteChanged)="onInstituteChanged($event)" [isSubmitted]="isSubmitted"
         [isApiUploadRunning]="isEducationStepUploading(activeEducation)" [uploadingFiles]="uploadingEducationFiles">
     </app-edusection>
     }
@@ -26,7 +26,7 @@
     <app-edusection [group]="educationForms.diploma10" title="Diploma (After 10th)" sectionType="diploma"
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" [isDataLoading]="isDataLoading"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [stepKey]="activeEducation"
-        [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (instituteChanged)="onInstituteChanged($event)"
+        [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (instituteChanged)="onInstituteChanged($event)" (instituteChanged)="onInstituteChanged($event)"
         (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)"  [isSubmitted]="isSubmitted"
         [isApiUploadRunning]="isEducationStepUploading(activeEducation)" [uploadingFiles]="uploadingEducationFiles"/>
     }
@@ -35,7 +35,7 @@
     <app-edusection [group]="educationForms.diploma12" title="Diploma (After 12th)" sectionType="diploma"
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" [isDataLoading]="isDataLoading"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [stepKey]="activeEducation"
-        [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (instituteChanged)="onInstituteChanged($event)"
+        [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (instituteChanged)="onInstituteChanged($event)" (instituteChanged)="onInstituteChanged($event)"
         (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)" [isSubmitted]="isSubmitted"
         [isApiUploadRunning]="isEducationStepUploading(activeEducation)" [uploadingFiles]="uploadingEducationFiles"/>
     }
@@ -44,14 +44,14 @@
     <app-edusection [group]="educationForms.ug" title="Undergraduate" sectionType="bachelors"
         [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" [isDataLoading]="isDataLoading"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [stepKey]="activeEducation"
-        [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (instituteChanged)="onInstituteChanged($event)"
+        [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (instituteChanged)="onInstituteChanged($event)" (instituteChanged)="onInstituteChanged($event)"
         (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)" [isSubmitted]="isSubmitted"
         [isApiUploadRunning]="isEducationStepUploading(activeEducation)" [uploadingFiles]="uploadingEducationFiles" />
     }
 
     @case ('pg') {
     <app-edusection [group]="educationForms.pg" title="Postgraduate" sectionType="postgrad" [stepKey]="activeEducation" [isDataLoading]="isDataLoading"
-        [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" (instituteChanged)="onInstituteChanged($event)"
+        [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" (instituteChanged)="onInstituteChanged($event)" (instituteChanged)="onInstituteChanged($event)"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [uploadedFiles]="uploadedFiles"
         [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" (fileSelected)="onFileSelectedFromSection($event)" [isSubmitted]="isSubmitted"
         (otherDocAdded)="onOtherDocAdded($event)" 
@@ -60,7 +60,7 @@
 
     @case ('others12') {
     <app-edusection [group]="educationForms.others12" title="Others (After 12th)" sectionType="others" [isDataLoading]="isDataLoading"
-        [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" (instituteChanged)="onInstituteChanged($event)"
+        [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" (instituteChanged)="onInstituteChanged($event)" (instituteChanged)="onInstituteChanged($event)"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [stepKey]="activeEducation"
         [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" [isSubmitted]="isSubmitted"
         (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)"
@@ -68,7 +68,7 @@
     }
     @case ('othersdiploma') {
     <app-edusection [group]="educationForms.othersdiploma" title="Others (After Diploma)" sectionType="others" [isDataLoading]="isDataLoading"
-        [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" (instituteChanged)="onInstituteChanged($event)"
+        [isViewModeon]="isViewMode" [isFromSummary]="isFromSummary" [isEditMode]="isEditMode" (instituteChanged)="onInstituteChanged($event)" (instituteChanged)="onInstituteChanged($event)"
         (editClick)="onEditClick()" (fileRemoved)="onFileRemovedFromSection($event)" [stepKey]="activeEducation"
         [uploadedFiles]="uploadedFiles" [savedFileMeta]="savedFileMeta" [otherDocMap]="otherDocMap" [isSubmitted]="isSubmitted"
         (otherDocAdded)="onOtherDocAdded($event)" (fileSelected)="onFileSelectedFromSection($event)" 

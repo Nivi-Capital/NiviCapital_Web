@@ -156,7 +156,7 @@ export class Educationinfo implements OnInit {
   uploadedFiles1: Record<string, File | Record<string, any> | null> = {};
   private educationFormState: Record<string, any> = {};
   uploadingEducationFiles: Record<string, boolean> = {};
-@Input() uploadingFiles: Record<string, boolean> = {};
+  @Input() uploadingFiles: Record<string, boolean> = {};
 
   uploadeddata: any;
 
@@ -507,7 +507,7 @@ export class Educationinfo implements OnInit {
   //check which data to display priority wise
   private async hydrateEducationStep(step: StepKey): Promise<void> {
     if (!step) return;
-        this.isSubmitted = false;
+    this.isSubmitted = false;
     this.isDataLoading = true;
     try {
       // 1. local restore
@@ -545,7 +545,7 @@ export class Educationinfo implements OnInit {
 
 
   onEducationSelect(value: any) {
-        this.isSubmitted = false;
+    this.isSubmitted = false;
     this.activeEducation = this.normalizeQualification(value.label.toLowerCase());
   }
 
@@ -817,7 +817,7 @@ export class Educationinfo implements OnInit {
     // this.saveEducationStateToLocalStorage();
     this.cd.detectChanges();
   }
- 
+
   onFileSelectedFromSection(e: {
     step: StepKey;
     control: 'marksheet' | 'lc' | 'other';
@@ -866,9 +866,9 @@ export class Educationinfo implements OnInit {
 
       this.uploadedFiles[key] = e.file;
 
-    this.otherDocMap = {
+      this.otherDocMap = {
         ...this.otherDocMap
-    };
+      };
 
       this.uploadedFiles = {
         ...this.uploadedFiles
@@ -973,6 +973,31 @@ export class Educationinfo implements OnInit {
 
     if (!form) return;
 
+    const isOther = event.name?.trim().toLowerCase() === 'other';
+
+    const otherInstituteControl = form.get('institututitle');
+
+    if (isOther) {
+      otherInstituteControl?.setValidators([
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(100)
+      ]);
+    } else {
+      otherInstituteControl?.setValue('', {
+        emitEvent: false
+      });
+
+      otherInstituteControl?.setValidators([
+        Validators.minLength(2),
+        Validators.maxLength(100)
+      ]);
+    }
+
+    otherInstituteControl?.updateValueAndValidity({
+      emitEvent: false
+    });
+
     form.patchValue({
       instituteId: event.id || '',
       instituteName: event.name || '',
@@ -991,7 +1016,83 @@ export class Educationinfo implements OnInit {
     this.saveEducationStateToLocalStorage();
   }
 
+  //on location value changes
+onLocationChanged(event: {
+  id: string;
+  name: string;
+}): void {
+  const step = this.activeEducation as StepKey;
+  const form = this.educationForms[step] as FormGroup;
 
+  if (!form) return;
+
+  const isOther =
+    event.name?.trim().toLowerCase() === 'other';
+
+  const otherLocationControl =
+    form.get('otherLocation');
+
+  if (isOther) {
+    otherLocationControl?.setValidators([
+      Validators.required,
+      Validators.minLength(2),
+      Validators.maxLength(100)
+    ]);
+  } else {
+    otherLocationControl?.setValue('', {
+      emitEvent: false
+    });
+
+    otherLocationControl?.setValidators([
+      Validators.minLength(2),
+      Validators.maxLength(100)
+    ]);
+
+    otherLocationControl?.markAsUntouched();
+  }
+
+  otherLocationControl?.updateValueAndValidity({
+    emitEvent: false
+  });
+
+  form.patchValue(
+    {
+      location: event.id || '',
+      otherLocation: isOther
+        ? form.get('otherLocation')?.value || ''
+        : ''
+    },
+    {
+      emitEvent: true
+    }
+  );
+
+  form.updateValueAndValidity({
+    emitEvent: true
+  });
+
+  form.markAsDirty();
+  this.hasUnsavedChanges = true;
+
+  this.educationFormState[step] = {
+    ...(this.educationFormState[step] || {}),
+    ...form.getRawValue(),
+
+    location: event.id || '',
+
+    otherLocation: isOther
+      ? form.get('otherLocation')?.value || ''
+      : ''
+  };
+
+  this.stepperService.setEducationStepData(
+    step,
+    this.educationFormState[step]
+  );
+
+  this.saveEducationStateToLocalStorage();
+  this.cd.detectChanges();
+}
   isOtherInstituteSelected(step: StepKey): boolean {
     const form = this.educationForms[step] as FormGroup;
     if (!form) return false;
@@ -1057,8 +1158,8 @@ export class Educationinfo implements OnInit {
     }
 
     if (step === 'offerletter') {
-  this.educationForms['offerletter']?.get('offerLetter')?.setValue(file);
-}
+      this.educationForms['offerletter']?.get('offerLetter')?.setValue(file);
+    }
 
     this.uploadedFiles[key] = file;
 
@@ -1130,10 +1231,10 @@ export class Educationinfo implements OnInit {
     if (e.control === 'other') {
       // key = `${e.step}_other_${e.index}`;
       key = this.buildKey(
-      e.step,
-      'other',
-      e.index ?? 0
-    );
+        e.step,
+        'other',
+        e.index ?? 0
+      );
     } else {
 
       const normalizedDoc = this.normalizeDocType(e.control);
@@ -1141,16 +1242,16 @@ export class Educationinfo implements OnInit {
       key = this.buildKey(e.step, normalizedDoc, idx);
     }
     // remove from both stores
-  
-const deleteDoc =
-    this.savedFileMeta?.[key] ||
-    this.uploadedFiles?.[key] ||
-    null;
+
+    const deleteDoc =
+      this.savedFileMeta?.[key] ||
+      this.uploadedFiles?.[key] ||
+      null;
     if (deleteDoc?.documentId) {
-    this.deleteItemArr([
-      deleteDoc.documentId
-    ]);
-  }
+      // this.deleteItemArr([
+      //   deleteDoc.documentId
+      // ]);
+    }
 
     delete this.uploadedFiles[key];
     delete this.savedFileMeta[key];
@@ -1161,33 +1262,33 @@ const deleteDoc =
     //   delete this.otherDocMap[key];
     // }
 
-    
+
     if (e.control !== 'other') {
-    const fg =
-      this.educationForms[e.step] as FormGroup;
+      const fg =
+        this.educationForms[e.step] as FormGroup;
 
-    const control =
-      fg?.get(e.control);
+      const control =
+        fg?.get(e.control);
 
-    control?.setValue(
-      null,
-      {
+      control?.setValue(
+        null,
+        {
+          emitEvent: false
+        }
+      );
+
+      control?.markAsDirty();
+      control?.updateValueAndValidity({
         emitEvent: false
-      }
-    );
+      });
 
-    control?.markAsDirty();
-    control?.updateValueAndValidity({
-      emitEvent: false
-    });
+    }
 
-  }
-
-  /*
-   * Remove old persisted metadata before saveEducationStateToLocalStorage()
-   * gets a chance to merge it back.
-   */
-  this.removeEducationDocumentFromStorage(key);
+    /*
+     * Remove old persisted metadata before saveEducationStateToLocalStorage()
+     * gets a chance to merge it back.
+     */
+    this.removeEducationDocumentFromStorage(key);
 
     this.uploadedFiles = { ...this.uploadedFiles };
     this.savedFileMeta = { ...this.savedFileMeta };
@@ -1305,22 +1406,22 @@ const deleteDoc =
     //   null
     // );
 
-      if (
-    normalizedDoc === 'other' ||
-    normalizedDoc === 'marksheet'
-  ) {
+    if (
+      normalizedDoc === 'other' ||
+      normalizedDoc === 'marksheet'
+    ) {
+      return (
+        this.uploadedFiles[keyWithIndex] ||
+        this.savedFileMeta[keyWithIndex] ||
+        null
+      );
+    }
+
     return (
-      this.uploadedFiles[keyWithIndex] ||
-      this.savedFileMeta[keyWithIndex] ||
+      this.uploadedFiles[keyWithoutIndex] ||
+      this.savedFileMeta[keyWithoutIndex] ||
       null
     );
-  }
-
-  return (
-    this.uploadedFiles[keyWithoutIndex] ||
-    this.savedFileMeta[keyWithoutIndex] ||
-    null
-  );
   }
 
   downloadLocal(level: any, docType: DocType, index?: number): void {
@@ -1700,14 +1801,14 @@ const deleteDoc =
   canProceedToNext(): boolean {
     const step = this.activeEducation as StepKey;
     const form = this.educationForms[step];
-     // Disable if any upload is currently in progress
-  if (this.isCurrentStepUploading?.()) {
-    return false;
-  }
+    // Disable if any upload is currently in progress
+    if (this.isCurrentStepUploading?.()) {
+      return false;
+    }
 
     // if (!form || !form.valid || this.isCurrentStepUploading()) return false;
 
-    
+
     // const hasUploadInProgress = Object.entries(
     //   this.uploadingEducationFiles
     // ).some(([key, uploading]) =>
@@ -1717,8 +1818,8 @@ const deleteDoc =
     // if (hasUploadInProgress) {
     //   return false;
     // }
- 
- //  Offer Letter
+
+    //  Offer Letter
     if (step === 'offerletter') {
 
       return this.hasFileOrSavedMeta(step, 'offerletter');
@@ -1737,7 +1838,7 @@ const deleteDoc =
 
     }
 
-   
+
 
     if (!form || !form.valid) return false;
 
@@ -1771,16 +1872,16 @@ const deleteDoc =
   }
 
   showValidationErrors(step: StepKey): void {
-        this.isSubmitted = true;
+    this.isSubmitted = true;
     const form = this.educationForms[step] as FormGroup | undefined;
 
     if (form) {
       (Object.values(form.controls) as AbstractControl[]).forEach(
         (control: AbstractControl) => {
-        control.markAsTouched();
-        control.updateValueAndValidity({
+          control.markAsTouched();
+          control.updateValueAndValidity({
           emitEvent: false});
-      });
+        });
     }
 
     // const missingDocs = this.requiredDocs(step).filter(doc =>
@@ -1795,7 +1896,7 @@ const deleteDoc =
     //   message += '.';
     // }
 
-  this.cd.detectChanges();
+    this.cd.detectChanges();
   }
 
   private getOtherDocumentsForStep(step: StepKey) {
@@ -1929,41 +2030,41 @@ const deleteDoc =
     localStorage.setItem(storageKey, JSON.stringify(payload));
   }
   private removeEducationDocumentFromStorage(
-  key: string
-): void {
-  if (!this.applicantId) {
-    return;
-  }
-  const storageKey =
-    this.getEducationStateKey();
-  const saved =
-    localStorage.getItem(storageKey);
+    key: string
+  ): void {
+    if (!this.applicantId) {
+      return;
+    }
+    const storageKey =
+      this.getEducationStateKey();
+    const saved =
+      localStorage.getItem(storageKey);
 
-  if (!saved) {
-    return;
-  }
-
-  try {
-    const parsed = JSON.parse(saved);
-
-    if (parsed.uploadedFileMeta) {
-      delete parsed.uploadedFileMeta[key];
+    if (!saved) {
+      return;
     }
 
-    if (parsed.otherDocMap) {
-      delete parsed.otherDocMap[key];
+    try {
+      const parsed = JSON.parse(saved);
+
+      if (parsed.uploadedFileMeta) {
+        delete parsed.uploadedFileMeta[key];
+      }
+
+      if (parsed.otherDocMap) {
+        delete parsed.otherDocMap[key];
+      }
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify(parsed)
+      );
+    } catch (error) {
+      console.error(
+        'Failed to remove deleted education document from storage:',
+        error
+      );
     }
-    localStorage.setItem(
-      storageKey,
-      JSON.stringify(parsed)
-    );
-  } catch (error) {
-    console.error(
-      'Failed to remove deleted education document from storage:',
-      error
-    );
   }
-}
 
   private hasMeaningfulEducationValue(raw: any): boolean {
     if (!raw) return false;
@@ -2116,33 +2217,33 @@ const deleteDoc =
       prev.instituteId ||
       '';
 
-  const instituteName =
-  data.instituteName ||
-  data.institutionName ||
-  data.institutename ||
-  prev.instituteName ||
-  prev.institutename ||
-  '';
+    const instituteName =
+      data.instituteName ||
+      data.institutionName ||
+      data.institutename ||
+      prev.instituteName ||
+      prev.institutename ||
+      '';
     const apiLocation = data.locationId || data.location || data.locationName || prev.location || '';
 
-      const otherInstituteName =
-    data.otherInstituteName ??
-    data.institutetitle ??
-    data.title ??
-    prev.institutetitle ??
-    '';
+    const otherInstituteName =
+      data.otherInstituteName ??
+      data.institutetitle ??
+      data.title ??
+      prev.institutetitle ??
+      '';
 
-  const otherLocationName =
-    data.otherLocationName ??
-    data.otherLocation ??
-    prev.otherLocation ??
-    '';
+    const otherLocationName =
+      data.otherLocationName ??
+      data.otherLocation ??
+      prev.otherLocation ??
+      '';
 
     const locationValue =
-    this.getOptionValue(
-      this.cityOptions,
-      apiLocation
-    ) || apiLocation;
+      this.getOptionValue(
+        this.cityOptions,
+        apiLocation
+      ) || apiLocation;
 
     if (!data) return;
 
@@ -2198,22 +2299,22 @@ const deleteDoc =
       )
     }
 
-   
+
 
     this.stepperService.setEducationStepData(step, form.getRawValue());
 
-      const hasData =
-    this.hasMeaningfulEducationValue(
-      form.getRawValue()
-    );
+    const hasData =
+      this.hasMeaningfulEducationValue(
+        form.getRawValue()
+      );
 
-  const hasDocuments = Object.keys(
-    this.savedFileMeta || {}
-  ).some(key => key.startsWith(`${step}_`));
+    const hasDocuments = Object.keys(
+      this.savedFileMeta || {}
+    ).some(key => key.startsWith(`${step}_`));
 
-  if (hasData || hasDocuments) {
-    this.markStepPersisted(step);
-  }
+    if (hasData || hasDocuments) {
+      this.markStepPersisted(step);
+    }
     this.cd.detectChanges();
   }
 
@@ -2240,7 +2341,7 @@ const deleteDoc =
       };
     }
 
-    
+
     const documentsToRestore = Array.isArray(data)
       ? data
       : Array.isArray(data.uploadedDocuments)
@@ -4691,7 +4792,7 @@ const deleteDoc =
     const fd = await this.buildEducationMetadataPayload(step);
     // const fd = await this.buildEducationUpdateFormData();
 
- 
+
 
     this.formSvc.saveEducationMetadata(fd, this.applicationId, true).subscribe({
       next: async (res: any) => {
@@ -4787,9 +4888,9 @@ const deleteDoc =
 
     let othersArr = [];
     let requestIndex = index ?? 0;
-     let marksheetArr: any[] = [];
-  const key = this.buildKey(step, normalizedDoc, index);
-   fd.append(
+    let marksheetArr: any[] = [];
+    const key = this.buildKey(step, normalizedDoc, index);
+    fd.append(
       `files[${requestIndex}].type`,
       this.getEducationDocumentType(key)
     );
@@ -4798,8 +4899,8 @@ const deleteDoc =
       fd.append(
         `files[${requestIndex}].title`,
         title?.trim() || 'Other Document'
-  );
-  }
+      );
+    }
 
     fd.append(
       `files[${requestIndex}].file`,
@@ -4947,7 +5048,7 @@ const deleteDoc =
         delete this.uploadedFiles[key];
         delete this.savedFileMeta[key];
         delete this.uploadingEducationFiles[key];
- this.uploadingEducationFiles[key] = false;
+        this.uploadingEducationFiles[key] = false;
 
         this.uploadedFiles = {
           ...this.uploadedFiles
@@ -4997,25 +5098,25 @@ const deleteDoc =
 
     if (!form) return;
 
-    
- 
+
+
     // PG is optional
     if (step === 'pg' && !this.hasPgData(form, step)) {
-          this.isSubmitted = false;
+      this.isSubmitted = false;
       this.moveToNextEducationStep(step);
       return;
     }
  if (step === 'offerletter' ) {
-         const isOfferLetterUploaded = this.hasFileOrSavedMeta('offerletter', 'offerletter');
-    if (!isOfferLetterUploaded) {
-      this.showValidationErrors(step);
+      const isOfferLetterUploaded = this.hasFileOrSavedMeta('offerletter', 'offerletter');
+      if (!isOfferLetterUploaded) {
+        this.showValidationErrors(step);
+        return;
+      }
+      // Directly mark complete and move to next (no metadata API needed)
+      this.isSubmitted = false;
+      this.stepperService.markEducationSectionComplete('offerletter');
+      this.moveToNextEducationStep(step);
       return;
-    }
-    // Directly mark complete and move to next (no metadata API needed)
-    this.isSubmitted = false;
-    this.stepperService.markEducationSectionComplete('offerletter');
-    this.moveToNextEducationStep(step);
-    return;
     }
 
 
@@ -5061,7 +5162,7 @@ const deleteDoc =
     );
 
     if (!this.shouldCallNextApi(step)) {
-          this.isSubmitted = false;
+      this.isSubmitted = false;
       this.completeEducationStepAndMove(step);
       return;
     }
@@ -5077,7 +5178,7 @@ const deleteDoc =
         this.markStepPersisted(step);
         this.hasUnsavedChanges = false;
         this.forceNextApiForDraft = false;
-            this.isSubmitted = false;
+        this.isSubmitted = false;
 
         this.stepperService.markEducationSectionComplete(step);
 
@@ -5117,14 +5218,14 @@ const deleteDoc =
   }
 
   private stopEducationUpload(key: string): void {
-  delete this.uploadingEducationFiles[key];
+    delete this.uploadingEducationFiles[key];
 
-  this.uploadingEducationFiles = {
-    ...this.uploadingEducationFiles
-  };
+    this.uploadingEducationFiles = {
+      ...this.uploadingEducationFiles
+    };
 
-  this.cd.detectChanges();
-}
+    this.cd.detectChanges();
+  }
 
 isDocUploading(docName: DocType): any{
     return this.uploadingEducationFiles[`${docName}_${docName}`];
