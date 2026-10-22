@@ -37,8 +37,8 @@
                 <!-- <div [ngClass]="{'col-6': isOtherEducation, 'col-12': !isOtherEducation  }"> -->
 
                 <div [ngClass]="{
-  'col-6': isOtherEducation || !!group.get('institutetitle')?.value,
-  'col-12': !(isOtherEducation || !!group.get('institutetitle')?.value)
+  'col-6': isOtherEducation ,
+  'col-12': !(isOtherEducation )
 }">
 
                     <app-dropdown [options]="filteredInstitutes" [placeholder]="'Select Institute Name'"
@@ -58,7 +58,7 @@
                     </div>
                 </div>
 
-                <div class="col-6" *ngIf="isOtherEducation || !!group.get('institutetitle')?.value">
+                <div class="col-6" *ngIf="isOtherEducation ">
                     <div class="form-group">
                         <app-inputfield formControlName="institutetitle" name="institutetitle"
                             label="Other Institution Name" placeholder="Enter Institution Name"
@@ -483,7 +483,7 @@
                                     } @else {
                                     <app-uploadbtn [config]="basicConfig" [required]="educationType !== 'POSTGRADUATE'"
                                         [disabled]="isViewModeon" label="Upload Document"
-                                        (uploadingChange)="onUploadProgressChange($event)"
+                                        (uploadingChange)="onUploadProgressChange($any($event))"
                                         (fileChange)="onOtherFileChange($event, slot)">
                                     </app-uploadbtn>
                                     }
