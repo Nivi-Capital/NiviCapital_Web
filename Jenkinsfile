@@ -2,10 +2,11 @@ pipeline {
     agent any
 
     options {
-        ansiColor('xterm')
+        timestamps()
     }
 
     environment {
+
         APP_SERVER = 'opc@172.0.1.130'
 
         IMAGE_NAME = 'nivicap-prod-ui'
@@ -36,8 +37,13 @@ pipeline {
         stage('Node Validation') {
             steps {
                 sh '''
+                    echo "===== Node Version ====="
                     node -v
+
+                    echo "===== NPM Version ====="
                     npm -v
+
+                    echo "===== Docker Version ====="
                     docker --version
                 '''
             }
@@ -86,7 +92,10 @@ pipeline {
                 sshagent(['Prod-deployment']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
+                            echo "===== Hostname ====="
                             hostname
+
+                            echo "===== Date ====="
                             date
                         '
                     """
@@ -100,12 +109,12 @@ pipeline {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
 
-                            echo "===== Docker Networks ====="
-                            docker network ls
+                        echo "===== Docker Networks ====="
+                        docker network ls
 
-                            docker network inspect nivi-prod-app-network >/dev/null
+                        docker network inspect nivi-prod-app-network >/dev/null
 
-                            echo "Docker network validated"
+                        echo "Docker network validated"
 
                         '
                     """
@@ -133,12 +142,6 @@ ssh -o StrictHostKeyChecking=no ${APP_SERVER} <<'EOF'
 
 set -e
 
-GREEN='\\033[0;32m'
-YELLOW='\\033[1;33m'
-RED='\\033[0;31m'
-BLUE='\\033[0;34m'
-NC='\\033[0m'
-
 echo "===== Loading Docker Image ====="
 
 docker load -i /tmp/${IMAGE_NAME}.tar
@@ -149,14 +152,18 @@ BACKUP_CONTAINER="${CONTAINER_NAME}-\$(date +%Y%m%d%H%M%S)"
 
 if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}\$"
 then
+    echo "Stopping current container..."
+
     docker stop ${CONTAINER_NAME} || true
+
+    echo "Renaming current container..."
 
     docker rename ${CONTAINER_NAME} \$BACKUP_CONTAINER
 
     echo "Backup Created: \$BACKUP_CONTAINER"
 fi
 
-echo "===== Removing Stale Container ====="
+echo "===== Remove Stale Container ====="
 
 docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
 
@@ -180,7 +187,7 @@ do
     if curl -sk ${HEALTH_URL} >/dev/null
     then
         SUCCESS=1
-        echo -e "\${GREEN}UI Health Check Passed\${NC}"
+        echo "UI Health Check Passed"
         break
     fi
 
@@ -190,11 +197,9 @@ done
 if [ "\$SUCCESS" -ne 1 ]
 then
 
-    echo -e "\${RED}"
     echo "========================================"
-    echo "       HEALTH CHECK FAILED"
+    echo "HEALTH CHECK FAILED"
     echo "========================================"
-    echo -e "\${NC}"
 
     docker logs --tail 200 ${CONTAINER_NAME} || true
 
@@ -209,11 +214,9 @@ then
 
     if [ -n "\$PREVIOUS_BACKUP" ]
     then
-        echo -e "\${RED}"
         echo "========================================"
-        echo "         STARTING ROLLBACK"
+        echo "STARTING ROLLBACK"
         echo "========================================"
-        echo -e "\${NC}"
 
         docker start "\$PREVIOUS_BACKUP"
 
@@ -234,24 +237,14 @@ sort -r | \
 tail -n +5 | \
 xargs -r docker rm -f
 
-echo -e "\${BLUE}"
 echo "========================================"
-echo "       DEPLOYMENT SUCCESSFUL"
+echo "DEPLOYMENT SUCCESSFUL"
 echo "========================================"
-echo -e "\${NC}"
 
 echo ""
+echo "===== Container Inventory ====="
 
-echo -e "\${BLUE}===== Container Inventory =====\${NC}"
-
-docker ps -a --format "{{.Names}}\t{{.Status}}" | while read NAME STATUS
-do
-    if [[ "\$NAME" == "${CONTAINER_NAME}" ]]; then
-        echo -e "\${GREEN}\$NAME  \$STATUS  [ACTIVE]\${NC}"
-    elif [[ "\$NAME" == ${CONTAINER_NAME}-* ]]; then
-        echo -e "\${YELLOW}\$NAME  \$STATUS  [ROLLBACK]\${NC}"
-    fi
-done
+docker ps -a --format "table {{.Names}}\t{{.Status}}"
 
 EOF
 """
@@ -265,7 +258,11 @@ EOF
                     sh """
                         ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
 
-                            docker ps -a | grep ${CONTAINER_NAME}
+                        echo "===== Container Status ====="
+                        docker ps -a | grep ${CONTAINER_NAME}
+
+                        echo "===== Port Validation ====="
+                        docker ps | grep ${UI_PORT}
 
                         '
                     """
@@ -279,7 +276,8 @@ EOF
                     sh """
                         ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
 
-                            curl -sk ${HEALTH_URL}
+                        echo "===== Health Check ====="
+                        curl -sk ${HEALTH_URL}
 
                         '
                     """
@@ -301,11 +299,11 @@ EOF
                 sh """
                     ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
 
-                        echo "===== Container Status ====="
-                        docker ps -a | grep ${CONTAINER_NAME} || true
+                    echo "===== Container Status ====="
+                    docker ps -a | grep ${CONTAINER_NAME} || true
 
-                        echo "===== Last 200 Log Lines ====="
-                        docker logs ${CONTAINER_NAME} --tail 200 || true
+                    echo "===== Last 200 Log Lines ====="
+                    docker logs ${CONTAINER_NAME} --tail 200 || true
 
                     '
                 """
