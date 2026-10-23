@@ -20,6 +20,7 @@ pipeline {
         stage('Workspace Validation') {
             steps {
                 sh '''
+                    echo "===== Workspace Validation ====="
                     pwd
                     ls -la
                 '''
@@ -35,8 +36,13 @@ pipeline {
         stage('Node Validation') {
             steps {
                 sh '''
+                    echo "===== Node Version ====="
                     node -v
+
+                    echo "===== NPM Version ====="
                     npm -v
+
+                    echo "===== Docker Version ====="
                     docker --version
                 '''
             }
@@ -44,24 +50,21 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh '''
-                    npm install
-                '''
+                sh 'npm install'
             }
         }
 
         stage('Angular Production Build') {
             steps {
-                sh '''
-                    npm run build -- --configuration production
-                '''
+                sh 'npm run build -- --configuration production'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 sh '''
-                    docker build -t ${IMAGE_NAME}:latest .
+                    docker build \
+                    -t ${IMAGE_NAME}:latest .
                 '''
             }
         }
@@ -72,8 +75,8 @@ pipeline {
                     rm -f ${IMAGE_NAME}.tar
 
                     docker save \
-                      ${IMAGE_NAME}:latest \
-                      -o ${IMAGE_NAME}.tar
+                    ${IMAGE_NAME}:latest \
+                    -o ${IMAGE_NAME}.tar
 
                     ls -lh ${IMAGE_NAME}.tar
                 '''
@@ -98,8 +101,14 @@ pipeline {
                 sshagent(['Prod-deployment']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
+
+                            echo "===== Docker Networks ====="
                             docker network ls
+
                             docker network inspect nivi-prod-app-network >/dev/null
+
+                            echo "Docker network validated"
+
                         '
                     """
                 }
@@ -112,7 +121,7 @@ pipeline {
                     sh '''
                         scp -o StrictHostKeyChecking=no \
                         ${IMAGE_NAME}.tar \
-                        ${APP_SERVER}:/tmp/
+                        opc@172.0.1.130:/tmp/
                     '''
                 }
             }
@@ -122,7 +131,7 @@ pipeline {
             steps {
                 sshagent(['Prod-deployment']) {
                     sh """
-ssh -o StrictHostKeyChecking=no ${APP_SERVER} <<'EOF'
+ssh -o StrictHostKeyChecking=no ${APP_SERVER} <<EOF
 
 set -e
 
@@ -142,38 +151,44 @@ then
     echo "Backup Created: \$BACKUP_CONTAINER"
 fi
 
-echo "===== Cleanup Failed Container ====="
+echo "===== Removing Failed Container ====="
 
 docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
 
-echo "===== Free Port 8081 ====="
+echo "===== Freeing Port ${UI_PORT} ====="
 
-PORT_CONTAINER=\$(docker ps --filter publish=8081 --format '{{.Names}}' | head -1)
+PORT_CONTAINER=\$(docker ps \
+    --filter publish=${UI_PORT} \
+    --format '{{.Names}}' | head -1)
 
 if [ -n "\$PORT_CONTAINER" ]
 then
-    docker stop "\$PORT_CONTAINER" || true
+    echo "Stopping container using port ${UI_PORT}: \$PORT_CONTAINER"
+    docker stop \$PORT_CONTAINER || true
 fi
 
 echo "===== Starting UI Container ====="
 
 docker run -d \
-  --name ${CONTAINER_NAME} \
-  --network nivi-prod-app-network \
-  --restart unless-stopped \
-  -p ${UI_PORT}:80 \
-  ${IMAGE_NAME}:latest
+    --name ${CONTAINER_NAME} \
+    --network nivi-prod-app-network \
+    --restart unless-stopped \
+    -p ${UI_PORT}:80 \
+    ${IMAGE_NAME}:latest
 
 SUCCESS=0
 
+echo "===== Waiting For UI ====="
+
 for i in \$(seq 1 30)
 do
-    echo "Health check attempt \$i"
+    HTTP_STATUS=\$(curl -k -s -o /dev/null -w "%{http_code}" ${HEALTH_URL})
 
-    if curl -sk ${HEALTH_URL} >/dev/null
+    echo "Attempt \$i - HTTP Status: \$HTTP_STATUS"
+
+    if [ "\$HTTP_STATUS" = "200" ]
     then
         SUCCESS=1
-        echo "UI Health Check Passed"
         break
     fi
 
@@ -183,7 +198,7 @@ done
 if [ "\$SUCCESS" -ne 1 ]
 then
 
-    echo "HEALTH CHECK FAILED"
+    echo "===== HEALTH CHECK FAILED ====="
 
     docker logs --tail 200 ${CONTAINER_NAME} || true
 
@@ -191,14 +206,14 @@ then
     docker rm ${CONTAINER_NAME} || true
 
     PREVIOUS_BACKUP=\$(docker ps -a \
-      --format "{{.Names}}" | \
-      grep "^${CONTAINER_NAME}-" | \
-      sort -r | \
-      head -1)
+        --format "{{.Names}}" | \
+        grep "^${CONTAINER_NAME}-" | \
+        sort -r | \
+        head -1)
 
     if [ -n "\$PREVIOUS_BACKUP" ]
     then
-        echo "STARTING ROLLBACK"
+        echo "===== STARTING ROLLBACK ====="
 
         docker start "\$PREVIOUS_BACKUP"
 
@@ -210,7 +225,7 @@ then
     exit 1
 fi
 
-echo "===== Cleanup Old Backups ====="
+echo "===== Cleaning Old Backup Containers ====="
 
 docker ps -a \
 --format "{{.Names}}" | \
@@ -232,90 +247,4 @@ EOF
         stage('Container Validation') {
             steps {
                 sshagent(['Prod-deployment']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-
-                            docker ps -a | grep ${CONTAINER_NAME}
-                            docker ps | grep ${UI_PORT}
-
-                        '
-                    """
-                }
-            }
-        }
-
-        stage('Application Health Check') {
-            steps {
-                sshagent(['Prod-deployment']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-
-                            curl -sk ${HEALTH_URL}
-
-                        '
-                    """
-                }
-            }
-        }
-
-        stage('Deployed Applications') {
-            steps {
-                sshagent(['Prod-deployment']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-
-                        echo "=============================================="
-                        echo "DEPLOYED APPLICATIONS"
-                        echo "=============================================="
-
-                        echo ""
-                        echo "API CONTAINER"
-                        docker ps -a \
-                        --filter "name=nivi-prod-app" \
-                        --format "Container={{.Names}} | Image={{.Image}} | Status={{.Status}}"
-
-                        echo ""
-                        echo "UI CONTAINER"
-                        docker ps -a \
-                        --filter "name=ui-prod-app" \
-                        --format "Container={{.Names}} | Image={{.Image}} | Status={{.Status}}"
-
-                        echo ""
-                        echo "=============================================="
-
-                        '
-                    """
-                }
-            }
-        }
-    }
-
-    post {
-
-        success {
-            echo 'UI Deployment completed successfully'
-        }
-
-        failure {
-            echo 'UI Deployment failed'
-
-            sshagent(['Prod-deployment']) {
-                sh """
-                    ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-
-                        echo "===== Container Status ====="
-                        docker ps -a | grep ${CONTAINER_NAME} || true
-
-                        echo "===== Last 200 Log Lines ====="
-                        docker logs ${CONTAINER_NAME} --tail 200 || true
-
-                    '
-                """
-            }
-        }
-
-        always {
-            echo 'Pipeline finished'
-        }
-    }
-}
+ 
