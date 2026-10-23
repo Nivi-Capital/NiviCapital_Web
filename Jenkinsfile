@@ -2,20 +2,15 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME     = "nivicap-prod-ui"
-        IMAGE_TAG      = "latest"
 
-        REMOTE_HOST    = "172.0.1.130"
-        REMOTE_USER    = "opc"
+        APP_SERVER = 'opc@172.0.1.130'
 
-        SSH_CREDENTIAL = "Prod-deployment"
+        IMAGE_NAME = 'nivicap-prod-ui'
+        CONTAINER_NAME = 'ui-prod-app'
 
-        NETWORK_NAME   = "nivi-prod-app-network"
+        UI_PORT = '8081'
+        HEALTH_URL = 'https://localhost'
 
-        HOST_PORT      = "8081"
-        CONTAINER_PORT = "80"
-
-        PATH           = "/usr/bin:/usr/local/bin:/bin:${env.PATH}"
     }
 
     stages {
@@ -23,76 +18,37 @@ pipeline {
         stage('Workspace Validation') {
             steps {
                 sh '''
-                    echo "===== Workspace ====="
+                    echo "===== Workspace Validation ====="
                     pwd
-                    ls -ltr
+                    ls -la
                 '''
+            }
+        }
+
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
             }
         }
 
         stage('Node Validation') {
             steps {
                 sh '''
-                    echo "===== Node Validation ====="
-
-                    whoami
-
-                    echo "PATH=$PATH"
-
-                    which node
-                    which npm
-
+                    echo "===== Node Version ====="
                     node -v
+
+                    echo "===== NPM Version ====="
                     npm -v
+
+                    echo "===== Docker Version ====="
+                    docker --version
                 '''
-            }
-        }
-
-        stage('Generate Container Name') {
-            steps {
-                script {
-                    env.TIMESTAMP = sh(
-                        script: "date +%Y%m%d%H%M%S",
-                        returnStdout: true
-                    ).trim()
-
-                    env.CONTAINER_NAME = "nivi-prod-ui-${env.TIMESTAMP}"
-
-                    echo "Container Name: ${env.CONTAINER_NAME}"
-                }
-            }
-        }
-
-        stage('Verify Remote Connectivity') {
-            steps {
-                sshagent(credentials: [SSH_CREDENTIAL]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
-                            hostname
-                            whoami
-                        '
-                    """
-                }
-            }
-        }
-
-        stage('Verify Docker Network') {
-            steps {
-                sshagent(credentials: [SSH_CREDENTIAL]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
-                            docker network inspect ${NETWORK_NAME} >/dev/null 2>&1 || \
-                            docker network create ${NETWORK_NAME}
-                        '
-                    """
-                }
             }
         }
 
         stage('Install Dependencies') {
             steps {
                 sh '''
-                    npm cache clean --force || true
                     npm install
                 '''
             }
@@ -101,7 +57,7 @@ pipeline {
         stage('Angular Production Build') {
             steps {
                 sh '''
-                    npm run build
+                    npm run build -- --configuration production
                 '''
             }
         }
@@ -110,7 +66,7 @@ pipeline {
             steps {
                 sh '''
                     docker build \
-                      -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                    -t ${IMAGE_NAME}:latest .
                 '''
             }
         }
@@ -121,70 +77,180 @@ pipeline {
                     rm -f ${IMAGE_NAME}.tar
 
                     docker save \
-                      -o ${IMAGE_NAME}.tar \
-                      ${IMAGE_NAME}:${IMAGE_TAG}
+                    ${IMAGE_NAME}:latest \
+                    -o ${IMAGE_NAME}.tar
 
                     ls -lh ${IMAGE_NAME}.tar
                 '''
             }
         }
 
-        stage('Transfer Image') {
+        stage('Verify Remote Connectivity') {
             steps {
-                sshagent(credentials: [SSH_CREDENTIAL]) {
+                sshagent(['Prod-deployment']) {
                     sh """
-                        scp -o StrictHostKeyChecking=no \
-                        ${IMAGE_NAME}.tar \
-                        ${REMOTE_USER}@${REMOTE_HOST}:/tmp/
-                    """
-                }
-            }
-        }
-
-        stage('Deploy Container') {
-            steps {
-                sshagent(credentials: [SSH_CREDENTIAL]) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
-
-                            echo "===== Loading Image ====="
-                            docker load -i /tmp/${IMAGE_NAME}.tar
-
-                            echo "===== Removing Old UI Containers ====="
-                            docker ps -aq \
-                              --filter "name=nivi-prod-ui" | \
-                              xargs -r docker rm -f
-
-                            echo "===== Starting New Container ====="
-
-                            docker run -d \
-                              --name ${CONTAINER_NAME} \
-                              --restart unless-stopped \
-                              --network ${NETWORK_NAME} \
-                              -p ${HOST_PORT}:${CONTAINER_PORT} \
-                              ${IMAGE_NAME}:${IMAGE_TAG}
-
-                            sleep 10
-
-                            docker ps | grep ${CONTAINER_NAME}
+                        ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
+                            hostname
+                            date
                         '
                     """
                 }
             }
         }
 
+        stage('Verify Docker Network') {
+            steps {
+                sshagent(['Prod-deployment']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
+                            docker network ls
+                            docker network inspect bridge >/dev/null
+                            echo Docker network validated
+                        '
+                    """
+                }
+            }
+        }
+
+        stage('Transfer Image') {
+            steps {
+                sshagent(['Prod-deployment']) {
+                    sh '''
+                        scp -o StrictHostKeyChecking=no \
+                        ${IMAGE_NAME}.tar \
+                        opc@172.0.1.130:/tmp/
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                sshagent(['Prod-deployment']) {
+                    sh """
+ssh -o StrictHostKeyChecking=no ${APP_SERVER} <<'EOF'
+
+set -e
+
+echo "===== Loading Docker Image ====="
+
+docker load -i /tmp/${IMAGE_NAME}.tar
+
+echo "===== Creating Rollback Backup ====="
+
+BACKUP_CONTAINER="${CONTAINER_NAME}-\$(date +%Y%m%d%H%M%S)"
+
+if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}\$"
+then
+    docker rename ${CONTAINER_NAME} \$BACKUP_CONTAINER
+
+    docker stop \$BACKUP_CONTAINER || true
+
+    echo "Backup Created: \$BACKUP_CONTAINER"
+fi
+
+echo "===== Starting UI Container ====="
+
+docker run -d \
+  --name ${CONTAINER_NAME} \
+  --restart unless-stopped \
+  -p ${UI_PORT}:80 \
+  ${IMAGE_NAME}:latest
+
+SUCCESS=0
+
+echo "===== Waiting For UI ====="
+
+for i in \$(seq 1 30)
+do
+    echo "Health check attempt \$i"
+
+    if curl -sk ${HEALTH_URL} >/dev/null
+    then
+        SUCCESS=1
+        echo "UI Health Check Passed"
+        break
+    fi
+
+    sleep 10
+done
+
+if [ "\$SUCCESS" -ne 1 ]
+then
+
+    echo "===== HEALTH CHECK FAILED ====="
+
+    docker logs --tail 200 ${CONTAINER_NAME} || true
+
+    docker stop ${CONTAINER_NAME} || true
+    docker rm ${CONTAINER_NAME} || true
+
+    PREVIOUS_BACKUP=\$(docker ps -a \
+      --format "{{.Names}}" | \
+      grep "^${CONTAINER_NAME}-" | \
+      sort -r | \
+      head -1)
+
+    if [ -n "\$PREVIOUS_BACKUP" ]
+    then
+        echo "===== STARTING ROLLBACK ====="
+
+        docker start "\$PREVIOUS_BACKUP"
+
+        docker rename "\$PREVIOUS_BACKUP" "${CONTAINER_NAME}"
+
+        echo "Rollback completed successfully"
+    fi
+
+    exit 1
+fi
+
+echo "===== Cleanup Old Backup Containers ====="
+
+docker ps -a \
+--format "{{.Names}}" | \
+grep "^${CONTAINER_NAME}-" | \
+sort -r | \
+tail -n +5 | \
+xargs -r docker rm -f
+
+echo "===== Deployment Successful ====="
+
+docker ps -a | grep ${CONTAINER_NAME}
+
+EOF
+"""
+                }
+            }
+        }
+
         stage('Container Validation') {
             steps {
-                sshagent(credentials: [SSH_CREDENTIAL]) {
+                sshagent(['Prod-deployment']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+                        ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
 
-                            echo "===== Running Containers ====="
-                            docker ps
+                        echo "===== Container Status ====="
+                        docker ps -a | grep ${CONTAINER_NAME}
 
-                            echo ""
-                            echo "===== Docker Network ====="
-                            docker network inspect ${NETWORK_NAME} | grep Name
+                        echo "===== Port Validation ====="
+                        docker ps | grep ${UI_PORT}
+
+                        '
+                    """
+                }
+            }
+        }
+
+        stage('Application Health Check') {
+            steps {
+                sshagent(['Prod-deployment']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
+
+                        echo "===== Health Check ====="
+                        curl -sk ${HEALTH_URL}
+
                         '
                     """
                 }
@@ -195,15 +261,29 @@ pipeline {
     post {
 
         success {
-            echo 'SUCCESS: UI deployment completed.'
+            echo 'UI Deployment completed successfully'
         }
 
         failure {
-            echo 'FAILED: UI deployment failed.'
+            echo 'UI Deployment failed'
+
+            sshagent(['Prod-deployment']) {
+                sh """
+                    ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
+
+                    echo "===== Container Status ====="
+                    docker ps -a | grep ${CONTAINER_NAME} || true
+
+                    echo "===== Last 200 Log Lines ====="
+                    docker logs ${CONTAINER_NAME} --tail 200 || true
+
+                    '
+                """
+            }
         }
 
         always {
-            cleanWs()
+            echo 'Pipeline finished'
         }
     }
 }
