@@ -315,3 +315,26 @@ EOF
         }
     }
 }
+
+
+
+
+echo ""
+echo "=============================================="
+echo "         DEPLOYED APPLICATIONS"
+echo "=============================================="
+
+echo ""
+echo "API CONTAINER"
+docker ps -a \
+--filter "name=nivi-prod-app" \
+--format "Container={{.Names}} | Image={{.Image}} | Status={{.Status}}"
+
+echo ""
+echo "UI CONTAINER"
+docker ps -a \
+--filter "name=ui-prod-app" \
+--format "Container={{.Names}} | Image={{.Image}} | Status={{.Status}}"
+
+echo ""
+echo "=============================================="
