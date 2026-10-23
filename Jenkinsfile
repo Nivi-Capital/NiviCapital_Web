@@ -6,7 +6,6 @@ pipeline {
     }
 
     environment {
-
         APP_SERVER = 'opc@172.0.1.130'
 
         IMAGE_NAME = 'nivicap-prod-ui'
@@ -21,7 +20,6 @@ pipeline {
         stage('Workspace Validation') {
             steps {
                 sh '''
-                    echo "===== Workspace Validation ====="
                     pwd
                     ls -la
                 '''
@@ -37,13 +35,8 @@ pipeline {
         stage('Node Validation') {
             steps {
                 sh '''
-                    echo "===== Node Version ====="
                     node -v
-
-                    echo "===== NPM Version ====="
                     npm -v
-
-                    echo "===== Docker Version ====="
                     docker --version
                 '''
             }
@@ -92,10 +85,7 @@ pipeline {
                 sshagent(['Prod-deployment']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-                            echo "===== Hostname ====="
                             hostname
-
-                            echo "===== Date ====="
                             date
                         '
                     """
@@ -108,14 +98,8 @@ pipeline {
                 sshagent(['Prod-deployment']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-
-                        echo "===== Docker Networks ====="
-                        docker network ls
-
-                        docker network inspect nivi-prod-app-network >/dev/null
-
-                        echo "Docker network validated"
-
+                            docker network ls
+                            docker network inspect nivi-prod-app-network >/dev/null
                         '
                     """
                 }
@@ -128,7 +112,7 @@ pipeline {
                     sh '''
                         scp -o StrictHostKeyChecking=no \
                         ${IMAGE_NAME}.tar \
-                        opc@172.0.1.130:/tmp/
+                        ${APP_SERVER}:/tmp/
                     '''
                 }
             }
@@ -152,20 +136,24 @@ BACKUP_CONTAINER="${CONTAINER_NAME}-\$(date +%Y%m%d%H%M%S)"
 
 if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}\$"
 then
-    echo "Stopping current container..."
-
     docker stop ${CONTAINER_NAME} || true
-
-    echo "Renaming current container..."
-
     docker rename ${CONTAINER_NAME} \$BACKUP_CONTAINER
 
     echo "Backup Created: \$BACKUP_CONTAINER"
 fi
 
-echo "===== Remove Stale Container ====="
+echo "===== Cleanup Failed Container ====="
 
 docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
+
+echo "===== Free Port 8081 ====="
+
+PORT_CONTAINER=\$(docker ps --filter publish=8081 --format '{{.Names}}' | head -1)
+
+if [ -n "\$PORT_CONTAINER" ]
+then
+    docker stop "\$PORT_CONTAINER" || true
+fi
 
 echo "===== Starting UI Container ====="
 
@@ -177,8 +165,6 @@ docker run -d \
   ${IMAGE_NAME}:latest
 
 SUCCESS=0
-
-echo "===== Waiting For UI ====="
 
 for i in \$(seq 1 30)
 do
@@ -197,9 +183,7 @@ done
 if [ "\$SUCCESS" -ne 1 ]
 then
 
-    echo "========================================"
     echo "HEALTH CHECK FAILED"
-    echo "========================================"
 
     docker logs --tail 200 ${CONTAINER_NAME} || true
 
@@ -214,9 +198,7 @@ then
 
     if [ -n "\$PREVIOUS_BACKUP" ]
     then
-        echo "========================================"
         echo "STARTING ROLLBACK"
-        echo "========================================"
 
         docker start "\$PREVIOUS_BACKUP"
 
@@ -228,7 +210,7 @@ then
     exit 1
 fi
 
-echo "===== Cleaning Old Backup Containers ====="
+echo "===== Cleanup Old Backups ====="
 
 docker ps -a \
 --format "{{.Names}}" | \
@@ -237,14 +219,9 @@ sort -r | \
 tail -n +5 | \
 xargs -r docker rm -f
 
-echo "========================================"
-echo "DEPLOYMENT SUCCESSFUL"
-echo "========================================"
+echo "===== Deployment Successful ====="
 
-echo ""
-echo "===== Container Inventory ====="
-
-docker ps -a --format "table {{.Names}}\t{{.Status}}"
+docker ps -a --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
 
 EOF
 """
@@ -258,11 +235,8 @@ EOF
                     sh """
                         ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
 
-                        echo "===== Container Status ====="
-                        docker ps -a | grep ${CONTAINER_NAME}
-
-                        echo "===== Port Validation ====="
-                        docker ps | grep ${UI_PORT}
+                            docker ps -a | grep ${CONTAINER_NAME}
+                            docker ps | grep ${UI_PORT}
 
                         '
                     """
@@ -276,8 +250,38 @@ EOF
                     sh """
                         ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
 
-                        echo "===== Health Check ====="
-                        curl -sk ${HEALTH_URL}
+                            curl -sk ${HEALTH_URL}
+
+                        '
+                    """
+                }
+            }
+        }
+
+        stage('Deployed Applications') {
+            steps {
+                sshagent(['Prod-deployment']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
+
+                        echo "=============================================="
+                        echo "DEPLOYED APPLICATIONS"
+                        echo "=============================================="
+
+                        echo ""
+                        echo "API CONTAINER"
+                        docker ps -a \
+                        --filter "name=nivi-prod-app" \
+                        --format "Container={{.Names}} | Image={{.Image}} | Status={{.Status}}"
+
+                        echo ""
+                        echo "UI CONTAINER"
+                        docker ps -a \
+                        --filter "name=ui-prod-app" \
+                        --format "Container={{.Names}} | Image={{.Image}} | Status={{.Status}}"
+
+                        echo ""
+                        echo "=============================================="
 
                         '
                     """
@@ -299,11 +303,11 @@ EOF
                 sh """
                     ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
 
-                    echo "===== Container Status ====="
-                    docker ps -a | grep ${CONTAINER_NAME} || true
+                        echo "===== Container Status ====="
+                        docker ps -a | grep ${CONTAINER_NAME} || true
 
-                    echo "===== Last 200 Log Lines ====="
-                    docker logs ${CONTAINER_NAME} --tail 200 || true
+                        echo "===== Last 200 Log Lines ====="
+                        docker logs ${CONTAINER_NAME} --tail 200 || true
 
                     '
                 """
@@ -315,26 +319,3 @@ EOF
         }
     }
 }
-
-
-
-
-echo ""
-echo "=============================================="
-echo "         DEPLOYED APPLICATIONS"
-echo "=============================================="
-
-echo ""
-echo "API CONTAINER"
-docker ps -a \
---filter "name=nivi-prod-app" \
---format "Container={{.Names}} | Image={{.Image}} | Status={{.Status}}"
-
-echo ""
-echo "UI CONTAINER"
-docker ps -a \
---filter "name=ui-prod-app" \
---format "Container={{.Names}} | Image={{.Image}} | Status={{.Status}}"
-
-echo ""
-echo "=============================================="
