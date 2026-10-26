@@ -22,7 +22,6 @@ pipeline {
         stage('Workspace Validation') {
             steps {
                 sh '''
-                    echo "Workspace:"
                     pwd
                     ls -ltr
                 '''
@@ -50,8 +49,6 @@ pipeline {
         stage('Verify Build Output') {
             steps {
                 sh '''
-                    echo "Angular Build Output"
-
                     ls -lh dist/
                     ls -lh dist/Nivicapital/
                     ls -lh dist/Nivicapital/browser/
@@ -61,22 +58,21 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh """
-                    docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} .
-                    docker tag ${IMAGE_NAME}:${BUILD_NUMBER} ${IMAGE_NAME}:latest
-                """
+                sh '''
+                    docker build -t ${IMAGE_NAME}:latest .
+                '''
             }
         }
 
         stage('Export Docker Image') {
             steps {
-                sh """
+                sh '''
                     rm -f ${IMAGE_NAME}.tar.gz
 
-                    docker save ${IMAGE_NAME}:${BUILD_NUMBER} | gzip > ${IMAGE_NAME}.tar.gz
+                    docker save ${IMAGE_NAME}:latest | gzip > ${IMAGE_NAME}.tar.gz
 
                     ls -lh ${IMAGE_NAME}.tar.gz
-                """
+                '''
             }
         }
 
@@ -84,10 +80,10 @@ pipeline {
             steps {
                 sshagent(['Prod-deployment']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
                             hostname
                             docker --version
-                        "
+                        '
                     """
                 }
             }
@@ -111,15 +107,12 @@ pipeline {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
 
-                            OLD_CONTAINER=\\\$(docker ps -q --filter publish=${APP_PORT})
+                            TS=\\\$(date +%Y%m%d%H%M%S)
 
-                            if [ ! -z \\\$OLD_CONTAINER ]; then
-                                docker stop \\\$OLD_CONTAINER || true
-                                docker rm \\\$OLD_CONTAINER || true
+                            if docker ps -a --format '{{.Names}}' | grep -q '^${CONTAINER_NAME}\$'; then
+                                docker stop ${CONTAINER_NAME} || true
+                                docker rename ${CONTAINER_NAME} ${CONTAINER_NAME}-\\\$TS
                             fi
-
-                            docker stop ${CONTAINER_NAME} || true
-                            docker rm ${CONTAINER_NAME} || true
 
                             gunzip -c /tmp/${IMAGE_NAME}.tar.gz | docker load
 
@@ -127,7 +120,7 @@ pipeline {
                                 --name ${CONTAINER_NAME} \
                                 --restart unless-stopped \
                                 -p ${APP_PORT}:80 \
-                                ${IMAGE_NAME}:${BUILD_NUMBER}
+                                ${IMAGE_NAME}:latest
 
                         "
                     """
@@ -139,16 +132,16 @@ pipeline {
             steps {
                 sshagent(['Prod-deployment']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
 
                             docker ps | grep ${CONTAINER_NAME}
 
-                            echo ''
-                            echo 'Container Logs'
+                            echo ""
+                            echo "Available Rollback Containers"
 
-                            docker logs --tail 50 ${CONTAINER_NAME}
+                            docker ps -a | grep ${CONTAINER_NAME} || true
 
-                        "
+                        '
                     """
                 }
             }
@@ -158,13 +151,13 @@ pipeline {
             steps {
                 sshagent(['Prod-deployment']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
 
                             sleep 10
 
                             curl -I http://127.0.0.1:${APP_PORT}
 
-                        "
+                        '
                     """
                 }
             }
@@ -176,22 +169,22 @@ pipeline {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
 
-                            echo 'Removing uploaded package'
                             rm -f /tmp/${IMAGE_NAME}.tar.gz
 
-                            echo 'Keeping latest 5 image versions'
+                            echo 'Keeping latest 5 containers'
 
-                            docker images ${IMAGE_NAME} \
-                            --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' \
-                            | grep -v latest \
-                            | sort -rk2,4 \
-                            | tail -n +6 \
-                            | awk '{print \\\$1}' \
-                            | xargs -r docker rmi
+                            docker ps -aq --filter 'name=${CONTAINER_NAME}' | while read id
+                            do
+                                echo \\\$(docker inspect -f '{{.Created}}' \\\$id) \\\$id
+                            done | sort -r | tail -n +6 | awk '{print \\\$2}' | xargs -r docker rm -f
 
                             docker image prune -f
                             docker container prune -f
                             docker network prune -f
+
+                            echo 'Remaining Containers'
+
+                            docker ps -a | grep ${CONTAINER_NAME} || true
 
                         "
                     """
@@ -206,18 +199,14 @@ pipeline {
             echo "========================================"
             echo "UI Deployment Completed"
             echo "========================================"
-
-            sh """
-                docker images | grep ${IMAGE_NAME} || true
-            """
         }
 
         success {
-            echo '✅ UI Deployment Successful'
+            echo "✅ UI Deployment Successful"
         }
 
         failure {
-            echo '❌ UI Deployment Failed'
+            echo "❌ UI Deployment Failed"
         }
     }
 }
