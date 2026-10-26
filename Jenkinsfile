@@ -1,193 +1,336 @@
+def pipelineStart = System.currentTimeMillis()
+
+def runTimed(String stageName, Closure body) {
+
+    long start = System.currentTimeMillis()
+
+    echo "========================================"
+    echo "STARTING : ${stageName}"
+    echo "TIME     : ${new Date()}"
+    echo "========================================"
+
+    body()
+
+    long duration = (System.currentTimeMillis() - start) / 1000
+
+    echo "========================================"
+    echo "COMPLETED: ${stageName}"
+    echo "DURATION : ${duration} seconds"
+    echo "========================================"
+}
+
 pipeline {
+
     agent any
 
+    options {
+        timestamps()
+    }
+
     environment {
-        IMAGE_NAME     = "nivicap-ui"
-        CONTAINER_NAME = "nivicap-ui"
 
-        REMOTE_HOST    = "172.0.1.130"
-        REMOTE_USER    = "opc"
+        APP_SERVER = 'opc@172.0.1.130'
 
-        APP_PORT       = "8081"
+        IMAGE_NAME = 'nivicap-ui'
+        CONTAINER_NAME = 'nivicap-ui'
+        APP_PORT = '8081'
     }
 
     stages {
 
-        stage('Checkout SCM') {
+        stage('Workspace Validation') {
             steps {
-                checkout scm
+                script {
+                    runTimed('Workspace Validation') {
+                        sh '''
+                            pwd
+                            ls -la
+                        '''
+                    }
+                }
             }
         }
 
-        stage('Workspace Validation') {
+        stage('Checkout SCM') {
             steps {
-                sh '''
-                    pwd
-                    ls -ltr
-                '''
+                script {
+                    runTimed('Checkout SCM') {
+                        checkout scm
+                    }
+                }
             }
         }
 
         stage('Node Validation') {
             steps {
-                sh '''
-                    node --version
-                    npm --version
-                '''
+                script {
+                    runTimed('Node Validation') {
+                        sh '''
+                            node --version
+                            npm --version
+                            docker --version
+                        '''
+                    }
+                }
             }
         }
 
         stage('Build Angular Application') {
             steps {
-                sh '''
-                    npm ci
-                    npm run build --configuration=production
-                '''
-            }
-        }
+                script {
+                    runTimed('Build Angular Application') {
+                        sh '''
+                            npm ci
 
-        stage('Verify Build Output') {
-            steps {
-                sh '''
-                    ls -lh dist/
-                    ls -lh dist/Nivicapital/
-                    ls -lh dist/Nivicapital/browser/
-                '''
+                            npm run build --configuration=production
+
+                            echo "Generated Files"
+
+                            ls -ltr dist/Nivicapital/browser
+                        '''
+                    }
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                    docker build -t ${IMAGE_NAME}:latest .
-                '''
+                script {
+                    runTimed('Build Docker Image') {
+                        sh '''
+                            docker build \
+                              -t nivicap-ui:latest .
+                        '''
+                    }
+                }
             }
         }
 
         stage('Export Docker Image') {
             steps {
-                sh '''
-                    rm -f ${IMAGE_NAME}.tar.gz
+                script {
+                    runTimed('Export Docker Image') {
+                        sh '''
+                            rm -f nivicap-ui.tar
 
-                    docker save ${IMAGE_NAME}:latest | gzip > ${IMAGE_NAME}.tar.gz
+                            docker save \
+                              nivicap-ui:latest \
+                              -o nivicap-ui.tar
 
-                    ls -lh ${IMAGE_NAME}.tar.gz
-                '''
+                            ls -lh nivicap-ui.tar
+                        '''
+                    }
+                }
             }
         }
 
         stage('Verify Remote Connectivity') {
             steps {
-                sshagent(['Prod-deployment']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
-                            hostname
-                            docker --version
-                        '
-                    """
+                script {
+                    runTimed('Verify Remote Connectivity') {
+                        sshagent(['Prod-deployment']) {
+
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
+
+                                hostname
+                                date
+
+                                '
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Verify Docker Network') {
+            steps {
+                script {
+                    runTimed('Verify Docker Network') {
+                        sshagent(['Prod-deployment']) {
+
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
+
+                                docker network ls
+
+                                docker network inspect bridge >/dev/null
+
+                                echo "Docker network validation successful"
+
+                                '
+                            """
+                        }
+                    }
                 }
             }
         }
 
         stage('Transfer Image') {
             steps {
-                sshagent(['Prod-deployment']) {
-                    sh """
-                        scp -o StrictHostKeyChecking=no \
-                        ${IMAGE_NAME}.tar.gz \
-                        ${REMOTE_USER}@${REMOTE_HOST}:/tmp/
-                    """
+                script {
+                    runTimed('Transfer Image') {
+                        sshagent(['Prod-deployment']) {
+
+                            sh '''
+                                scp -o StrictHostKeyChecking=no \
+                                nivicap-ui.tar \
+                                opc@172.0.1.130:/tmp/
+                            '''
+                        }
+                    }
                 }
             }
         }
 
         stage('Deploy Container') {
             steps {
-                sshagent(['Prod-deployment']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                script {
+                    runTimed('Deploy Container') {
 
-                            TS=\\\$(date +%Y%m%d%H%M%S)
+                        sshagent(['Prod-deployment']) {
 
-                            if docker ps -a --format '{{.Names}}' | grep -q '^${CONTAINER_NAME}\$'; then
-                                docker stop ${CONTAINER_NAME} || true
-                                docker rename ${CONTAINER_NAME} ${CONTAINER_NAME}-\\\$TS
-                            fi
+                            sh """
+ssh -o StrictHostKeyChecking=no ${APP_SERVER} <<'EOF'
 
-                            gunzip -c /tmp/${IMAGE_NAME}.tar.gz | docker load
+set -e
 
-                            docker run -d \
-                                --name ${CONTAINER_NAME} \
-                                --restart unless-stopped \
-                                -p ${APP_PORT}:80 \
-                                ${IMAGE_NAME}:latest
+echo "===== Loading Image ====="
 
-                        "
-                    """
+docker load -i /tmp/nivicap-ui.tar
+
+TIMESTAMP=\$(date +%Y%m%d%H%M%S)
+
+if docker ps -a --format '{{.Names}}' | grep -q '^nivicap-ui$'
+then
+    docker stop nivicap-ui || true
+
+    docker rename \
+      nivicap-ui \
+      nivicap-ui-\${TIMESTAMP}
+fi
+
+echo "===== Starting Container ====="
+
+docker run -d \
+  --name nivicap-ui \
+  --restart unless-stopped \
+  -p 8081:80 \
+  nivicap-ui:latest
+
+EOF
+"""
+                        }
+                    }
                 }
             }
         }
 
         stage('Container Validation') {
             steps {
-                sshagent(['Prod-deployment']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+                script {
+                    runTimed('Container Validation') {
 
-                            docker ps | grep ${CONTAINER_NAME}
+                        sshagent(['Prod-deployment']) {
 
-                            echo ""
-                            echo "Available Rollback Containers"
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
 
-                            docker ps -a | grep ${CONTAINER_NAME} || true
+                                echo "===== Running Container ====="
 
-                        '
-                    """
+                                docker ps | grep nivicap-ui
+
+                                echo "===== Available Rollback Containers ====="
+
+                                docker ps -a | grep nivicap-ui || true
+
+                                '
+                            """
+                        }
+                    }
                 }
             }
         }
 
         stage('Application Health Check') {
             steps {
-                sshagent(['Prod-deployment']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+                script {
+                    runTimed('Application Health Check') {
 
-                            sleep 10
+                        sshagent(['Prod-deployment']) {
 
-                            curl -I http://127.0.0.1:${APP_PORT}
+                            sh """
+ssh -o StrictHostKeyChecking=no ${APP_SERVER} <<'EOF'
 
-                        '
-                    """
+SUCCESS=0
+
+for i in \$(seq 1 30)
+do
+
+    echo "Health check attempt \$i"
+
+    if curl -s -o /dev/null -I \
+      http://127.0.0.1:8081
+    then
+        SUCCESS=1
+        break
+    fi
+
+    sleep 10
+
+done
+
+docker logs --tail 50 nivicap-ui
+
+if [ "\$SUCCESS" -ne 1 ]
+then
+    echo "Health check failed"
+    exit 1
+fi
+
+EOF
+"""
+                        }
+                    }
                 }
             }
         }
 
         stage('Docker Cleanup') {
             steps {
-                sshagent(['Prod-deployment']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                script {
+                    runTimed('Docker Cleanup') {
 
-                            rm -f /tmp/${IMAGE_NAME}.tar.gz
+                        sshagent(['Prod-deployment']) {
 
-                            echo 'Keeping latest 5 containers'
+                            sh """
+ssh -o StrictHostKeyChecking=no ${APP_SERVER} <<'EOF'
 
-                            docker ps -aq --filter 'name=${CONTAINER_NAME}' | while read id
-                            do
-                                echo \\\$(docker inspect -f '{{.Created}}' \\\$id) \\\$id
-                            done | sort -r | tail -n +6 | awk '{print \\\$2}' | xargs -r docker rm -f
+rm -f /tmp/nivicap-ui.tar
 
-                            docker image prune -f
-                            docker container prune -f
-                            docker network prune -f
+echo "===== Keep Latest 5 Containers ====="
 
-                            echo 'Remaining Containers'
+docker ps -aq --filter "name=nivicap-ui" | while read id
+do
+   echo "\$(docker inspect -f '{{.Created}}' \$id) \$id"
+done \
+| sort -r \
+| tail -n +6 \
+| awk '{print \$2}' \
+| xargs -r docker rm -f
 
-                            docker ps -a | grep ${CONTAINER_NAME} || true
+docker image prune -f
+docker network prune -f
 
-                        "
-                    """
+echo "===== Remaining Containers ====="
+
+docker ps -a | grep nivicap-ui || true
+
+EOF
+"""
+                        }
+                    }
                 }
             }
         }
@@ -195,18 +338,41 @@ pipeline {
 
     post {
 
-        always {
-            echo "========================================"
-            echo "UI Deployment Completed"
-            echo "========================================"
-        }
-
         success {
-            echo "✅ UI Deployment Successful"
+            echo 'UI Deployment completed successfully'
         }
 
         failure {
-            echo "❌ UI Deployment Failed"
+
+            echo 'UI Deployment failed'
+
+            sshagent(['Prod-deployment']) {
+
+                sh """
+                    ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
+
+                    docker ps -a | grep nivicap-ui || true
+
+                    docker logs nivicap-ui --tail 200 || true
+
+                    '
+                """
+            }
+        }
+
+        always {
+
+            script {
+
+                long totalDuration =
+                    (System.currentTimeMillis() - pipelineStart) / 1000
+
+                echo "========================================"
+                echo "TOTAL PIPELINE TIME : ${totalDuration} seconds"
+                echo "========================================"
+            }
+
+            echo 'Pipeline finished'
         }
     }
 }
