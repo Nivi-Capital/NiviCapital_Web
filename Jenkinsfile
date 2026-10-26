@@ -61,21 +61,22 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                    docker build -t ${IMAGE_NAME}:latest .
-                '''
+                sh """
+                    docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} .
+                    docker tag ${IMAGE_NAME}:${BUILD_NUMBER} ${IMAGE_NAME}:latest
+                """
             }
         }
 
         stage('Export Docker Image') {
             steps {
-                sh '''
+                sh """
                     rm -f ${IMAGE_NAME}.tar.gz
 
-                    docker save ${IMAGE_NAME}:latest | gzip > ${IMAGE_NAME}.tar.gz
+                    docker save ${IMAGE_NAME}:${BUILD_NUMBER} | gzip > ${IMAGE_NAME}.tar.gz
 
                     ls -lh ${IMAGE_NAME}.tar.gz
-                '''
+                """
             }
         }
 
@@ -83,10 +84,10 @@ pipeline {
             steps {
                 sshagent(['Prod-deployment']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
                             hostname
                             docker --version
-                        '
+                        "
                     """
                 }
             }
@@ -110,6 +111,13 @@ pipeline {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
 
+                            OLD_CONTAINER=\\\$(docker ps -q --filter publish=${APP_PORT})
+
+                            if [ ! -z \\\$OLD_CONTAINER ]; then
+                                docker stop \\\$OLD_CONTAINER || true
+                                docker rm \\\$OLD_CONTAINER || true
+                            fi
+
                             docker stop ${CONTAINER_NAME} || true
                             docker rm ${CONTAINER_NAME} || true
 
@@ -119,7 +127,7 @@ pipeline {
                                 --name ${CONTAINER_NAME} \
                                 --restart unless-stopped \
                                 -p ${APP_PORT}:80 \
-                                ${IMAGE_NAME}:latest
+                                ${IMAGE_NAME}:${BUILD_NUMBER}
 
                         "
                     """
@@ -132,7 +140,14 @@ pipeline {
                 sshagent(['Prod-deployment']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+
                             docker ps | grep ${CONTAINER_NAME}
+
+                            echo ''
+                            echo 'Container Logs'
+
+                            docker logs --tail 50 ${CONTAINER_NAME}
+
                         "
                     """
                 }
@@ -143,13 +158,13 @@ pipeline {
             steps {
                 sshagent(['Prod-deployment']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
 
                             sleep 10
 
                             curl -I http://127.0.0.1:${APP_PORT}
 
-                        '
+                        "
                     """
                 }
             }
@@ -161,9 +176,22 @@ pipeline {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
 
+                            echo 'Removing uploaded package'
                             rm -f /tmp/${IMAGE_NAME}.tar.gz
 
+                            echo 'Keeping latest 5 image versions'
+
+                            docker images ${IMAGE_NAME} \
+                            --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' \
+                            | grep -v latest \
+                            | sort -rk2,4 \
+                            | tail -n +6 \
+                            | awk '{print \\\$1}' \
+                            | xargs -r docker rmi
+
                             docker image prune -f
+                            docker container prune -f
+                            docker network prune -f
 
                         "
                     """
@@ -179,9 +207,9 @@ pipeline {
             echo "UI Deployment Completed"
             echo "========================================"
 
-            sh '''
+            sh """
                 docker images | grep ${IMAGE_NAME} || true
-            '''
+            """
         }
 
         success {
