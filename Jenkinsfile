@@ -28,7 +28,6 @@ pipeline {
     }
 
     environment {
-
         APP_SERVER = 'opc@172.0.1.130'
 
         IMAGE_NAME = 'nivicap-ui'
@@ -82,7 +81,6 @@ pipeline {
                     runTimed('Build Angular Application') {
                         sh '''
                             npm ci
-
                             npm run build --configuration=production
 
                             echo "===== Build Output ====="
@@ -170,32 +168,29 @@ pipeline {
 
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-
                                     set -e
 
                                     docker load -i /tmp/nivicap-ui.tar
 
-                                    TS=\\$(date +%Y%m%d%H%M%S)
+                                    if docker ps -a --format "{{.Names}}" | grep -q "^nivicap-ui\$"; then
 
-                                    if docker ps -a --format "{{.Names}}" | grep -q "^nivicap-ui\\$"
-                                    then
-                                        echo "Archiving existing container"
+                                        TS=`date +%Y%m%d%H%M%S`
+
+                                        echo "Archiving old container"
 
                                         docker stop nivicap-ui || true
 
                                         docker rename \
-                                          nivicap-ui \
-                                          nivicap-ui-\\$TS
+                                            nivicap-ui \
+                                            nivicap-ui-'"\$TS"'
+
                                     fi
 
-                                    echo "Starting new container"
-
                                     docker run -d \
-                                      --name nivicap-ui \
-                                      --restart unless-stopped \
-                                      -p 8081:80 \
-                                      nivicap-ui:latest
-
+                                        --name nivicap-ui \
+                                        --restart unless-stopped \
+                                        -p 8081:80 \
+                                        nivicap-ui:latest
                                 '
                             """
                         }
@@ -213,17 +208,13 @@ pipeline {
 
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-
                                     echo "===== Running Container ====="
-
                                     docker ps | grep nivicap-ui
 
                                     echo ""
-
                                     echo "===== Rollback Containers ====="
 
                                     docker ps -a | grep nivicap-ui || true
-
                                 '
                             """
                         }
@@ -241,11 +232,8 @@ pipeline {
 
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-
                                     sleep 10
-
                                     curl -I http://127.0.0.1:8081
-
                                 '
                             """
                         }
@@ -263,37 +251,14 @@ pipeline {
 
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-
                                     rm -f /tmp/nivicap-ui.tar
 
-                                    TOTAL=\\$(docker ps -a \
-                                      --filter "name=nivicap-ui" \
-                                      --format "{{.ID}}" | wc -l)
+                                    echo "===== Existing Containers ====="
 
-                                    if [ "\\$TOTAL" -gt 5 ]
-                                    then
-
-                                        REMOVE=\\$((TOTAL-5))
-
-                                        docker ps -a \
-                                          --filter "name=nivicap-ui" \
-                                          --format "{{.ID}} {{.CreatedAt}}" \
-                                        | sort -k2,4 \
-                                        | head -n "\\$REMOVE" \
-                                        | awk "{print \\\\\\$1}" \
-                                        | xargs -r docker rm -f
-
-                                    fi
+                                    docker ps -a | grep nivicap-ui || true
 
                                     docker image prune -f
-
                                     docker network prune -f
-
-                                    echo "===== Remaining Containers ====="
-
-                                    docker ps -a \
-                                      --filter "name=nivicap-ui"
-
                                 '
                             """
                         }
@@ -317,13 +282,11 @@ pipeline {
 
                 sh """
                     ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-
                         docker ps -a | grep nivicap-ui || true
 
-                        echo ""
+                        echo "===== Logs ====="
 
                         docker logs nivicap-ui --tail 200 || true
-
                     '
                 """
             }
