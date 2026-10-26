@@ -7,7 +7,7 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { ErrorInterceptor } from './core/interceptors/error.interceptor';
 import { LoggingInterceptor } from './core/interceptors/logging.interceptor';
 import { CachingInterceptor } from './core/interceptors/caching.interceptor';
-import { CsrfService } from './core/service/CsrfService';
+// import { CsrfService } from './core/service/CsrfService';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -18,21 +18,21 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withFetch(),
 
-      withXsrfConfiguration({
-        cookieName: 'XSRF-TOKEN',
-        headerName: 'X-XSRF-TOKEN'
-      }),
+      // withXsrfConfiguration({
+      //   cookieName: 'XSRF-TOKEN',
+      //   headerName: 'X-XSRF-TOKEN'
+      // }),
 
       withInterceptorsFromDi()
     ),
 
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
-    provideAppInitializer(() => {
-  const csrfService = inject(CsrfService);
-    return csrfService.initialize();
+    // provideAppInitializer(() => {
+  // const csrfService = inject(CsrfService);
+  //   return csrfService.initialize();
 
-})
+// })
   ]
 };
  
