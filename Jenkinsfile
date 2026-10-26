@@ -2,10 +2,13 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "nivicap-ui"
-        REMOTE_HOST = "172.0.1.130"
-        REMOTE_USER = "opc"
+        IMAGE_NAME     = "nivicap-ui"
         CONTAINER_NAME = "nivicap-ui"
+
+        REMOTE_HOST    = "172.0.1.130"
+        REMOTE_USER    = "opc"
+
+        LOCAL_PORT     = "8081"
     }
 
     stages {
@@ -19,7 +22,10 @@ pipeline {
         stage('Workspace Validation') {
             steps {
                 sh '''
+                    echo "Current Directory:"
                     pwd
+
+                    echo "Workspace Contents:"
                     ls -ltr
                 '''
             }
@@ -43,7 +49,7 @@ pipeline {
         stage('Build Angular Application') {
             steps {
                 sh '''
-                    npm run build --configuration=sit
+                    npm run build --configuration=production
                 '''
             }
         }
@@ -51,7 +57,11 @@ pipeline {
         stage('Verify Build Output') {
             steps {
                 sh '''
-                    ls -lh dist/Nivicapital/browser
+                    echo "Checking Angular Build Output"
+
+                    ls -lh dist/
+                    ls -lh dist/Nivicapital || true
+                    ls -lh dist/Nivicapital/browser || true
                 '''
             }
         }
@@ -67,7 +77,10 @@ pipeline {
         stage('Export Docker Image') {
             steps {
                 sh '''
+                    rm -f ${IMAGE_NAME}.tar.gz
+
                     docker save ${IMAGE_NAME}:latest | gzip > ${IMAGE_NAME}.tar.gz
+
                     ls -lh ${IMAGE_NAME}.tar.gz
                 '''
             }
@@ -76,9 +89,12 @@ pipeline {
         stage('Verify Remote Connectivity') {
             steps {
                 sshagent(['Prod-deployment']) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "hostname"
-                    '''
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                            hostname
+                            whoami
+                        "
+                    """
                 }
             }
         }
@@ -86,11 +102,11 @@ pipeline {
         stage('Verify Docker Network') {
             steps {
                 sshagent(['Prod-deployment']) {
-                    sh '''
+                    sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
-                        docker network ls
+                            docker network ls
                         "
-                    '''
+                    """
                 }
             }
         }
@@ -98,11 +114,23 @@ pipeline {
         stage('Transfer Image') {
             steps {
                 sshagent(['Prod-deployment']) {
-                    sh '''
+                    sh """
                         scp -o StrictHostKeyChecking=no \
                         ${IMAGE_NAME}.tar.gz \
                         ${REMOTE_USER}@${REMOTE_HOST}:/tmp/
-                    '''
+                    """
+                }
+            }
+        }
+
+        stage('Verify Image Transfer') {
+            steps {
+                sshagent(['Prod-deployment']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                            ls -lh /tmp/${IMAGE_NAME}.tar.gz
+                        "
+                    """
                 }
             }
         }
@@ -110,22 +138,23 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 sshagent(['Prod-deployment']) {
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
 
-                    docker stop ${CONTAINER_NAME} || true
-                    docker rm ${CONTAINER_NAME} || true
+                            docker stop ${CONTAINER_NAME} || true
 
-                    docker load < /tmp/${IMAGE_NAME}.tar.gz
+                            docker rm ${CONTAINER_NAME} || true
 
-                    docker run -d \
-                      --name ${CONTAINER_NAME} \
-                      --restart unless-stopped \
-                      -p 8081:80 \
-                      ${IMAGE_NAME}:latest
+                            gunzip -c /tmp/${IMAGE_NAME}.tar.gz | docker load
 
-                    '
-                    '''
+                            docker run -d \
+                                --name ${CONTAINER_NAME} \
+                                --restart unless-stopped \
+                                -p ${LOCAL_PORT}:80 \
+                                ${IMAGE_NAME}:latest
+
+                        "
+                    """
                 }
             }
         }
@@ -133,11 +162,19 @@ pipeline {
         stage('Container Validation') {
             steps {
                 sshagent(['Prod-deployment']) {
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
-                        docker ps | grep ${CONTAINER_NAME}
-                    '
-                    '''
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+
+                            echo 'Running Containers'
+
+                            docker ps | grep ${CONTAINER_NAME}
+
+                            echo ''
+
+                            docker logs --tail 50 ${CONTAINER_NAME}
+
+                        "
+                    """
                 }
             }
         }
@@ -145,16 +182,17 @@ pipeline {
         stage('Application Health Check') {
             steps {
                 sshagent(['Prod-deployment']) {
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
 
-                    echo "Waiting for UI startup..."
-                    sleep 10
+                            echo 'Waiting for application startup...'
 
-                    curl -I http://127.0.0.1:8081
+                            sleep 15
 
-                    '
-                    '''
+                            curl -I http://127.0.0.1:${LOCAL_PORT}
+
+                        "
+                    """
                 }
             }
         }
@@ -173,11 +211,11 @@ pipeline {
         }
 
         success {
-            echo "UI Deployment completed successfully"
+            echo "✅ UI Deployment completed successfully"
         }
 
         failure {
-            echo "UI Deployment failed"
+            echo "❌ UI Deployment failed"
         }
     }
 }
