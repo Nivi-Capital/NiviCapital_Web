@@ -28,12 +28,10 @@ pipeline {
     }
 
     environment {
-        APP_SERVER = 'opc@172.0.1.130'
-
-        IMAGE_NAME = 'nivicap-ui'
+        APP_SERVER     = 'opc@172.0.1.130'
+        IMAGE_NAME     = 'nivicap-ui'
         CONTAINER_NAME = 'nivicap-ui'
-
-        APP_PORT = '8081'
+        APP_PORT       = '8081'
     }
 
     stages {
@@ -125,9 +123,7 @@ pipeline {
             steps {
                 script {
                     runTimed('Verify Remote Connectivity') {
-
                         sshagent(['Prod-deployment']) {
-
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
                                     hostname
@@ -145,9 +141,7 @@ pipeline {
             steps {
                 script {
                     runTimed('Transfer Image') {
-
                         sshagent(['Prod-deployment']) {
-
                             sh '''
                                 scp -o StrictHostKeyChecking=no \
                                 nivicap-ui.tar \
@@ -172,18 +166,15 @@ pipeline {
 
                                     docker load -i /tmp/nivicap-ui.tar
 
-                                    if docker ps -a --format "{{.Names}}" | grep -q "^nivicap-ui\$"; then
+                                    if docker ps -a --format "{{.Names}}" | grep -q "^nivicap-ui\\$"; then
 
-                                        TS=`date +%Y%m%d%H%M%S`
-
-                                        echo "Archiving old container"
+                                        TS=`date +"%Y-%m-%d-%H-%M-%S"`
 
                                         docker stop nivicap-ui || true
 
                                         docker rename \
                                             nivicap-ui \
                                             nivicap-ui-'"\$TS"'
-
                                     fi
 
                                     docker run -d \
@@ -208,11 +199,10 @@ pipeline {
 
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-                                    echo "===== Running Container ====="
                                     docker ps | grep nivicap-ui
 
                                     echo ""
-                                    echo "===== Rollback Containers ====="
+                                    echo "Rollback Containers"
 
                                     docker ps -a | grep nivicap-ui || true
                                 '
@@ -253,10 +243,6 @@ pipeline {
                                 ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
                                     rm -f /tmp/nivicap-ui.tar
 
-                                    echo "===== Existing Containers ====="
-
-                                    docker ps -a | grep nivicap-ui || true
-
                                     docker image prune -f
                                     docker network prune -f
                                 '
@@ -275,27 +261,12 @@ pipeline {
         }
 
         failure {
-
             echo '❌ UI Deployment Failed'
-
-            sshagent(['Prod-deployment']) {
-
-                sh """
-                    ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-                        docker ps -a | grep nivicap-ui || true
-
-                        echo "===== Logs ====="
-
-                        docker logs nivicap-ui --tail 200 || true
-                    '
-                """
-            }
         }
 
         always {
 
             script {
-
                 long totalDuration =
                     (System.currentTimeMillis() - pipelineStart) / 1000
 
