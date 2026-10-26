@@ -8,7 +8,7 @@ pipeline {
         REMOTE_HOST    = "172.0.1.130"
         REMOTE_USER    = "opc"
 
-        LOCAL_PORT     = "8081"
+        APP_PORT       = "8081"
     }
 
     stages {
@@ -22,10 +22,8 @@ pipeline {
         stage('Workspace Validation') {
             steps {
                 sh '''
-                    echo "Current Directory:"
+                    echo "Workspace:"
                     pwd
-
-                    echo "Workspace Contents:"
                     ls -ltr
                 '''
             }
@@ -40,15 +38,10 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                sh 'npm ci'
-            }
-        }
-
         stage('Build Angular Application') {
             steps {
                 sh '''
+                    npm ci
                     npm run build --configuration=production
                 '''
             }
@@ -57,11 +50,11 @@ pipeline {
         stage('Verify Build Output') {
             steps {
                 sh '''
-                    echo "Checking Angular Build Output"
+                    echo "Angular Build Output"
 
                     ls -lh dist/
-                    ls -lh dist/Nivicapital || true
-                    ls -lh dist/Nivicapital/browser || true
+                    ls -lh dist/Nivicapital/
+                    ls -lh dist/Nivicapital/browser/
                 '''
             }
         }
@@ -90,22 +83,10 @@ pipeline {
             steps {
                 sshagent(['Prod-deployment']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
                             hostname
-                            whoami
-                        "
-                    """
-                }
-            }
-        }
-
-        stage('Verify Docker Network') {
-            steps {
-                sshagent(['Prod-deployment']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
-                            docker network ls
-                        "
+                            docker --version
+                        '
                     """
                 }
             }
@@ -123,18 +104,6 @@ pipeline {
             }
         }
 
-        stage('Verify Image Transfer') {
-            steps {
-                sshagent(['Prod-deployment']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
-                            ls -lh /tmp/${IMAGE_NAME}.tar.gz
-                        "
-                    """
-                }
-            }
-        }
-
         stage('Deploy Container') {
             steps {
                 sshagent(['Prod-deployment']) {
@@ -142,7 +111,6 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
 
                             docker stop ${CONTAINER_NAME} || true
-
                             docker rm ${CONTAINER_NAME} || true
 
                             gunzip -c /tmp/${IMAGE_NAME}.tar.gz | docker load
@@ -150,7 +118,7 @@ pipeline {
                             docker run -d \
                                 --name ${CONTAINER_NAME} \
                                 --restart unless-stopped \
-                                -p ${LOCAL_PORT}:80 \
+                                -p ${APP_PORT}:80 \
                                 ${IMAGE_NAME}:latest
 
                         "
@@ -164,15 +132,7 @@ pipeline {
                 sshagent(['Prod-deployment']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
-
-                            echo 'Running Containers'
-
                             docker ps | grep ${CONTAINER_NAME}
-
-                            echo ''
-
-                            docker logs --tail 50 ${CONTAINER_NAME}
-
                         "
                     """
                 }
@@ -183,13 +143,27 @@ pipeline {
             steps {
                 sshagent(['Prod-deployment']) {
                     sh """
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+
+                            sleep 10
+
+                            curl -I http://127.0.0.1:${APP_PORT}
+
+                        '
+                    """
+                }
+            }
+        }
+
+        stage('Docker Cleanup') {
+            steps {
+                sshagent(['Prod-deployment']) {
+                    sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
 
-                            echo 'Waiting for application startup...'
+                            rm -f /tmp/${IMAGE_NAME}.tar.gz
 
-                            sleep 15
-
-                            curl -I http://127.0.0.1:${LOCAL_PORT}
+                            docker image prune -f
 
                         "
                     """
@@ -202,7 +176,7 @@ pipeline {
 
         always {
             echo "========================================"
-            echo "Pipeline Finished"
+            echo "UI Deployment Completed"
             echo "========================================"
 
             sh '''
@@ -211,11 +185,11 @@ pipeline {
         }
 
         success {
-            echo "✅ UI Deployment completed successfully"
+            echo '✅ UI Deployment Successful'
         }
 
         failure {
-            echo "❌ UI Deployment failed"
+            echo '❌ UI Deployment Failed'
         }
     }
 }
