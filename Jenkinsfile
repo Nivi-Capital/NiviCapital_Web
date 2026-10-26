@@ -28,12 +28,10 @@ pipeline {
     }
 
     environment {
-
-        APP_SERVER = 'opc@172.0.1.130'
-
-        IMAGE_NAME = 'nivicap-ui'
+        APP_SERVER     = 'opc@172.0.1.130'
+        IMAGE_NAME     = 'nivicap-ui'
         CONTAINER_NAME = 'nivicap-ui'
-        APP_PORT = '8081'
+        APP_PORT       = '8081'
     }
 
     stages {
@@ -81,10 +79,9 @@ pipeline {
                     runTimed('Build Angular Application') {
                         sh '''
                             npm ci
-
                             npm run build --configuration=production
 
-                            echo "Generated Files"
+                            echo "===== Build Output ====="
 
                             ls -ltr dist/Nivicapital/browser
                         '''
@@ -98,8 +95,7 @@ pipeline {
                 script {
                     runTimed('Build Docker Image') {
                         sh '''
-                            docker build \
-                              -t nivicap-ui:latest .
+                            docker build -t nivicap-ui:latest .
                         '''
                     }
                 }
@@ -129,36 +125,11 @@ pipeline {
                 script {
                     runTimed('Verify Remote Connectivity') {
                         sshagent(['Prod-deployment']) {
-
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-
-                                hostname
-                                date
-
-                                '
-                            """
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Verify Docker Network') {
-            steps {
-                script {
-                    runTimed('Verify Docker Network') {
-                        sshagent(['Prod-deployment']) {
-
-                            sh """
-                                ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-
-                                docker network ls
-
-                                docker network inspect bridge >/dev/null
-
-                                echo "Docker network validation successful"
-
+                                    hostname
+                                    date
+                                    docker --version
                                 '
                             """
                         }
@@ -172,7 +143,6 @@ pipeline {
                 script {
                     runTimed('Transfer Image') {
                         sshagent(['Prod-deployment']) {
-
                             sh '''
                                 scp -o StrictHostKeyChecking=no \
                                 nivicap-ui.tar \
@@ -187,39 +157,31 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 script {
+
                     runTimed('Deploy Container') {
 
                         sshagent(['Prod-deployment']) {
 
                             sh """
-ssh -o StrictHostKeyChecking=no ${APP_SERVER} <<'EOF'
-
+ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
 set -e
-
-echo "===== Loading Image ====="
 
 docker load -i /tmp/nivicap-ui.tar
 
-TIMESTAMP=\$(date +%Y%m%d%H%M%S)
+TS=\$(date +%Y%m%d%H%M%S)
 
-if docker ps -a --format '{{.Names}}' | grep -q '^nivicap-ui$'
+if docker ps -a --format "{{.Names}}" | grep -q "^nivicap-ui\$"
 then
     docker stop nivicap-ui || true
-
-    docker rename \
-      nivicap-ui \
-      nivicap-ui-\${TIMESTAMP}
+    docker rename nivicap-ui nivicap-ui-\$TS
 fi
-
-echo "===== Starting Container ====="
 
 docker run -d \
   --name nivicap-ui \
   --restart unless-stopped \
   -p 8081:80 \
   nivicap-ui:latest
-
-EOF
+'
 """
                         }
                     }
@@ -230,6 +192,7 @@ EOF
         stage('Container Validation') {
             steps {
                 script {
+
                     runTimed('Container Validation') {
 
                         sshagent(['Prod-deployment']) {
@@ -241,7 +204,7 @@ EOF
 
                                 docker ps | grep nivicap-ui
 
-                                echo "===== Available Rollback Containers ====="
+                                echo "===== Rollback Containers ====="
 
                                 docker ps -a | grep nivicap-ui || true
 
@@ -256,40 +219,37 @@ EOF
         stage('Application Health Check') {
             steps {
                 script {
+
                     runTimed('Application Health Check') {
 
                         sshagent(['Prod-deployment']) {
 
                             sh """
-ssh -o StrictHostKeyChecking=no ${APP_SERVER} <<'EOF'
+ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
 
 SUCCESS=0
 
 for i in \$(seq 1 30)
 do
+    echo "Health Check Attempt \$i"
 
-    echo "Health check attempt \$i"
-
-    if curl -s -o /dev/null -I \
-      http://127.0.0.1:8081
+    if curl -s -I http://127.0.0.1:8081 >/dev/null
     then
         SUCCESS=1
         break
     fi
 
     sleep 10
-
 done
 
 docker logs --tail 50 nivicap-ui
 
 if [ "\$SUCCESS" -ne 1 ]
 then
-    echo "Health check failed"
+    echo "Health Check Failed"
     exit 1
 fi
-
-EOF
+'
 """
                         }
                     }
@@ -300,25 +260,22 @@ EOF
         stage('Docker Cleanup') {
             steps {
                 script {
+
                     runTimed('Docker Cleanup') {
 
                         sshagent(['Prod-deployment']) {
 
                             sh """
-ssh -o StrictHostKeyChecking=no ${APP_SERVER} <<'EOF'
+ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
 
 rm -f /tmp/nivicap-ui.tar
 
 echo "===== Keep Latest 5 Containers ====="
 
-docker ps -aq --filter "name=nivicap-ui" | while read id
+for id in \$(docker ps -aq --filter "name=nivicap-ui")
 do
-   echo "\$(docker inspect -f '{{.Created}}' \$id) \$id"
-done \
-| sort -r \
-| tail -n +6 \
-| awk '{print \$2}' \
-| xargs -r docker rm -f
+    echo "\$(docker inspect -f "{{.Created}}" \$id) \$id"
+done | sort -r | tail -n +6 | awk "{print \\$2}" | xargs -r docker rm -f
 
 docker image prune -f
 docker network prune -f
@@ -326,8 +283,7 @@ docker network prune -f
 echo "===== Remaining Containers ====="
 
 docker ps -a | grep nivicap-ui || true
-
-EOF
+'
 """
                         }
                     }
@@ -353,6 +309,8 @@ EOF
 
                     docker ps -a | grep nivicap-ui || true
 
+                    echo "===== Logs ====="
+
                     docker logs nivicap-ui --tail 200 || true
 
                     '
@@ -372,7 +330,7 @@ EOF
                 echo "========================================"
             }
 
-            echo 'Pipeline finished'
+            echo 'Pipeline Finished'
         }
     }
 }
