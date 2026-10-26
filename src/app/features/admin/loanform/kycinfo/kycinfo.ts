@@ -62,9 +62,12 @@ export class Kycinfo {
   kycId: any;
 
   passportmissing: boolean = false;
+  isPassportNumberMissing: boolean = false;
+  passportNumberSavedOnServer = false;
+  nextClicked:boolean= false;
   passportuploadfailure: boolean = false;
   selectedPassportFile: File | null = null;
-passportPreviewUrl = '';
+  passportPreviewUrl = '';
 
   isSummaryLoading = false;
   summaryLoaded = false;
@@ -73,7 +76,8 @@ passportPreviewUrl = '';
   panDisplayName: string = '';
   passportDisplayName: string = '';
   otherDocumentDisplayName: string = '';
-   isFromSummary = false;
+  isFromSummary = false;
+passportnumber: any;
 
   constructor(private fb: FormBuilder, public stepperService: Loanstepperservice, private cd: ChangeDetectorRef, private loanformservice: Loanformservice, private route: ActivatedRoute) { }
 
@@ -123,6 +127,10 @@ passportPreviewUrl = '';
 
 
     });
+
+  this.kycdocumentsForm.get('passportnumber')?.valueChanges.subscribe(value => {
+  this.isPassportNumberMissing = !String(value || '').trim();
+});
 
     this.getKycData(this.kycdetailsID);
     this.kycdocumentsForm.get('isperMailingAddress')
@@ -206,22 +214,64 @@ passportPreviewUrl = '';
     this.stepperService.previous();
   }
   next() {
+    this.nextClicked =true
+    
+    const passportNumberControl = this.kycdocumentsForm.get('passportnumber');
 
-    if (!this.selectedPassportFile && !this.passportUrl) {
-      this.passportmissing = true;
-      return;
+    const passportNumber = String(passportNumberControl?.value || '' ).trim();
+  const hasPassportNumber = !!passportNumber;
 
-    }
+  const hasPassportDocument =!!this.selectedPassportFile || !!this.passportUrl;
+
+  // Validate both fields before returning.
+  this.isPassportNumberMissing = !hasPassportNumber;
+  this.passportmissing = !hasPassportDocument;
+
+     if (!hasPassportNumber) {
+    passportNumberControl?.markAsTouched();
+    passportNumberControl?.setErrors({
+      ...(passportNumberControl.errors || {}),
+      required: true
+    });
+  }
+
+  
+    // Show both error messages together.
+  if (!hasPassportNumber || !hasPassportDocument) {
+    this.cd.detectChanges();
+    return;
+  }
+
+  this.isPassportNumberMissing = false;
+  this.passportmissing = false;
+  this.passportuploadfailure = false;
     this.passportmissing = false;
 
-    if (this.passportUrl) {
-      this.stepperService.markStepCompleted('kycinfo');
+   const needsFileUpload   = !!this.selectedPassportFile;
+  const needsNumberUpdate = !this.passportNumberSavedOnServer;
+  // Nothing to save — proceed directly.
+  if (!needsFileUpload && !needsNumberUpdate) {
+    this.stepperService.markStepCompleted('kycinfo');
+    this.stepperService.next();
+    return;
+  }
+  // Both file and number need saving — upload file first, then number.
+  if (needsFileUpload && needsNumberUpdate) {
+    this.updatepassportno();
+    return;
+  }
+  // Only a new file was selected.
+  if (needsFileUpload) {
+    this.updatepassport();
+    return;
+  }
+  // Only the number needs saving (doc already on server).
+  this.updatepassportno();
 
-      this.stepperService.next();
-      return;
-    }
+  }
 
-    const fd = new FormData();
+updatepassport(){
+const fd = new FormData();
 
     // text fields
     fd.append('docType', 'PASSPORT');
@@ -238,49 +288,59 @@ passportPreviewUrl = '';
         this.passportuploadfailure = true
       }
     });
+}
+//update passport number
+updatepassportno(){
+  const passportNo = String(
+    this.kycdocumentsForm.get('passportnumber')?.value || ''
+  ).trim();
+
+  const object={
+      "kycId": this.kycId,
+  "passportNo": passportNo,
+  "isSubmit": true
 
   }
+     this.loanformservice.updatepassportNumber(object).subscribe({
+      next: (data) => {
+        console.log(data);
+         this.passportNumberSavedOnServer = true;
+        this.stepperService.markStepCompleted('kycinfo');
+        this.stepperService.next();
+      },
+      error: (error) => {
+        console.log(error);
+        this.passportuploadfailure = true
+      }
+    });
+}
+ 
 
-
-  onFileChange1(result: UploadResult, key: string) {
-    console.log(!result.file);
+  onFileChange(result: UploadResult, key: string) {
     if (!result.file) {
       this.passportmissing = false;
-      return
-    };
-
+      return;
+    }
 
     this.selectedPassportFile = result.file;
     if (this.selectedPassportFile) {
       this.passportmissing = false;
     }
-  }
 
-  onFileChange(result: UploadResult, key: string) {
-  if (!result.file) {
-    this.passportmissing = false;
-    return;
-  }
+    this.passportFileName = result.file.name;
+    this.passportDisplayName = this.getFileName(result.file.name, 30);
 
-  this.selectedPassportFile = result.file;
-if (this.selectedPassportFile) {
-      this.passportmissing = false;
+    if (this.passportPreviewUrl) {
+      URL.revokeObjectURL(this.passportPreviewUrl);
     }
-    
-  this.passportFileName = result.file.name;
-  this.passportDisplayName = this.getFileName(result.file.name, 30);
 
-  if (this.passportPreviewUrl) {
-    URL.revokeObjectURL(this.passportPreviewUrl);
+    this.passportPreviewUrl =
+      URL.createObjectURL(result.file);
+
+    this.passportmissing = false;
+    this.passportuploadfailure = false;
+    this.cd.detectChanges();
   }
-
-  this.passportPreviewUrl =
-    URL.createObjectURL(result.file);
-
-  this.passportmissing = false;
-  this.passportuploadfailure = false;
-  this.cd.detectChanges();
-}
   getFileName(filename: any, maxLength: number = 22): string {
     const fileName = filename || '';
     if (fileName.length <= maxLength) {
@@ -305,7 +365,14 @@ if (this.selectedPassportFile) {
           const passportDoc = documents.find((d: { docType: string; }) => d.docType === 'PASSPORT');
           const otherDoc = documents.find((d: { docType: string; }) => d.docType === 'UTILITY_BILL');
 
+          const passportNumber = String(
+          formdata.passportNumber ??
+          formdata.passportNo ??
+          ''
+        ).trim();
 
+         this.isPassportNumberMissing = passportNumber.length === 0;
+         this.passportNumberSavedOnServer = passportNumber.length > 0; 
           this.aadhaarFrontUrl = aadhaarFront?.url || '';
           this.aadhaarFrontFileName = aadhaarFront?.fileName || '';
           this.aadhaarFrontDisplayName =
@@ -332,7 +399,7 @@ if (this.selectedPassportFile) {
           this.otherDocumentFileName = otherDoc?.fileName || '';
           this.otherDocumentDisplayName =
             this.getFileName(this.otherDocumentFileName, 30);
-
+         
           this.kycdocumentsForm.patchValue({
             adhaarnumber: formdata.aadhaarNumber,
             adhaarfront: aadhaarFront?.fileName,
@@ -362,6 +429,15 @@ if (this.selectedPassportFile) {
             iscurrMailingAddress: formdata.sameAsPermanent == 0 ? true : false,
           });
           this.kycdocumentsForm.disable({ emitEvent: false });
+
+
+
+          if (!String(passportNumber).trim()) {
+            this.kycdocumentsForm
+              .get('passportnumber')
+              ?.enable({ emitEvent: false });
+          }
+
           console.log(this.kycdocumentsForm.get('dob')?.disabled);
           this.stepperService.setStepData('kycinfo', formdata);
           this.summaryLoaded = true;

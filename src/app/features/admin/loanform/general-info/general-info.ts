@@ -263,7 +263,8 @@ export class GeneralInfo implements OnInit {
         coursename: ['', Validators.required],
         othercoursenametitle: [''],
         // courseduration: [''],
-        coursestartdate: ['', [Validators.required, this.dateMinValidator(() => new Date())]],
+        // coursestartdate: ['', [Validators.required, this.dateMinValidator(() => new Date())]],
+        coursestartdate: ['', [Validators.required, this.dateMinValidator(() => this.getCourseStartMinDate())]],
         courseenddate: ['', [Validators.required, this.endDateValidator()]],
         checkedasset: [null, Validators.required],
         lendingpartner: ['', Validators.required],
@@ -1258,52 +1259,16 @@ export class GeneralInfo implements OnInit {
 
   }
 
-  dateMinValidator1 = (getMinDate: () => Date) => {
-    return (control: any) => {
-      const value = control.value;
-      const minDate = getMinDate();
+//today- 3 years allowed for start date
+private getCourseStartMinDate(): Date {
+  const minDate = new Date();
 
-      if (!value || !minDate) {
-        return { zeroDateError: true };
-      }
+  minDate.setFullYear(minDate.getFullYear() - 3);
+  minDate.setHours(0, 0, 0, 0);
 
-      const selected = new Date(value);
-      const min = new Date(getMinDate());
-      this.minEndCourseDate = selected;
+  return minDate;
+}
 
-
-      selected.setHours(0, 0, 0, 0);
-      min.setHours(0, 0, 0, 0);
-
-      return selected < min ? { minDateError: true, zeroDateError: false } : null;
-      // if (selected < min) {
-      //   return { minDateError: true };
-      // }
-
-      // return null;
-    };
-  };
-
-  endDateValidator1 = () => {
-    return (control: any) => {
-      const endDate = control.value;
-      const minDate = this.minEndCourseDate;
-
-
-      if (!endDate || !minDate) {
-        return { zeroDateError: true };
-      };
-
-      const end = new Date(endDate);
-      const min = new Date(minDate);
-
-
-      end.setHours(0, 0, 0, 0);
-      min.setHours(0, 0, 0, 0);
-      return end <= min ? { invalidEndDate: true, zeroDateError: false } : null;
-
-    };
-  };
 
   dateMinValidator = (getMinDate: () => Date): ValidatorFn => {
     return (control: AbstractControl): ValidationErrors | null => {
@@ -2102,6 +2067,10 @@ onStartDateChanged(event: unknown): void {
   endControl?.updateValueAndValidity({
     emitEvent: false
   });
+
+  if (endControl?.value && endControl.invalid) {
+endControl.markAsTouched();
+}
 }
 
 onEndDateChanged(event: unknown): void {

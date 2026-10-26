@@ -134,7 +134,7 @@ export class Edusection {
 
   otherbusinessdoc: boolean = false;
   otherdoc: boolean = false;
-  private slotCounter = 0;
+  private slotCounter = -1;
 
   seleactInstitute: OptionItem[] = []
   filteredInstitutes: any[] = [];
@@ -163,33 +163,37 @@ export class Edusection {
   viewOnly = false;
   //edit from summary
 
- @Input() isFromSummary = false;
-@Input() isViewModeon = false;
-@Input() isEditMode = false;
-@Output() editClick = new EventEmitter<void>();
-@Output() instituteChanged = new EventEmitter<{ id: string; name: string }>();
+  @Input() isFromSummary = false;
+  @Input() isViewModeon = false;
+  @Input() isEditMode = false;
+  @Output() editClick = new EventEmitter<void>();
+  @Output() instituteChanged = new EventEmitter<{ id: string; name: string }>();
+  @Output() locationChanged = new EventEmitter<{ id: string; name: string }>();
 
   editSuccess: any = false;
   description1 = `Great ! Your Additional Info Details\n Uploaded Successfully.`;
 
   @Input() isDataLoading = false;
+  isUploadProgressRunning = false;
+  @Input() isApiUploadRunning = false;
+  @Input() isSubmitted = false;
   constructor(private fb: FormBuilder, private stepperService: Loanstepperservice, private cd: ChangeDetectorRef, private route: ActivatedRoute, private router: Router,
     public main: Main, private msgBox: Msgboxservice, public loanformservice: Loanformservice, private storageservice: Storage) { }
 
 
   ngOnInit(): void {
 
-this.group.patchValue({
-  passingyear: this.group.get('passingyear')?.value || 'Year of Passing',
-  per_cgpa: this.group.get('per_cgpa')?.value || 'Percentage / CGPA '
-}, { emitEvent: false });
+    this.group.patchValue({
+  passingyear: this.group.get('passingyear')?.value ,
+      per_cgpa: this.group.get('per_cgpa')?.value
+    }, { emitEvent: false });
 
 
     let Allids = this.stepperService.getLoanId();
 
     this.applicantId = Allids[0];
     this.applicationId = Allids[1];
-   
+
 
     const queryParams = this.route.snapshot.queryParams;
     this.isSummaryEditMode =
@@ -237,21 +241,21 @@ this.group.patchValue({
 
   }
 
- private applyCurrentFormMode(): void {
-  if (!this.group) {
-    return;
-  }
+  private applyCurrentFormMode(): void {
+    if (!this.group) {
+      return;
+    }
 
-  if (this.isViewModeon && !this.isEditMode) {
-    this.group.disable({
-      emitEvent: false
-    });
-  } else {
-    this.group.enable({
-      emitEvent: false
-    });
+    if (this.isViewModeon && !this.isEditMode) {
+      this.group.disable({
+        emitEvent: false
+      });
+    } else {
+      this.group.enable({
+        emitEvent: false
+      });
+    }
   }
-}
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['sectionType'] || changes['title'] || changes['stepKey']) {
       this.initSection();      //   run every time step changes
@@ -265,15 +269,15 @@ this.group.patchValue({
     ) {
       this.rebuildOtherDocuments();
     }
-if (
-    changes['isViewModeon'] ||
-    changes['isEditMode'] ||
-    changes['isDataLoading']
-  ) {
-    if (!this.isDataLoading) {
-      this.applyCurrentFormMode();
+    if (
+      changes['isViewModeon'] ||
+      changes['isEditMode'] ||
+      changes['isDataLoading']
+    ) {
+      if (!this.isDataLoading) {
+        this.applyCurrentFormMode();
+      }
     }
-  }
   }
 
   private initSection(): void {
@@ -336,36 +340,63 @@ if (
 
 
 
- 
-SelectedInstitute(values: string | string[]) {
-  const ids = Array.isArray(values) ? values : [values];
-  const selectedId = ids[0] || '';
 
-  const selected = this.seleactInstitute.find(s => s.value === selectedId);
+  SelectedInstitute(values: string | string[]) {
+    const ids = Array.isArray(values) ? values : [values];
+    const selectedId = ids[0] || '';
 
-  const instituteId = selected?.value || selectedId || '';
-  const instituteName = selected?.label || '';
+    const selected = this.seleactInstitute.find(s => s.value === selectedId);
 
-  this.selectedInstituteID = instituteId;
-  this.selectedInstituteLabel = instituteName;
+    const instituteId = selected?.value || selectedId || '';
+    const instituteName = selected?.label || '';
 
-  this.isOtherEducation =
-    instituteName.trim().toLowerCase() === 'other';
+    this.selectedInstituteID = instituteId;
+    this.selectedInstituteLabel = instituteName;
 
-  this.group.patchValue({
-    instituteId: instituteId,
-    instituteName: instituteName,
-    institutename: instituteName
-  }, { emitEvent: true });
+    this.isOtherEducation =
+      instituteName.trim().toLowerCase() === 'other';
 
-  this.group.markAsDirty();
-  this.group.markAsTouched();
+    const otherInstituteControl =
+      this.group.get('institutetitle');
 
-  this.instituteChanged.emit({
-    id: instituteId,
-    name: instituteName
-  });
-}
+    if (this.isOtherEducation) {
+      otherInstituteControl?.setValidators([
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(100)
+      ]);
+    } else {
+      otherInstituteControl?.setValue('', {
+        emitEvent: false
+      });
+
+      otherInstituteControl?.setValidators([
+        Validators.minLength(2),
+        Validators.maxLength(100)
+      ]);
+
+      otherInstituteControl?.markAsUntouched();
+    }
+
+    // Important: recalculate validity immediately
+    otherInstituteControl?.updateValueAndValidity({
+      emitEvent: false
+    });
+
+    this.group.patchValue({
+      instituteId: instituteId,
+      instituteName: instituteName,
+      institutename: instituteName
+    }, { emitEvent: true });
+
+    this.group.markAsDirty();
+    this.group.markAsTouched();
+
+    this.instituteChanged.emit({
+      id: instituteId,
+      name: instituteName
+    });
+  }
   filterInstitutes(searchText: any) {
     const value = searchText.trim().toLowerCase();
 
@@ -381,7 +412,7 @@ SelectedInstitute(values: string | string[]) {
         this.seleactInstitute = [...res];
       });
     }
-    
+
     //  Special case: user searching "other"
     // if (value === 'other') {
     //   const otherItem = this.seleactInstitute.find(
@@ -429,12 +460,38 @@ SelectedInstitute(values: string | string[]) {
       s => s.label.trim().toLowerCase() === 'other'
     )
 
+    const otherLocationControl =
+      this.group.get('otherLocation');
+
+    if (this.isOtherLocation) {
+      otherLocationControl?.setValidators([
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(100)
+      ]);
+    } else {
+      otherLocationControl?.setValue('', {
+        emitEvent: false
+      });
+
+      otherLocationControl?.setValidators([
+        Validators.minLength(2),
+        Validators.maxLength(100)
+      ]);
+
+      otherLocationControl?.markAsUntouched();
+    }
+
+    // Important: recalculate validity after validator change
+    otherLocationControl?.updateValueAndValidity({
+      emitEvent: false
+    });
     const control = this.group.get('location');
     // control?.setValue(this.selectedLocationLabel);
     control?.setValue(ids);
     control?.markAsTouched();
     control?.updateValueAndValidity();
-
+    this.cd.detectChanges();
   }
 
   filtercities(searchText: any) {
@@ -465,76 +522,76 @@ SelectedInstitute(values: string | string[]) {
 
 
   restoreDropdownValues() {
-  const saved = this.group.getRawValue();
+    const saved = this.group.getRawValue();
 
-  if (!saved) return;
+    if (!saved) return;
 
-  // Institute restore
-  const instituteRaw =
-    saved.instituteId ||
-    saved.institutename ||
-    saved.instituteName ||
-    '';
+    // Institute restore
+    const instituteRaw =
+      saved.instituteId ||
+      saved.institutename ||
+      saved.instituteName ||
+      '';
 
-  if (instituteRaw) {
-    const found = this.seleactInstitute.find(i =>
-      i.value === instituteRaw ||
-      i.label?.trim().toLowerCase() === instituteRaw.toString().trim().toLowerCase()
-    );
+    if (instituteRaw) {
+      const found = this.seleactInstitute.find(i =>
+        i.value === instituteRaw ||
+        i.label?.trim().toLowerCase() === instituteRaw.toString().trim().toLowerCase()
+      );
 
-    if (found) {
-      this.selectedInstituteID = found.value;
-      this.selectedInstituteLabel = found.label;
+      if (found) {
+        this.selectedInstituteID = found.value;
+        this.selectedInstituteLabel = found.label;
 
-      this.isOtherEducation =
-        found.label?.trim().toLowerCase() === 'other';
+        this.isOtherEducation =
+          found.label?.trim().toLowerCase() === 'other';
 
-      this.group.patchValue({
-        instituteId: found.value,
-        instituteName: found.label,
-        institutename: found.label,
-        institutetitle:
-          saved.institutetitle ||
-          saved.otherInstituteName ||
-          ''
-      }, { emitEvent: false });
-    } else {
-      // fallback if dropdown option not found but saved value is Other
-      this.selectedInstituteLabel = saved.instituteName || saved.institutename || '';
+        this.group.patchValue({
+          instituteId: found.value,
+          instituteName: found.label,
+          institutename: found.label,
+          institutetitle:
+            saved.institutetitle ||
+            saved.otherInstituteName ||
+            ''
+        }, { emitEvent: false });
+      } else {
+        // fallback if dropdown option not found but saved value is Other
+        this.selectedInstituteLabel = saved.instituteName || saved.institutename || '';
 
-      this.isOtherEducation =
-        this.selectedInstituteLabel?.trim().toLowerCase() === 'other';
+        this.isOtherEducation =
+          this.selectedInstituteLabel?.trim().toLowerCase() === 'other';
 
-      this.group.patchValue({
-        institutetitle:
-          saved.institutetitle ||
-          saved.otherInstituteName ||
-          ''
-      }, { emitEvent: false });
+        this.group.patchValue({
+          institutetitle:
+            saved.institutetitle ||
+            saved.otherInstituteName ||
+            ''
+        }, { emitEvent: false });
+      }
     }
-  }
 
-  // Location restore
-  const locationRaw = saved.location || '';
+    // Location restore
+    const locationRaw = saved.location || '';
 
-  if (locationRaw) {
-    const foundLoc = this.selectlocation.find(l =>
-      l.value === locationRaw ||
-      l.label?.trim().toLowerCase() === locationRaw.toString().trim().toLowerCase()
-    );
+    if (locationRaw) {
+      const foundLoc = this.selectlocation.find(l =>
+        l.value === locationRaw ||
+        l.label?.trim().toLowerCase() === locationRaw.toString().trim().toLowerCase()
+      );
 
-    if (foundLoc) {
-      this.selectedLocationLabel = foundLoc.label;
+      if (foundLoc) {
+        this.selectedLocationLabel = foundLoc.label;
 
-      this.isOtherLocation =
-        foundLoc.label?.trim().toLowerCase() === 'other';
+        this.isOtherLocation =
+          foundLoc.label?.trim().toLowerCase() === 'other';
 
-      this.group.get('location')?.setValue(foundLoc.value, { emitEvent: false });
+        this.group.get('location')?.setValue(foundLoc.value, { emitEvent: false });
+      }
     }
-  }
 
-  this.cd.detectChanges();
-}
+    this.cd.detectChanges();
+  }
   getLevelFromTitle(title: string): EducationType {
     const t = (title || '').toLowerCase();
 
@@ -554,7 +611,7 @@ SelectedInstitute(values: string | string[]) {
   }
 
 
- 
+
   hasLocal(doc: 'marksheet' | 'lc' | 'other', index?: number): boolean {
     return !!this.getStoredFile(doc, index);
   }
@@ -571,22 +628,22 @@ SelectedInstitute(values: string | string[]) {
     return file.fileName || file.name || '';
   }
   getLocalName(
-  doc: 'marksheet' | 'lc' | 'other',
+    doc: 'marksheet' | 'lc' | 'other',
   index?: number,truncate = true
-): string {
-  const file = this.getStoredFile(doc, index);
+  ): string {
+    const file = this.getStoredFile(doc, index);
 
-  if (!file) return '';
+    if (!file) return '';
 
-  const fileName =
-    file instanceof File
-      ? file.name
-      : file.fileName || file.name || '';
+    const fileName =
+      file instanceof File
+        ? file.name
+        : file.fileName || file.name || '';
 
     if (!truncate || fileName.length <= 30) {
           return fileName; }
-            return `${fileName.substring(0, 30)}...`;
-}
+    return `${fileName.substring(0, 30)}...`;
+  }
 
   buildKey(doc: DocType, index?: number): string {
     // return index
@@ -716,7 +773,7 @@ SelectedInstitute(values: string | string[]) {
     }
   }
 
- 
+
   downloadLocalFile(doc: DocType, index?: number): void {
     const file = this.getStoredFile(doc, index);
     if (!file) return;
@@ -984,20 +1041,39 @@ SelectedInstitute(values: string | string[]) {
     }, {} as { [key: string]: Document });
   }
 
+  get isAddDocumentDisabled(): boolean {
+    return (
+      this.otherDocuments.length >= this.maxOtherDocuments ||
+      this.isUploadProgressRunning ||
+      this.isApiUploadRunning
+    );
+  }
   addotherdocuments() {
 
-    if (this.otherDocuments.length >= this.maxOtherDocuments) {
+    if (this.isAddDocumentDisabled) {
       return;
     }
     const id = ++this.slotCounter;
-    this.otherDocuments.push({
+    // this.otherDocuments.push({
 
-      id,
-      title: '',
-      file: null
+    //   id,
+    //   title: '',
+    //   file: null
 
 
-    });
+    // });
+    this.otherDocuments = [
+
+      ...this.otherDocuments,
+      {
+        id,
+        title: '',
+        file: null,
+        key: `${this.stepKey}_other_${id}`
+      }
+
+    ];
+
     this.otherDocAdded.emit(id);
 
   }
@@ -1036,49 +1112,56 @@ SelectedInstitute(values: string | string[]) {
 
 
         // const key = `others_${doc.id}`;
-        const key = `${this.stepKey}_other_${doc.id}`;
+        // const key = `${this.stepKey}_other_${doc.id}`;
 
-        const deleteDoc: any = this.uploadedFiles[key];
+        // const deleteDoc: any = this.uploadedFiles[key];
 
-        if(deleteDoc?.documentId){
-          this.deleteItemArr([deleteDoc?.documentId]);
-        }
+        // if(deleteDoc?.documentId){
+        //   this.deleteItemArr([deleteDoc?.documentId]);
+        // }
 
-        this.uploadedFiles[key] = null;
-        this.uploadedFiles = { ...this.uploadedFiles };
+        // this.uploadedFiles[key] = null;
+        // this.uploadedFiles = { ...this.uploadedFiles };
 
         const docToUpdate = this.otherDocuments.find(d => d.id === doc.id);
 
         if (docToUpdate) {
           docToUpdate.file = null;
-          this.otherDocuments = [...this.otherDocuments];
+
         }
+        this.otherDocuments = [...this.otherDocuments];
+        this.fileRemoved.emit({
+          step: this.stepKey,
+          control: 'other',
+          index: doc.id
 
-
+        });
+        this.group.markAsDirty();
+        this.cd.detectChanges();
       },
     })
   }
- 
 
 
-getOtherFileName(slot: any, truncate = true): string {
-  const file = slot?.file;
 
-  if (!file) {
-    return '';
+  getOtherFileName(slot: any, truncate = true): string {
+    const file = slot?.file;
+
+    if (!file) {
+      return '';
+    }
+
+    const fileName =
+      file instanceof File
+        ? file.name
+        : file.fileName || file.name || '';
+
+    if (!truncate || fileName.length <= 35) {
+      return fileName;
+    }
+
+    return `${fileName.substring(0, 35)}...`;
   }
-
-  const fileName =
-    file instanceof File
-      ? file.name
-      : file.fileName || file.name || '';
-
-  if (!truncate || fileName.length <= 35) {
-    return fileName;
-  }
-
-  return `${fileName.substring(0, 35)}...`;
-}
   viewOther(slot: any): void {
     const file = slot.file;
     if (!file) return;
@@ -1194,74 +1277,78 @@ getOtherFileName(slot: any, truncate = true): string {
   }
 
   private rebuildOtherDocuments(): void {
-  if (!this.stepKey) return;
+    if (!this.stepKey) return;
 
-  const prefix = `${this.stepKey}_other_`;
+    const prefix = `${this.stepKey}_other_`;
 
-  // ✅ FIX: ONLY use savedFileMeta (single source of truth)
-  const keys1 = Object.keys(this.savedFileMeta || {})
-    .filter(k => k.startsWith(prefix));
-    
- const keys = [
-    ...Object.keys(this.savedFileMeta || {}).filter(k => k.startsWith(prefix)),
-    ...Object.keys(this.uploadedFiles || {}).filter(k => k.startsWith(prefix)),
-    ...Object.keys(this.otherDocMap || {}).filter(k => k.startsWith(prefix)),
-  ];
+    // ✅ FIX: ONLY use savedFileMeta (single source of truth)
+    const keys1 = Object.keys(this.savedFileMeta || {})
+      .filter(k => k.startsWith(prefix));
 
-
-  const uniqueKeys = [...new Set(keys)].sort((a, b) => {
-    return this.extractOtherIndex(a) - this.extractOtherIndex(b);
-  });
-
-  this.otherDocuments = uniqueKeys.map((key) => {
-    const index = this.extractOtherIndex(key);
+    const keys = [
+      ...Object.keys(this.savedFileMeta || {}).filter(k => k.startsWith(prefix)),
+      ...Object.keys(this.uploadedFiles || {}).filter(k => k.startsWith(prefix)),
+      ...Object.keys(this.otherDocMap || {}).filter(k => k.startsWith(prefix)),
+    ];
 
 
-   const savedMeta = this.savedFileMeta[key] as any;
-    const uploadedMeta = this.uploadedFiles[key] as any;
+    const uniqueKeys = [...new Set(keys)].sort((a, b) => {
+      return this.extractOtherIndex(a) - this.extractOtherIndex(b);
+    });
 
-    const file = savedMeta || uploadedMeta || null;
+    this.otherDocuments = uniqueKeys.map((key) => {
+      const index = this.extractOtherIndex(key);
 
-    return {
-      id: index,
-      key,
-     
- title:
-        this.otherDocMap[key]?.title ||
-        savedMeta?.title ||
-        uploadedMeta?.title ||
-        '',
 
-      file
+      const savedMeta = this.savedFileMeta[key] as any;
+      const uploadedMeta = this.uploadedFiles[key] as any;
+
+      const file = savedMeta || uploadedMeta || null;
+
+      return {
+        id: index,
+        key,
+
+        title:
+          this.otherDocMap[key]?.title ||
+          savedMeta?.title ||
+          uploadedMeta?.title ||
+          '',
+
+        file
+      };
+    });
+
+    // this.slotCounter = this.otherDocuments.length
+    //   ? Math.max(...this.otherDocuments.map(x => x.id))+1
+    //   : 0;
+
+    this.slotCounter = this.otherDocuments.length
+      ? Math.max(...this.otherDocuments.map(x => x.id))
+      : -1;
+
+    this.otherDocuments = [...this.otherDocuments];
+
+    this.cd.detectChanges();
+  }
+  onOtherTitleInput(slot: any, event: any): void {
+    this.main.restrictInput(event, 'text');
+
+    const value = event?.target?.value || '';
+    slot.title = value;
+
+    const key = slot.key;
+
+    this.otherDocMap = {
+      ...this.otherDocMap,
+      [key]: {
+        ...(this.otherDocMap[key] || {}),
+        title: value
+      }
     };
-  });
 
-  this.slotCounter = this.otherDocuments.length
-    ? Math.max(...this.otherDocuments.map(x => x.id))+1
-    : 0;
-
-  this.otherDocuments = [...this.otherDocuments];
-
-  this.cd.detectChanges();
-}
-onOtherTitleInput(slot: any, event: any): void {
-  this.main.restrictInput(event, 'text');
-
-  const value = event?.target?.value || '';
-  slot.title = value;
-
-  const key = slot.key;
-
-  this.otherDocMap = {
-    ...this.otherDocMap,
-    [key]: {
-      ...(this.otherDocMap[key] || {}),
-      title: value
-    }
-  };
-
-  this.cd.detectChanges();
-}
+    this.cd.detectChanges();
+  }
 
   private extractOtherIndex(key: string): number {
     const match = key.match(/_other_(\d+)$/);
@@ -1292,26 +1379,26 @@ onOtherTitleInput(slot: any, event: any): void {
     this.group.disable({ emitEvent: false });
   }
 
-   enableEducationInfoForm() {
+  enableEducationInfoForm() {
     this.group.enable({ emitEvent: false });
 
 
   }
 
-onEditClick(): void {
-  if (this.isDataLoading) {
-    return;
-  }
+  onEditClick(): void {
+    if (this.isDataLoading) {
+      return;
+    }
 
-  this.editClick.emit();
-}
+    this.editClick.emit();
+  }
   onEditClick1() {
     this.isViewModeon = false;
     this.isEditMode = true;
 
     this.enableEducationInfoForm();
 
-  this.stepperService.unlockSummaryEducationSubsteps();
+    this.stepperService.unlockSummaryEducationSubsteps();
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -1322,5 +1409,41 @@ onEditClick(): void {
       queryParamsHandling: 'merge'
     });
   }
+  // 1. Marksheet check (already present)
+  isMarksheetMissing(index: number): boolean {
+    return this.isSubmitted && this.isMarksheetRequired(index) && !this.hasLocal('marksheet', index);
+  }
 
+  // 2. Leaving Certificate check
+  isLcRequired(): boolean {
+    return !this.isPostGraduate; // LC is required for all except Post Graduate
+  }
+
+  isLcMissing(): boolean {
+    return this.isSubmitted && this.isLcRequired() && !this.hasLocal('lc');
+  }
+
+  // 3. Other Documents check (if any other doc slot was added)
+  isOtherTitleMissing(slot: any): boolean {
+    return this.isSubmitted && (!slot?.title || !slot.title.trim());
+  }
+
+  isOtherFileMissing(slot: any): boolean {
+    return this.isSubmitted && !slot?.file && !slot?.fileUrl;
+  }
+
+  //check uploading bar
+  onUploadProgressChange(isUploading: boolean): void {
+    this.isUploadProgressRunning = isUploading;
+  }
+
+  @Input() uploadingFiles: Record<string, boolean> = {};
+
+  isDocUploading(doc: DocType, index?: number): boolean {
+    const key = this.buildKey(doc, index);
+    return !!this.uploadingFiles?.[key];
+  }
+  isOtherDocUploading(doc: any): any {
+    return this.uploadingFiles[doc.key];
+  }
 }
