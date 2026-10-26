@@ -28,10 +28,12 @@ pipeline {
     }
 
     environment {
-        APP_SERVER     = 'opc@172.0.1.130'
-        IMAGE_NAME     = 'nivicap-ui'
+        APP_SERVER = 'opc@172.0.1.130'
+
+        IMAGE_NAME = 'nivicap-ui'
         CONTAINER_NAME = 'nivicap-ui'
-        APP_PORT       = '8081'
+
+        APP_PORT = '8081'
     }
 
     stages {
@@ -109,8 +111,8 @@ pipeline {
                             rm -f nivicap-ui.tar
 
                             docker save \
-                              nivicap-ui:latest \
-                              -o nivicap-ui.tar
+                                nivicap-ui:latest \
+                                -o nivicap-ui.tar
 
                             ls -lh nivicap-ui.tar
                         '''
@@ -123,7 +125,9 @@ pipeline {
             steps {
                 script {
                     runTimed('Verify Remote Connectivity') {
+
                         sshagent(['Prod-deployment']) {
+
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
                                     hostname
@@ -141,11 +145,13 @@ pipeline {
             steps {
                 script {
                     runTimed('Transfer Image') {
+
                         sshagent(['Prod-deployment']) {
+
                             sh '''
                                 scp -o StrictHostKeyChecking=no \
-                                nivicap-ui.tar \
-                                opc@172.0.1.130:/tmp/
+                                    nivicap-ui.tar \
+                                    opc@172.0.1.130:/tmp/
                             '''
                         }
                     }
@@ -160,30 +166,43 @@ pipeline {
 
                         sshagent(['Prod-deployment']) {
 
-                            sh """
-                                ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-                                    set -e
+                            sh '''
+cat > deploy-ui.sh <<'EOF'
+#!/bin/bash
+set -e
 
-                                    docker load -i /tmp/nivicap-ui.tar
+docker load -i /tmp/nivicap-ui.tar
 
-                                    if docker ps -a --format "{{.Names}}" | grep -q "^nivicap-ui\\$"; then
+if docker ps -a --format '{{.Names}}' | grep -q '^nivicap-ui$'
+then
 
-                                        TS=`date +"%Y-%m-%d-%H-%M-%S"`
+    TS=$(date +"%Y-%m-%d-%H-%M-%S")
 
-                                        docker stop nivicap-ui || true
+    echo "Archiving existing container"
 
-                                        docker rename \
-                                            nivicap-ui \
-                                            nivicap-ui-'"\$TS"'
-                                    fi
+    docker stop nivicap-ui || true
 
-                                    docker run -d \
-                                        --name nivicap-ui \
-                                        --restart unless-stopped \
-                                        -p 8081:80 \
-                                        nivicap-ui:latest
-                                '
-                            """
+    docker rename \
+      nivicap-ui \
+      nivicap-ui-${TS}
+fi
+
+echo "Starting new container"
+
+docker run -d \
+  --name nivicap-ui \
+  --restart unless-stopped \
+  -p 8081:80 \
+  nivicap-ui:latest
+
+EOF
+
+scp -o StrictHostKeyChecking=no deploy-ui.sh \
+    opc@172.0.1.130:/tmp/
+
+ssh -o StrictHostKeyChecking=no opc@172.0.1.130 \
+    "chmod +x /tmp/deploy-ui.sh && /tmp/deploy-ui.sh"
+'''
                         }
                     }
                 }
@@ -199,12 +218,14 @@ pipeline {
 
                             sh """
                                 ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
+
                                     docker ps | grep nivicap-ui
 
                                     echo ""
                                     echo "Rollback Containers"
 
                                     docker ps -a | grep nivicap-ui || true
+
                                 '
                             """
                         }
@@ -239,14 +260,46 @@ pipeline {
 
                         sshagent(['Prod-deployment']) {
 
-                            sh """
-                                ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
-                                    rm -f /tmp/nivicap-ui.tar
+                            sh '''
+cat > cleanup-ui.sh <<'EOF'
+#!/bin/bash
 
-                                    docker image prune -f
-                                    docker network prune -f
-                                '
-                            """
+rm -f /tmp/nivicap-ui.tar
+
+TOTAL=$(docker ps -a \
+    --filter "name=nivicap-ui" \
+    --format "{{.ID}}" | wc -l)
+
+if [ "$TOTAL" -gt 5 ]
+then
+
+    REMOVE=$((TOTAL-5))
+
+    docker ps -a \
+      --filter "name=nivicap-ui" \
+      --format "{{.ID}} {{.CreatedAt}}" \
+    | sort -k2,4 \
+    | head -n "$REMOVE" \
+    | awk '{print $1}' \
+    | xargs -r docker rm -f
+
+fi
+
+docker image prune -f
+docker network prune -f
+
+echo "===== Remaining Containers ====="
+
+docker ps -a | grep nivicap-ui || true
+
+EOF
+
+scp -o StrictHostKeyChecking=no cleanup-ui.sh \
+    opc@172.0.1.130:/tmp/
+
+ssh -o StrictHostKeyChecking=no opc@172.0.1.130 \
+    "chmod +x /tmp/cleanup-ui.sh && /tmp/cleanup-ui.sh"
+'''
                         }
                     }
                 }
@@ -261,12 +314,29 @@ pipeline {
         }
 
         failure {
+
             echo '❌ UI Deployment Failed'
+
+            sshagent(['Prod-deployment']) {
+
+                sh """
+                    ssh -o StrictHostKeyChecking=no ${APP_SERVER} '
+
+                        docker ps -a | grep nivicap-ui || true
+
+                        echo "===== Logs ====="
+
+                        docker logs nivicap-ui --tail 200 || true
+
+                    '
+                """
+            }
         }
 
         always {
 
             script {
+
                 long totalDuration =
                     (System.currentTimeMillis() - pipelineStart) / 1000
 
