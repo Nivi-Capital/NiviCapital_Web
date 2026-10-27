@@ -29,7 +29,7 @@ export class Main {
 
    getLogin(payload: any) : Observable<any>{
     return this.http.post<any>(
-      `${this.baseUrl}/api/admin/auth/login`,
+      `${this.baseUrl}/admin/auth/login`,
       payload,
       { withCredentials: true }
     );
