@@ -67,7 +67,7 @@ export class Main {
 
   getLogin(payload: LoginPayload): Observable<any> {
     return this.http.post<any>(
-      `${this.baseUrl}/admin/auth/login`,
+      `${this.baseUrl}/api/admin/auth/login`,
       payload
     );
   }
