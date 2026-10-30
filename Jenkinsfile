@@ -192,6 +192,7 @@ echo "Starting new container"
 docker run -d \
   --name nivicap-ui \
   --restart unless-stopped \
+  -e TZ=Asia/Kolkata \
   -p 8081:80 \
   nivicap-ui:latest
 
