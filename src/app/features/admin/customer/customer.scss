@@ -37,14 +37,17 @@
 
 .db-title {
   // flex: 0 0 45%;
+  flex-shrink: 0;
+  padding-top: 10px;
+  white-space: nowrap;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  // align-items: center;
   padding-bottom: $spacing_14;
-
+ gap: $spacing_9;
   @media (max-width: 768px) {
     display: block;
   }
@@ -53,10 +56,18 @@
 
 .section-controls {
   // flex: 0 0 56%;
+    flex: 1;
   display: flex;
   gap: $spacing_7;
-  flex-wrap: wrap;
-  align-items: end;
+  // flex-wrap: wrap;
+  // align-items: end;
+    grid-template-columns:
+    minmax(260px, 333px)
+    minmax(160px, 170px)
+    minmax(160px, 170px)
+    minmax(178px, auto);
+  justify-content: end;
+  align-items: start;
 
   @media (max-width: 420px) {
     display: flex;

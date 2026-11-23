@@ -55,6 +55,11 @@
           <app-inputfield label="Input Label" type="text" placeholder="Search for result" helpText="Help text"
             [showSearch]="true" [showLabel]="false" [showHelpText]="false" (valueChange)="onSearchChange($event)"> >
           </app-inputfield>
+             @if (errormsg) {
+            <div class="text-danger search-error">
+              {{ errormsg }}
+            </div>
+          }
         </div>
 
 

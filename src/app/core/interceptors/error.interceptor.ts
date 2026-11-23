@@ -91,7 +91,9 @@ export class ErrorInterceptor implements HttpInterceptor {
         'The request timed out. Please try again.';
       break;
 
-
+ case 429:
+     showPopup = false; // AuthInterceptor handles this
+      return throwError(() => error);
     case 500:
       errorMessage =
         error.error?.message ??

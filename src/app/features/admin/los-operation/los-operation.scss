@@ -21,7 +21,7 @@
 .section-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  // align-items: center;
   padding-bottom: $spacing_14;
 
   @media (max-width: 768px) {
@@ -30,7 +30,7 @@
 }
 
 
-.section-controls {
+.section-controls1 {
   // flex: 0 0 56%;
   display: flex;
   gap: $spacing_7;
@@ -123,4 +123,21 @@
   }
 }
 
-
+.db-title {
+  // flex: 0 0 45%;
+  flex-shrink: 0;
+  padding-top: 10px;
+  white-space: nowrap;
+}
+.section-controls {
+  flex: 1;
+  display: flex;
+  grid-template-columns:
+    minmax(260px, 333px)
+    minmax(160px, 170px)
+    minmax(160px, 170px)
+    minmax(178px, auto);
+  justify-content: end;
+  align-items: start;
+  gap: $spacing_7;
+}

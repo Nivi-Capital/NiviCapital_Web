@@ -126,6 +126,9 @@ export class LosOperation {
   isLoading: boolean = false;
   hidepagination: boolean = false;
 
+    searchcharlimit: boolean = false;
+   errormsg:string = '';
+
   constructor(public http: HttpClient, public router: Router, private service: Main, private cdr: ChangeDetectorRef, private tableDataService: TableData, private addcustomerservice: Addcustomerservice) { }
   // 
   ngOnInit(): void {
@@ -291,6 +294,8 @@ export class LosOperation {
       this.currentPage = 1;
       this.filteredData = [];
       this.loadallusers();      // reload paginated list
+       this.searchcharlimit = false;
+        this.errormsg ='';
       this.cdr.detectChanges();
       return;
     }
@@ -367,6 +372,9 @@ export class LosOperation {
       },
       error: (err) => {
         console.error("error msg", err);
+         this.searchcharlimit = true;
+        this.errormsg = err?.error?.message ?? 'An error occurred while searching.';
+        this.cdr.detectChanges();
       }
     })
 

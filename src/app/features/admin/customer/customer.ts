@@ -172,6 +172,8 @@ export class Customer implements OnInit, OnDestroy {
   ];
   isLoading: boolean = false;
   hidepagination: boolean = false;
+  searchcharlimit: boolean = false;
+   errormsg:string = '';
   constructor(private http: HttpClient, private router: Router, private service: Main, private msgBox: Msgboxservice, private cdr: ChangeDetectorRef, private tableDataService: TableData, private addcustomerservice: Addcustomerservice) { }
   ngOnInit(): void {
     this.loadallusers();
@@ -295,12 +297,11 @@ export class Customer implements OnInit, OnDestroy {
       this.currentPage = 1;
 this.filteredData = [];
       this.loadallusers();      // reload paginated list
+      this.searchcharlimit = false;
+        this.errormsg ='';
       this.cdr.detectChanges();
       return;
     }
-
-
-
     if (this.searchText.includes('@')) {
       type = 'EMAIL'
 
@@ -368,6 +369,9 @@ this.filteredData = [];
       },
       error: (err) => {
         console.error("error msg", err);
+        this.searchcharlimit = true;
+        this.errormsg = err?.error?.message ?? 'An error occurred while searching.';
+        this.cdr.detectChanges();
       }
     })
   }

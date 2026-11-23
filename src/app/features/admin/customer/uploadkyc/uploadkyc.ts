@@ -131,10 +131,10 @@ export class Uploadkyc implements OnDestroy, AfterViewInit {
 
   //on server kyc data is get removed
   private initReady = false;
-  private viewReady = false;
-  private kycLoaded = false;
-  private isPageRefresh = false;
-  isNewFlow = false;
+    private viewReady = false;
+    private kycLoaded = false;
+    private isPageRefresh = false;
+    isNewFlow = false;
 
   private readonly documentTypeMap: Record<string, string> = {
     pan: 'PAN',
@@ -151,15 +151,15 @@ private isKycAlreadySubmitted: boolean = false;
 
   async ngOnInit(): Promise<void> {
 
-    this.isPageRefresh =
-      (
-        performance.getEntriesByType(
-          'navigation'
-        )[0] as PerformanceNavigationTiming | undefined
-      )?.type === 'reload';
+      this.isPageRefresh =
+        (
+          performance.getEntriesByType(
+            'navigation'
+          )[0] as PerformanceNavigationTiming | undefined
+        )?.type === 'reload';
 
-    const params = this.route.snapshot.queryParams;
-    this.isNewFlow = params['mode'] === 'new';
+     const params = this.route.snapshot.queryParams;
+        this.isNewFlow = params['mode'] === 'new';
     const cameFromSummary =
       params['fromSummary'] === true ||
       params['fromSummary'] === 'true' ||
