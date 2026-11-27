@@ -185,12 +185,23 @@ export class Main {
     localStorage.removeItem('lastLogin');
   }
 
+  // Logout(): Observable<ApiResponse<any>> {
+  //   return this.http.post<ApiResponse<any>>(
+  //     `${this.baseUrl}/auth/logout`,
+  //     {},
+  //        );
+  // }
+
   Logout(): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(
-      `${this.baseUrl}/auth/logout`,
-      {},
-         );
-  }
+  return this.http.post<ApiResponse<any>>(
+    `${this.baseUrl}/auth/logout`,
+    {},
+    {
+      withCredentials: true
+    }
+  );
+}
+
 
    // LOS api  
   getLosDetails(id: string): Observable<any> {
