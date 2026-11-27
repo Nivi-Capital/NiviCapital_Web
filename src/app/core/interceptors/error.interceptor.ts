@@ -56,6 +56,11 @@ export class ErrorInterceptor implements HttpInterceptor {
       break;
 
     case 400:
+       if(error.error?.message?.includes('Name search requires at least 3 characters') ) {
+            showPopup = false; 
+             return throwError(() => error);
+        }
+
       errorMessage =
         error.error?.message ??
         'Bad request. Please verify your input.';
@@ -72,10 +77,7 @@ export class ErrorInterceptor implements HttpInterceptor {
       break;
 
     case 404:
-      // errorMessage =
-      //   error.error?.message ??
-      //   'The requested resource could not be found.';
-      // break;
+     
       showPopup = false; // AuthInterceptor handles this
       return throwError(() => error);
 

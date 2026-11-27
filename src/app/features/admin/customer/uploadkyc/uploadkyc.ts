@@ -1013,20 +1013,33 @@ fd.append(
     }
 
     return (
-      this.uploadedFileMeta[key]?.viewUrl ||
-      this.uploadedFileMeta[key]?.fileUrl ||
+      this.uploadedFileMeta[key]?.documentId||
+      // this.uploadedFileMeta[key]?.viewUrl ||
+      // this.uploadedFileMeta[key]?.fileUrl ||
       ''
     );
   }
   viewLocalFile(key: string): void {
-    const url = this.getLocalFileUrl(key);
+    const docid = this.getLocalFileUrl(key);
+  
+    this.viewdocument(docid);
 
-    if (!url) return;
+    // if (!url) return;
 
-    window.open(url, '_blank');
+    // window.open(url, '_blank');
   }
 
-  downloadLocalFile(key: string): void {
+viewdocument(key: string): void {
+  this.loanservice.viewkYCDocument(key).subscribe({
+    next: (response: Blob) => {
+      const imageUrl = URL.createObjectURL(response);
+      window.open(imageUrl, '_blank');
+
+      setTimeout(() => URL.revokeObjectURL(imageUrl), 10000);
+    }
+  });
+}
+  downloadLocalFile1(key: string): void {
     const file = this.uploadedFiles[key] || this.uploadedFileMeta[key];
     const meta = this.uploadedFileMeta[key];
     if (!file) return;
@@ -1038,7 +1051,31 @@ fd.append(
     link.download = file?.name || meta?.fileName;
     link.click();
   }
+downloadLocalFile(key: string): void {
+  const meta = this.uploadedFileMeta[key];
+  const documentId = meta?.documentId;
 
+  if (!documentId) return;
+
+  this.loanservice.viewkYCDocument(documentId).subscribe({
+    next: (response: Blob) => {
+      const url = URL.createObjectURL(response);
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download = meta?.fileName || `${key}.png`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      URL.revokeObjectURL(url);
+    },
+    error: (error) => {
+      console.error('Unable to download document:', error);
+    }
+  });
+}
   deleteLocalFile(key: string): void {
 
     this.msgBox.open({

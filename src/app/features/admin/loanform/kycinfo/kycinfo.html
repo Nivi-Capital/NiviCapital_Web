@@ -85,7 +85,7 @@
               <p class="text-label file-name" [title]="aadhaarFrontFileName">{{aadhaarFrontDisplayName}}</p>
               <div class="icons">
                 <span (click)="viewImage(aadhaarFrontUrl)"><img src="/assets/images/icons/eyered.svg" alt="view"></span>
-                <span (click)="downloadImage(aadhaarFrontUrl,aadhaarFrontFileName)"><img
+                <span (click)="downloadLocalFile(aadhaarFrontUrl,aadhaarFrontFileName)"><img
                     src="/assets/images/icons/import-red.svg" alt="Download"></span>
               </div>
             </div>
@@ -98,7 +98,7 @@
               <p class="text-label file-name" [title]="aadhaarBackFileName">{{aadhaarBackDisplayName}}</p>
               <div class="icons">
                 <span (click)="viewImage(aadhaarBackUrl)"><img src="/assets/images/icons/eyered.svg" alt="view"></span>
-                <span (click)="downloadImage(aadhaarBackUrl,aadhaarBackFileName)"><img
+                <span (click)="downloadLocalFile(aadhaarBackUrl,aadhaarBackFileName)"><img
                     src="/assets/images/icons/import-red.svg" alt="Download"></span>
               </div>
             </div>
@@ -120,7 +120,7 @@
               <!-- <p class="text-label">{{panFileName}}</p> -->
               <div class="icons">
                 <span (click)="viewImage(panUrl)"><img src="/assets/images/icons/eyered.svg" alt="view"></span>
-                <span (click)="downloadImage(panUrl,panFileName)"><img src="/assets/images/icons/import-red.svg"
+                <span (click)="downloadLocalFile(panUrl,panFileName)"><img src="/assets/images/icons/import-red.svg"
                     alt="Download"></span>
               </div>
             </div>
@@ -157,7 +157,7 @@
 
               <div class="icons">
                 <span (click)="viewImage(passportUrl)"><img src="/assets/images/icons/eyered.svg" alt="view"></span>
-                <span (click)="downloadImage(passportUrl,passportFileName)"><img
+                <span (click)="downloadLocalFile(passportUrl,passportFileName)"><img
                     src="/assets/images/icons/import-red.svg" alt="Download"></span>
               </div>
             </div>
@@ -263,7 +263,7 @@
               <div class="icons">
                 <span (click)="viewImage(otherDocumentUrl)"><img src="/assets/images/icons/eyered.svg"
                     alt="view"></span>
-                <span (click)="downloadImage(otherDocumentUrl,otherDocumentFileName)"><img
+                <span (click)="downloadLocalFile(otherDocumentUrl,otherDocumentFileName)"><img
                     src="/assets/images/icons/import-red.svg" alt="Download"></span>
               </div>
             </div>

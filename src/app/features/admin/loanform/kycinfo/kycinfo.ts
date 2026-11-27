@@ -164,7 +164,7 @@ passportnumber: any;
 
   }
 
-  viewImage(url: string): void {
+  viewImage1(url: string): void {
     window.open(url, '_blank');
   }
 
@@ -184,6 +184,41 @@ passportnumber: any;
 
       });
 
+  }
+
+  downloadLocalFile(key: string, filename: string): void {
+    const documentId = key;
+
+    if (!documentId) return;
+
+    this.loanformservice.viewkYCDocument(documentId).subscribe({
+      next: (response: Blob) => {
+        const url = URL.createObjectURL(response);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = filename || `${key}.png`;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Unable to download document:', error);
+      }
+    });
+  }
+  viewImage(key: string): void {
+    this.loanformservice.viewkYCDocument(key).subscribe({
+      next: (response: Blob) => {
+        const imageUrl = URL.createObjectURL(response);
+        window.open(imageUrl, '_blank');
+
+        setTimeout(() => URL.revokeObjectURL(imageUrl), 10000);
+      }
+    });
   }
 
   getKycId(event: any) {
@@ -373,20 +408,20 @@ updatepassportno(){
 
          this.isPassportNumberMissing = passportNumber.length === 0;
          this.passportNumberSavedOnServer = passportNumber.length > 0; 
-          this.aadhaarFrontUrl = aadhaarFront?.url || '';
+          this.aadhaarFrontUrl = aadhaarFront?.url || aadhaarFront?.documentId || '';
           this.aadhaarFrontFileName = aadhaarFront?.fileName || '';
           this.aadhaarFrontDisplayName =
             this.getFileName(this.aadhaarFrontFileName, 21);
-          this.aadhaarBackUrl = aadhaarBack?.url || '';
+          this.aadhaarBackUrl = aadhaarBack?.url || aadhaarBack?.documentId || '';
           this.aadhaarBackFileName = aadhaarBack?.fileName || '';
           this.aadhaarBackDisplayName =
             this.getFileName(this.aadhaarBackFileName, 21);
-          this.panUrl = panDoc?.url || '';
+          this.panUrl = panDoc?.url || panDoc?.documentId || '';
           this.panFileName = panDoc?.fileName || '';
           this.panDisplayName =
             this.getFileName(this.panFileName, 30);
 
-          this.passportUrl = passportDoc?.url || '';
+          this.passportUrl = passportDoc?.url || passportDoc?.documentId || '';
           this.passportFileName = passportDoc?.fileName || '';
           this.passportDisplayName =
             this.getFileName(this.passportFileName, 30);
@@ -395,7 +430,7 @@ updatepassportno(){
             this.passportmissing = false;
           }
 
-          this.otherDocumentUrl = otherDoc?.url || '';
+          this.otherDocumentUrl = otherDoc?.url || otherDoc?.documentId || '';
           this.otherDocumentFileName = otherDoc?.fileName || '';
           this.otherDocumentDisplayName =
             this.getFileName(this.otherDocumentFileName, 30);

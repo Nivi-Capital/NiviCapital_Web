@@ -70,6 +70,7 @@ export class Additionalinfo implements OnInit {
   applicationId: any;
   applicantId: any;
   profilePhotoUrl: any;
+  profileDocumentId: any;
   objectName: any;
   fileName: any;
 
@@ -461,6 +462,7 @@ try {
 
       this.gendercheckvalue = '';
       this.profilePhotoUrl = '';
+      this.profileDocumentId = '';
       this.fileName = '';
       this.objectName = '';
       this.isspousemiddlename = false;
@@ -573,6 +575,7 @@ if (
       applicantId: this.getApiApplicantId(),
 
       profilePhotoUrl: applicantDetails.photoUrl || '',
+      profilePhotoId: applicantDetails.photoUrl || '',
       uploadphoto: applicantDetails.photoUrl || applicantDetails.fileName || '',
       fileName: applicantDetails.fileName || '',
       objectName: applicantDetails.objectName || '',
@@ -739,6 +742,7 @@ if (
       next: (res) => {
         console.log(res);
         this.profilePhotoUrl = res.data.publicUrl;
+        this.profileDocumentId = res.data.documentId;
         this.objectName = res.data.objectName;
         this.fileName = res.data.fileName;
 
@@ -823,21 +827,31 @@ if (
       return this.uploadedPreviewUrls[key];
     }
     if (this.localFiles[key]) {
-      return this.localFiles[key].url;
+      return this.localFiles[key];
     }
     return '';
   }
 
 
   viewLocalFile(key: string): void {
-    const url = this.getLocalFileUrl(key);
+    // const url = this.getLocalFileUrl(key);
 
-    if (!url) return;
+    // if (!url) return;
 
-    window.open(url, '_blank');
+    // window.open(url, '_blank');
+
+    const doc: any = this.getLocalFileUrl(key);
+
+    if(!doc) return;
+
+    if(typeof doc === 'string'){
+      window.open(doc, '_blank');
+    } else if(typeof doc === 'object'){
+      this.viewdocument(doc.url);
+    }
   }
 
-  downloadLocalFile(key: string): void {
+  downloadLocalFile1(key: string): void {
     const file = this.uploadedFiles[key];
 
     if (!file) return;
@@ -848,6 +862,41 @@ if (
     link.href = url;
     link.download = file.name;
     link.click();
+  }
+  downloadLocalFile(key: string): void {
+    const meta = this.localFiles[key] || this.uploadedFiles[key];
+    const documentId = meta?.url || this.profileDocumentId;
+
+    if (!documentId) return;
+
+    this.formSvc.viewkYCDocument(documentId).subscribe({
+      next: (response: Blob) => {
+        const url = URL.createObjectURL(response);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = meta?.name || `${key}.png`;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Unable to download document:', error);
+      }
+    });
+  }
+  viewdocument(key: string): void {
+    this.formSvc.viewkYCDocument(key).subscribe({
+      next: (response: Blob) => {
+        const imageUrl = URL.createObjectURL(response);
+        window.open(imageUrl, '_blank');
+
+        setTimeout(() => URL.revokeObjectURL(imageUrl), 10000);
+      }
+    });
   }
 
   deleteLocalFile(key: string): void {
@@ -942,15 +991,16 @@ if (
     if (!data) return;
 
     this.profilePhotoUrl = data.profilePhotoUrl || data.uploadphoto || '';
+    this.profileDocumentId = data.profilePhotoId || '';
     this.fileName = data.fileName || '';
     this.objectName = data.objectName || '';
 
 
-    if (this.profilePhotoUrl || this.fileName) {
+    if (this.profilePhotoUrl || this.profileDocumentId || this.fileName) {
       this.setExistingFile(
         'applicantphoto',
         this.fileName || 'Applicant Photo',
-        this.profilePhotoUrl
+        this.profilePhotoUrl || this.profileDocumentId
       );
     }
 
@@ -983,7 +1033,7 @@ this.ismothermiddlename = noMotherMiddleName;
 
     this.additionalinfoForm.patchValue({
 
-      uploadphoto: this.profilePhotoUrl || '',
+      uploadphoto: this.profilePhotoUrl || this.profileDocumentId || '',
       maritalstatus: data.maritalStatus ? data.maritalStatus.charAt(0) + data.maritalStatus.slice(1).toLowerCase() : '',
       // gender: data.gender == "M" ? "Male" : data.gender == "F" ? "Female" : 'O',
       dependents: data.numberOfDependents,
@@ -1162,7 +1212,8 @@ this.ismothermiddlename = noMotherMiddleName;
     console.log(this.gendercheckvalue);
     return {
       applicantId: this.getApiApplicantId(),
-      profilePhotoUrl: this.profilePhotoUrl || formdata.uploadphoto || existingData?.profilePhotoUrl || '',
+      // profilePhotoUrl: this.profilePhotoUrl || formdata.uploadphoto || existingData?.profilePhotoUrl || '',
+      profilePhotoId: this.profileDocumentId || '',
       fileName: this.fileName || this.formSvc.additionalInfoData?.fileName || this.formSvc.co_additionalInfoData?.fileName || existingData?.fileName || '',
       objectName: this.objectName || this.formSvc.additionalInfoData?.objectName || this.formSvc.co_additionalInfoData?.objectName || existingData?.objectName || '',
 

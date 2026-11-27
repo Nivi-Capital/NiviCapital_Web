@@ -1192,15 +1192,17 @@ this.uploadingFiles[key] = false;
     // return doc?.viewUrl || '';  // Use viewUrl!
 
 
-    const url = doc?.viewUrl || '';
-
+    const url1 = doc?.viewUrl || '';
+   const url = doc?.documentId || '';
     if (!url || url === 'NA') return '';
 
     if (url.startsWith('http')) {
       return url;
     }
 
-    return `${window.location.origin}${url}`;
+    // return `${window.location.origin}${url}`;
+    return `${url}`;
+
 
   }
 
@@ -1317,11 +1319,22 @@ this.uploadingFiles[key] = false;
     return !!this.getDocumentByKey(documentKey);
   }
   viewImage(url: string): void {
-    window.open(url, '_blank');
+     this.viewdocument(url);
+    // window.open(url, '_blank');
   }
 
+  viewdocument(key: string): void {
+    this.loanformservice.viewkYCDocument(key).subscribe({
+      next: (response: Blob) => {
+        const imageUrl = URL.createObjectURL(response);
+        window.open(imageUrl, '_blank');
 
-  downloadImage(url: string, filename: string): void {
+        setTimeout(() => URL.revokeObjectURL(imageUrl), 10000);
+      }
+    });
+  }
+
+  downloadImage1(url: string, filename: string): void {
     if (!url || url === 'NA') {
       console.error('Invalid document URL');
       return;
@@ -1347,6 +1360,32 @@ this.uploadingFiles[key] = false;
       .catch(err => {
         console.error('Download failed:', err);
       });
+  }
+
+  downloadImage(documentId: string, filename: string): void {
+    if (!documentId || documentId === 'NA') {
+      console.error('Invalid document ID');
+      return;
+    }
+
+    this.loanformservice.viewkYCDocument(documentId).subscribe({
+      next: (response: Blob) => {
+        const blobUrl = URL.createObjectURL(response);
+        const link = document.createElement('a');
+
+        link.href = blobUrl;
+        link.download = filename || 'document';
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(blobUrl);
+      },
+      error: (error) => {
+        console.error('Download failed:', error);
+      }
+    });
   }
 
   deleteImage(key: string, otherDocType: string = '', id: number = 0): void {

@@ -202,8 +202,10 @@ export class Customer implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           let resdate = response.data.content;
-          this.totalItems = response.data.totalElements;
-          this.totalPages = response.data.totalPages;
+          // this.totalItems = response.data.totalElements;
+          // this.totalPages = response.data.totalPages;
+          this.totalItems = 60;
+          this.totalPages = 10;
           if (resdate.length == 0) {
             this.nodata = true;
           } else {
@@ -361,6 +363,9 @@ this.filteredData = [];
     );
 
         // this.filteredData = [row];
+        this.searchcharlimit = false;
+        this.errormsg ='';
+        
         this.nodata = false;
         this.hidepagination = true;   // hide pagination in search
         this.cdr.detectChanges();

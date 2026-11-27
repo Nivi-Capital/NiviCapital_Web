@@ -341,7 +341,6 @@ export class LosOperation {
       next: (res) => {
         console.log(res);
          let respdata = res?.data 
-        // const row: TransformedUserData = {
         this.filteredData = respdata.map(
                 (item: any): TransformedUserData => ({
           custId: item.custId ?? '-',
@@ -354,13 +353,13 @@ export class LosOperation {
           kycStatus: item.kycStatus ?? '-',
           createdAt: item.custId ?? '-',
           userId: item.userInitiateId ?? '-'
-        // };
+       
 })
     );
 
+  this.searchcharlimit = false;
+        this.errormsg ='';
 
-
-        // this.filteredData = [row];
 
         this.nodata = false;
         this.hidepagination = true;   // hide pagination in search

@@ -767,14 +767,52 @@ export class Edusection {
       return;
     }
 
-    const savedUrl = file.viewUrl || file.fileUrl || file.publicUrl || '';
-    if (savedUrl) {
-      window.open(savedUrl, '_blank');
-    }
+    const savedUrl1 = file.viewUrl || file.fileUrl || file.publicUrl || '';
+     const savedUrl = file.documentId || '';
+    // if (savedUrl) {
+    //   window.open(savedUrl, '_blank');
+    // }
+     this.viewdocument(savedUrl);
   }
 
-
   downloadLocalFile(doc: DocType, index?: number): void {
+    const meta = this.getStoredFile(doc, index);
+    const documentId = meta?.documentId;
+
+    if (!documentId) return;
+
+    this.loanformservice.viewkYCDocument(documentId).subscribe({
+      next: (response: Blob) => {
+        const url = URL.createObjectURL(response);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = meta?.fileName || `${doc}.png`;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Unable to download document:', error);
+      }
+    });
+  }
+
+  viewdocument(key: string): void {
+    this.loanformservice.viewkYCDocument(key).subscribe({
+      next: (response: Blob) => {
+        const imageUrl = URL.createObjectURL(response);
+        window.open(imageUrl, '_blank');
+
+        setTimeout(() => URL.revokeObjectURL(imageUrl), 10000);
+      }
+    });
+  }
+
+  downloadLocalFile1(doc: DocType, index?: number): void {
     const file = this.getStoredFile(doc, index);
     if (!file) return;
 
@@ -1174,12 +1212,14 @@ export class Edusection {
     }
 
     const url = file.viewUrl || file.fileUrl || file.publicUrl || '';
-    if (url) {
-      window.open(url, '_blank');
-    }
+    const savedUrl = file.documentId  || '';
+    // if (url) {
+    //   window.open(url, '_blank');
+    // }
+    this.viewdocument(savedUrl);
   }
 
-  downloadOther1(doc: any) {
+  downloadOther2(doc: any) {
     const url = URL.createObjectURL(doc.file);
     const a = document.createElement('a');
     a.href = url;
@@ -1187,7 +1227,7 @@ export class Edusection {
     a.click();
     URL.revokeObjectURL(url);
   }
-  downloadOther(slot: any): void {
+  downloadOther1(slot: any): void {
     const file = slot.file;
     if (!file) return;
 
@@ -1209,6 +1249,31 @@ export class Edusection {
     a.target = '_blank';
     a.download = file.fileName || file.name || 'document';
     a.click();
+  }
+
+  downloadOther(slot: any): void {
+    const documentId = slot?.file?.documentId;
+
+    if (!documentId) return;
+
+    this.loanformservice.viewkYCDocument(documentId).subscribe({
+      next: (response: Blob) => {
+        const url = URL.createObjectURL(response);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = slot?.file?.fileName || `${slot?.key}.png`;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Unable to download document:', error);
+      }
+    });
   }
 
 

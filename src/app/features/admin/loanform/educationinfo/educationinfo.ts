@@ -1233,11 +1233,55 @@ onLocationChanged(event: {
       file.viewUrl ||
       file.fileUrl ||
       file.publicUrl ||
+      file.documentId ||
       '';
 
-    if (url) {
-      window.open(url, '_blank');
-    }
+    // if (url) {
+    //   window.open(url, '_blank');
+    // }
+
+    this.viewdocument(url);
+  }
+
+  viewdocument(key: string): void {
+    this.formSvc.viewkYCDocument(key).subscribe({
+      next: (response: Blob) => {
+        const imageUrl = URL.createObjectURL(response);
+        window.open(imageUrl, '_blank');
+
+        setTimeout(() => URL.revokeObjectURL(imageUrl), 10000);
+      }
+    });
+  }
+
+  downloadLocal(level: any, docType: DocType, index?: number): void {
+    const file: any = this.getStoredFileMeta(
+      level as StepKey,
+      docType,
+      index
+    );
+    const documentId = file?.documentId;
+
+    if (!documentId) return;
+
+    this.formSvc.viewkYCDocument(documentId).subscribe({
+      next: (response: Blob) => {
+        const url = URL.createObjectURL(response);
+        const link = document.createElement('a');
+
+        link.href = url;
+        link.download = file?.fileName || `${docType}.png`;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Unable to download document:', error);
+      }
+    });
   }
 
   onFileRemovedFromSection(e: {
@@ -1444,7 +1488,7 @@ onLocationChanged(event: {
     );
   }
 
-  downloadLocal(level: any, docType: DocType, index?: number): void {
+  downloadLocal1(level: any, docType: DocType, index?: number): void {
     const file: any = this.getStoredFileMeta(
       level as StepKey,
       docType,
@@ -3165,7 +3209,8 @@ otherLocation:this.isOtherLocationSelected(step) ? raw.otherLocation || '' : '',
   }
   //patch from summary 
   private async loadEducationFromSummary(): Promise<void> {
-    if (!this.applicationId || this.summaryEducationLoaded) return;
+    // if (!this.applicationId || this.summaryEducationLoaded) return;
+    if(!this.applicantId) return;
 
     try {
       const res: any = await firstValueFrom(

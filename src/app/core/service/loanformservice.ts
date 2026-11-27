@@ -380,6 +380,7 @@ updatepassportNumber(data: any): Observable<ApiResponse<any>> {
   }
 
   // ************************* Income   *************************
+  // ************************* upload documnets of education and Income   *************************
 
   uploadIncome(payload: any, id: string,edit?:boolean): Observable<ApiResponse<any>> {
 
@@ -752,6 +753,16 @@ updatepassportNumber(data: any): Observable<ApiResponse<any>> {
   getSavedkYCData(custId: string, sectionkey: string): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(
       `${this.baseUrl}/v1/los/draft/getKYC?custId=${custId}&sectionKey=${sectionkey}`,
+
+    );
+  }
+
+    viewkYCDocument(documentId: string): Observable<Blob> {
+    return this.http.get(
+      `${this.baseUrl}/v1/kyc/documents/${documentId}`,
+       {
+      responseType: 'blob'
+    }
 
     );
   }
