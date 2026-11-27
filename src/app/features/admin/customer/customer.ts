@@ -202,10 +202,8 @@ export class Customer implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           let resdate = response.data.content;
-          // this.totalItems = response.data.totalElements;
-          // this.totalPages = response.data.totalPages;
-          this.totalItems = 60;
-          this.totalPages = 10;
+          this.totalItems = response.data.totalElements;
+          this.totalPages = response.data.totalPages;
           if (resdate.length == 0) {
             this.nodata = true;
           } else {
